@@ -11,7 +11,7 @@ terraform {
     }
     kubernetes = {
       source = "hashicorp/kubernetes"
-      version = "2.13.1"
+      version = "2.23.0"
     }
     null = {
       source = "hashicorp/null"
@@ -20,6 +20,10 @@ terraform {
     local = {
       source = "hashicorp/local"
       version = "2.4.0"
+    }
+    google = {
+      source = "hashicorp/google"
+      version = "5.0.0"
     }
   }
 }

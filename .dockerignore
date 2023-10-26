@@ -1,13 +1,18 @@
-# Ignore everything.
-**
+vm/.vagrant/*
+vm/generated/*
 
-# Except the following.
-!src
-!LICENSE.txt
-!pyproject.toml
-!poetry.lock
-!README.md
+vm-ubuntu/.vagrant/*
+vm-ubuntu/generated/*
 
-# Filter unwanted files from included folders.
-**/__pycache__
-**.py[cod]
+baremetal/generated/*
+
+.coverage/*
+*/__pycache__/*
+*/.pytest_cache/*
+
+*.egg-info/*
+
+workspace/*
+terraform/*
+
+.git/*

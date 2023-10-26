@@ -206,7 +206,7 @@ resource "kubernetes_ingress_v1" "dashboard" {
           path = "/"
           backend {
             service {
-              name = "ray-node-port"
+              name = "ray-kuberay-head-svc"
               port {
                 name = "dashboard"
               }

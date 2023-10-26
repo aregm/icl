@@ -2,7 +2,7 @@
 
 : ${SCRIPT_DIR:=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )}
 
-: ${CONTROL_NODE_IMAGE:=pbchekin/ccn:0.0.1}
+: ${CONTROL_NODE_IMAGE:=pbchekin/ccn:0.0.2}
 : ${PROXY_IMAGE:=pbchekin/x1-proxy:0.0.1}
 
 X1_ROOT="$( cd $SCRIPT_DIR && cd ../.. && pwd)"
@@ -23,8 +23,10 @@ function control_node() {
     --env USER
   )
 
-  if [[ -d $HOME/.kube ]]; then
-    docker_cmd+=( --volume $HOME/.kube:/work/.kube )
+  if [[ -f $KUBECONFIG ]]; then
+    docker_cmd+=( --volume $KUBECONFIG:/work/.kube/config )
+  elif [[ -d ${HOME}/.kube ]]; then
+    docker_cmd+=( --volume ${HOME}/.kube:/work/.kube )
   fi
 
   if [[ -d $HOME/.aws ]]; then
@@ -115,29 +117,23 @@ function control_node() {
 
 function deploy_x1() {
   control_node "\
-    export KUBECONFIG=/work/x1/$KUBECONFIG \
-    && export KUBE_CONFIG_PATH=/work/x1/$KUBECONFIG \
-    && terraform -chdir=x1/terraform init -upgrade -input=false \
-    && terraform -chdir=x1/terraform apply -input=false -auto-approve $(x1_terraform_args)
+    cd x1/terraform/x1 \
+    && terraform init -upgrade -migrate-state -input=false \
+    && terraform apply -input=false -auto-approve $(x1_terraform_args)
   "
 }
 
 # Delete X1 workloads
 function delete_x1() {
   control_node "\
-    export KUBECONFIG=/work/x1/$KUBECONFIG \
-    && export KUBE_CONFIG_PATH=/work/x1/$KUBECONFIG \
-    && terraform -chdir=x1/terraform destroy -input=false -auto-approve $(x1_terraform_args) || true
-  "
+  cd x1/terraform/x1 \
+  && terraform init -upgrade -migrate-state -input=false \
+  && terraform destroy -input=false -auto-approve $(x1_terraform_args) || true"
 }
 
 # Delete PersistentVolumes
 function delete_pvs() {
-  control_node "\
-    export KUBECONFIG=/work/x1/$KUBECONFIG \
-    && export KUBE_CONFIG_PATH=/work/x1/$KUBECONFIG \
-    && kubectl delete --all -A --wait=false pvc || true
-  "
+  control_node "kubectl delete --all -A --wait=false pvc || true"
 }
 
 function start_proxy() {

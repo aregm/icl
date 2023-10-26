@@ -36,15 +36,22 @@ variable "jupyterhub_oneapi_profile_image" {
   default = ""
 }
 
+variable "jupyterhub_gpu_profile_enabled" {
+  description = "Enable JupyterHub GPU profile"
+  type = bool
+  default = false
+}
+
+variable "jupyterhub_gpu_profile_image" {
+  description = "Docker image for JupyterHub GPU profile"
+  type = string
+  default = ""
+}
+
 variable "prefect_api_url" {
   description = "Prefect API URL"
   type = string
   default = "http://prefect-server.prefect:4200/api"
-}
-
-variable "prefect_image" {
-  description = "Prefect Docker image"
-  type = string
 }
 
 variable "ingress_domain" {
@@ -55,6 +62,12 @@ variable "ingress_domain" {
 
 variable "shared_volume_enabled" {
   description = "Enable shared volume"
+  type = bool
+  default = false
+}
+
+variable "jupyterhub_cluster_admin_enabled" {
+  description = "Enable admin access to Kubernetes cluster from JupyterHub sessions"
   type = bool
   default = false
 }

@@ -13,8 +13,13 @@ resource "helm_release" "docker-registry" {
         size: "${var.storage_size}"
         storageClass: "${var.storage_class}"
       service:
-        type: NodePort
-        nodePort: 30500
+        type: ClusterIP
+      ingress:
+        enabled: true
+        hosts:
+          - "registry.${var.ingress_domain}"
+        annotations:
+          nginx.ingress.kubernetes.io/proxy-body-size: "0"
     EOT
   ]
 }

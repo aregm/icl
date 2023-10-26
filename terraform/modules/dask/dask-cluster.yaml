@@ -56,7 +56,7 @@ spec:
             initialDelaySeconds: 15
             periodSeconds: 20
     service: # ServiceSpec, standard k8s service - https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#servicespec-v1-core
-      type: NodePort
+      type: ClusterIP
       selector:
         dask.org/cluster-name: dask
         dask.org/component: scheduler
@@ -65,9 +65,7 @@ spec:
           protocol: TCP
           port: 8786
           targetPort: "tcp-comm"
-          nodePort: 30020
         - name: http-dashboard
           protocol: TCP
           port: 8787
           targetPort: "http-dashboard"
-          nodePort: 30021

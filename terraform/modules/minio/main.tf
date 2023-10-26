@@ -14,53 +14,6 @@ resource "helm_release" "operator" {
   ]
 }
 
-# Helm chart for MinIO operator does not allow changing a Service type for its console, so creating a dedicated NodePort
-# Service with the same selector.
-resource "kubernetes_service" "console" {
-  depends_on = [helm_release.operator]
-  metadata {
-    name = "console-node-port"
-    namespace = "minio"
-  }
-  spec {
-    type = "NodePort"
-    port {
-      name = "console"
-      port = 9090
-      target_port = 9090
-      protocol = "TCP"
-      node_port = 30003
-    }
-    selector = {
-      "app.kubernetes.io/instance" = "operator-console"
-      "app.kubernetes.io/name" = "operator"
-    }
-  }
-}
-
-# Helm chart for MinIO does not allow changing a Service type for its S3 endpoint, so creating a dedicated NodePort
-# Service with the same selector.
-resource "kubernetes_service" "endpoint" {
-  depends_on = [helm_release.operator]
-  metadata {
-    name = "minio-node-port"
-    namespace = "minio"
-  }
-  spec {
-    type = "NodePort"
-    port {
-      name = "https-minio"
-      port = 443
-      target_port = 9000
-      protocol = "TCP"
-      node_port = 30006
-    }
-    selector = {
-      "v1.min.io/tenant" = "minio"
-    }
-  }
-}
-
 resource "kubernetes_ingress_v1" "endpoint" {
   depends_on = [helm_release.operator]
   metadata {

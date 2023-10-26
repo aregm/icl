@@ -1,15 +1,24 @@
 #!/usr/bin/env bash
 
-# Deploys X1 cluster using kind, see https://kind.sigs.k8s.io/
+# Deploys X1 cluster using kind, see https://kind.sigs.k8s.io/.
+# Loads environment variables from .x1/environment file in the current directory, if exists.
 
 set -e
 
+if [[ -f .x1/environment ]]; then
+  source .x1/environment
+fi
+
 # Default values that can be overriden by corresponding environment variables
-: ${KIND_VERSION:="v0.19.0"}
+: ${KIND_VERSION:="v0.20.0"}
 : ${CLUSTER_NAME:="x1"}
 : ${REDSOCKS_SKIP:="0.0.0.0/8 10.0.0.0/8 100.64.0.0/10 127.0.0.0/8 169.254.0.0/16 172.16.0.0/12 192.168.0.0/16 198.18.0.0/15 224.0.0.0/4 240.0.0.0/4"}
 : ${INGRESS_DOMAIN:="localtest.me"}
+: ${X1_EXTERNALDNS_ENABLED:="false"}
 : ${CONTROL_NODE_IMAGE:=pbchekin/ccn:0.0.1}
+: ${KUBECONFIG:="$HOME/.kube/config"}
+
+export KUBECONFIG
 
 # https://stackoverflow.com/questions/59895/getting-the-source-directory-of-a-bash-script-from-within
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
@@ -68,7 +77,7 @@ kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
 nodes:
   - role: control-plane
-    image: kindest/node:v1.25.9
+    image: kindest/node:v1.28.0
     # This works only for one node, see https://kind.sigs.k8s.io/docs/user/ingress/#ingress-nginx
     # With multiple nodes, a more granular control is needed where nginx pod is running.
     extraPortMappings:
@@ -82,6 +91,13 @@ nodes:
       # Since it is a default Ray port you may need to change it if you have Ray running on the host.
       - containerPort: 30009
         hostPort: 10001
+        protocol: TCP
+      # Map clusterNodePort 32001 to the same port on host.
+      # This port is used to forward SSH to JupyterHub session for the first user. If you are
+      # planning to enable SSH for more than one user add more ports (32002 for the second user, and
+      # so on).
+      - containerPort: 32001
+        hostPort: 32001
         protocol: TCP
 "
   if [[ -v dockerhub_proxy ]]; then
@@ -264,8 +280,6 @@ else
   if [[ -v http_proxy || -v https_proxy ]]; then
     with_proxy
   fi
-  # Clean up Terraform state files from the previous run
-  rm -f $X1_ROOT/terraform/terraform.tfstate*
 fi
 
 terraform_extra_args=(
@@ -273,6 +287,7 @@ terraform_extra_args=(
   -var default_storage_class="standard" # Kind cluster has local-path-provisioner, it defines "standard" StorageClass
   -var prometheus_enabled=false         # Disable prometheus stack to make footprint smaller
   -var ingress_domain="$INGRESS_DOMAIN"
+  -var externaldns_enabled="${X1_EXTERNALDNS_ENABLED}"
 )
 
 if [[ " $@ " =~ " --with-clearml " ]]; then
@@ -288,7 +303,7 @@ if [[ " $@ " =~ " --with-cert-manager " ]]; then
 fi
 
 with_corefile
-control_node "terraform -chdir=x1/terraform init -upgrade -input=false"
-control_node "terraform -chdir=x1/terraform apply -input=false -auto-approve ${terraform_extra_args[*]}"
+control_node "terraform -chdir=x1/terraform/x1 init -upgrade -input=false"
+control_node "terraform -chdir=x1/terraform/x1 apply -input=false -auto-approve ${terraform_extra_args[*]}"
 
 echo "To delete the cluster run '$0 --delete'"

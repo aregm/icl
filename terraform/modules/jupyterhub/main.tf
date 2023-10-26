@@ -6,8 +6,52 @@ locals {
       image = var.jupyterhub_singleuser_default_image
       # required for sudo
       allow_privilege_escalation = true
+      # enable cluster admin
+      service_account = var.jupyterhub_cluster_admin_enabled ? kubernetes_service_account.admin.0.metadata.0.name : null
+      automount_service_account_token = var.jupyterhub_cluster_admin_enabled
     }
     default = true
+  }
+
+  jupyterhub_gpu_profile = {
+    display_name = "X1 GPU"
+    description = "Prefect, Modin, Ray"
+    kubespawner_override = {
+      image = var.jupyterhub_gpu_profile_image
+      # required for sudo
+      allow_privilege_escalation = true
+      # enable cluster admin
+      service_account = var.jupyterhub_cluster_admin_enabled ? kubernetes_service_account.admin.0.metadata.0.name : null
+      automount_service_account_token = var.jupyterhub_cluster_admin_enabled
+      extra_resource_limits = {
+        "gpu.intel.com/i915" = "1"
+      }
+    }
+  }
+
+  jupyterhub_gpu_admin_profile = {
+    display_name = "X1 GPU with SYS_ADMIN, SYS_PTRACE"
+    description = "Prefect, Modin, Ray"
+    kubespawner_override = {
+      image = var.jupyterhub_gpu_profile_image
+      # required for sudo
+      allow_privilege_escalation = true
+      # enable cluster admin
+      service_account = var.jupyterhub_cluster_admin_enabled ? kubernetes_service_account.admin.0.metadata.0.name : null
+      automount_service_account_token = var.jupyterhub_cluster_admin_enabled
+      extra_resource_limits = {
+        "gpu.intel.com/i915" = "1"
+      }
+      extra_container_config = {
+        securityContext = {
+          allowPrivilegeEscalation = true
+          runAsUser = 1000
+          capabilities = {
+            add = ["SYS_ADMIN", "NET_ADMIN", "SYS_PTRACE"]
+          }
+        }
+      }
+    }
   }
 
   jupyterhub_oneapi_profile = {
@@ -23,6 +67,8 @@ locals {
     [
       local.jupyterhub_default_profile,
     ],
+    var.jupyterhub_gpu_profile_enabled ? [local.jupyterhub_gpu_profile] : [],
+    var.jupyterhub_gpu_profile_enabled ? [local.jupyterhub_gpu_admin_profile] : [],
     var.jupyterhub_oneapi_profile_enabled ? [local.jupyterhub_oneapi_profile] : [],
   )
 
@@ -80,7 +126,7 @@ resource "helm_release" "jupyterhub" {
   namespace = kubernetes_namespace.jupyterhub.id
   chart = "jupyterhub"
   repository = "https://jupyterhub.github.io/helm-chart"
-  version = "2.0.0"
+  version = "3.0.3"
   timeout = 1200
   # See https://github.com/jupyterhub/zero-to-jupyterhub-k8s/blob/HEAD/jupyterhub/values.yaml
   # See https://zero-to-jupyterhub.readthedocs.io/en/latest/resources/reference.html
@@ -116,13 +162,12 @@ resource "helm_release" "jupyterhub" {
         extraEnv:
           JUPYTERHUB_SINGLEUSER_APP: jupyter_server.serverapp.ServerApp
           PREFECT_API_URL: "${var.prefect_api_url}"
+          PREFECT_UI_URL: "http://prefect.${var.ingress_domain}"
         networkPolicy:
           enabled: false
       proxy:
         service:
-          type: NodePort
-          nodePorts:
-            http: 30004
+          type: ClusterIP
         chp:
           networkPolicy:
             enabled: false
@@ -138,6 +183,8 @@ resource "helm_release" "jupyterhub" {
         enabled: true
         hosts:
           - jupyter.${var.ingress_domain}
+        annotations:
+          nginx.ingress.kubernetes.io/proxy-body-size: "0"
     EOT
   ]
 }
@@ -146,4 +193,29 @@ module "shared-volume" {
   count = var.shared_volume_enabled ? 1 : 0
   source = "../shared-volume-use"
   namespace = kubernetes_namespace.jupyterhub.id
+}
+
+resource "kubernetes_service_account" "admin" {
+  count = var.jupyterhub_cluster_admin_enabled ? 1 : 0
+  metadata {
+    name = "admin"
+    namespace = kubernetes_namespace.jupyterhub.id
+  }
+}
+
+resource "kubernetes_cluster_role_binding" "admin" {
+  count = var.jupyterhub_cluster_admin_enabled ? 1 : 0
+  metadata {
+    name = "admin"
+  }
+  role_ref {
+    api_group = "rbac.authorization.k8s.io"
+    kind = "ClusterRole"
+    name = "cluster-admin"
+  }
+  subject {
+    kind = "ServiceAccount"
+    name = "admin"
+    namespace = kubernetes_namespace.jupyterhub.id
+  }
 }

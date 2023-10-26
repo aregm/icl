@@ -22,6 +22,18 @@ variable "ceph_device_filter" {
   default = ".*"
 }
 
+variable "ceph_devices" {
+  description = "List of devices, for example [{name = /dev/loop0}]"
+  type = list(map(string))
+  default = []
+}
+
+variable "ceph_allow_loop_devices" {
+  description = "If true, loop devices are allowed to be used for osds"
+  type = bool
+  default = false
+}
+
 variable "local_storage_enabled" {
   description = "True if local storage provisioner is required"
   default = false
@@ -97,24 +109,18 @@ variable "ingress_nginx_service_enabled" {
 variable "docker_registry_enabled" {
   description = "Enable docker-registry"
   type = bool
-  default = false
+  default = true
 }
 
 variable "docker_registry_storage_size" {
   description = "Storage size for docker-registry"
-  default = "100Mi"
+  default = "512Mi"
   type = string
 }
 
 variable "prefect_image_tag" {
   description = "Tag of the official Prefect Docker image"
-  default = "2.9.0-python3.9"
-  type = string
-}
-
-variable "prefect_image" {
-  description = "Prefect Docker image"
-  default = "pbchekin/x1-prefect:2.9.0-python3.9-20230404"
+  default = "2.13.0-python3.9"
   type = string
 }
 
@@ -126,7 +132,7 @@ variable "prefect_api_url" {
 
 variable "ray_image" {
   description = "Full tag for Ray Docker image"
-  default = "pbchekin/x1-ray:2.3.0-py39-20230404"
+  default = "pbchekin/x1-ray:2.6.1-py39-20230803"
   type = string
 }
 
@@ -192,14 +198,14 @@ variable "jupyterhub_pre_puller_enabled" {
 
 variable "jupyterhub_singleuser_volume_size" {
   description = "Size of a persistent volume for a single user session"
-  default = "100Mi"
+  default = "2536Mi"
   type = string
 }
 
 variable "jupyterhub_singleuser_default_image" {
   description = "Default Docker image for JupyterHub default profile"
   # original image: jupyterhub/k8s-singleuser-sample:2.0.1-0.dev.git.6035.h643c0f0c
-  default = "pbchekin/x1-jupyterhub:0.0.10"
+  default = "pbchekin/x1-jupyterhub:0.0.17"
   type = string
 }
 
@@ -213,6 +219,18 @@ variable "jupyterhub_oneapi_profile_image" {
   description = "Docker image for JupyterHub oneAPI profile"
   type = string
   default = "pbchekin/jupyterhub-oneapi:1.2.0-20230309"
+}
+
+variable "jupyterhub_gpu_profile_image" {
+  description = "Docker image for JupyterHub GPU profile"
+  type = string
+  default = "pbchekin/x1-jupyterhub-gpu:0.0.17"
+}
+
+variable "jupyterhub_cluster_admin_enabled" {
+  description = "Enable admin access to Kubernetes cluster from JupyterHub sessions"
+  type = bool
+  default = false
 }
 
 variable "olm_enabled" {
@@ -257,3 +275,20 @@ variable "ceph_secret_namespace" {
   default = "rook-ceph"
 }
 
+variable "externaldns_enabled" {
+  description = "Enable ExternalDNS for the cluster"
+  type = bool
+  default = false
+}
+
+variable "nfd_enabled" {
+  description = "Enable Node Feature Discovery"
+  type = bool
+  default = false
+}
+
+variable "intel_gpu_enabled" {
+  description = "Enable Intel GPU support"
+  type = bool
+  default = false
+}

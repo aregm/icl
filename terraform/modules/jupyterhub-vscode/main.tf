@@ -3,7 +3,7 @@ locals {
     display_name = "Code Server"
     description = "Visual Studio Code server"
     kubespawner_override = {
-      image = "codercom/code-server:4.11.0"
+      image = "codercom/code-server:4.17.0"
       cmd = [
         "--auth", "none",
         "--bind-addr", "0.0.0.0:8888",
@@ -58,7 +58,7 @@ resource "helm_release" "vscode" {
   namespace = kubernetes_namespace.vscode.id
   chart = "jupyterhub"
   repository = "https://jupyterhub.github.io/helm-chart"
-  version = "2.0.0"
+  version = "3.0.3"
   timeout = 1200
   # See https://github.com/jupyterhub/zero-to-jupyterhub-k8s/blob/HEAD/jupyterhub/values.yaml
   # See https://zero-to-jupyterhub.readthedocs.io/en/latest/resources/reference.html

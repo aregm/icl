@@ -1,6 +1,6 @@
 variable "release" {
   description = "Version of docker-registry Helm chart"
-  default = "2.1.0"
+  default = "2.2.2"
   type = string
 }
 
@@ -11,5 +11,10 @@ variable "storage_class" {
 
 variable "storage_size" {
   description = "Storage cize for docker-registry volume"
+  type = string
+}
+
+variable "ingress_domain" {
+  description = "Ingress domain name"
   type = string
 }

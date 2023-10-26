@@ -18,8 +18,7 @@ locals {
 
   grafana = {
     service = {
-      type = "NodePort"
-      nodePort = 30000
+      type = "ClusterIP"
     }
     ingress = {
       enabled: true
@@ -39,7 +38,7 @@ resource "helm_release" "metrics_server" {
   namespace = "kube-system"
   repository = "https://kubernetes-sigs.github.io/metrics-server/"
   chart = "metrics-server"
-  version = "3.8.4"
+  version = "3.11.0"
   values = [
     # Disable certificate validation, kubelet certificate needs to be signed by cluster CA
     "args: [--kubelet-insecure-tls]",

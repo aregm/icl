@@ -13,8 +13,7 @@ resource "helm_release" "kubernetes-dashboard" {
         - --enable-skip-login
         - --disable-settings-authorizer
       service:
-        type: NodePort
-        nodePort: 30005
+        type: ClusterIP
       ingress:
         enabled: true
         hosts:
