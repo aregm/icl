@@ -1,0 +1,5 @@
+"""Main module for X1 logging."""
+
+from .logging import get_logger
+
+__all__ = ["get_logger"]

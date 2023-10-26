@@ -104,6 +104,7 @@ def main(ip: str, domain: str):
         'minio',
         'prefect',
         'ray',
+        'registry',
         's3',
         'app.clearml',
         'api.clearml',

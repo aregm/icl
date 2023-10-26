@@ -1,0 +1,36 @@
+name: Python tests
+
+# Controls when the workflow will run
+on:
+  # Triggers the workflow on push or pull request events but only for the main branch
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout x1 repository
+        uses: actions/checkout@v3
+
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install test dependencies
+        run: |
+          pip install .[unit_tests]
+
+      - name: Run static analysis
+        run: |
+          pre-commit run --show-diff-on-failure --color=always --all-files
+
+      - name: Run unit tests
+        run: |
+          coverage run --branch -m pytest src/x1 -vv
+          coverage report

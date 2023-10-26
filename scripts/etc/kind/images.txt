@@ -15,10 +15,9 @@ kuberay/operator:v0.4.0
 kubernetesui/dashboard:v2.6.0
 minio/console:v0.20.3
 minio/operator:v4.5.1
-pbchekin/x1-jupyterhub:0.0.10
-pbchekin/x1-prefect:2.8.5-python3.9-20230309
-pbchekin/x1-prefect:2.9.0-python3.9-20230404
-pbchekin/x1-ray:2.3.0-py39-20230309
-prefecthq/prefect:2.9.0-python3.9
+pbchekin/x1-jupyterhub:0.0.17
+pbchekin/x1-prefect:2.13.0-python3.9-20231010
+pbchekin/x1-ray:2.6.1-py39-20230803
+prefecthq/prefect:2.13.0-python3.9
 quay.io/minio/minio:RELEASE.2022-05-26T05-48-41Z
 registry.k8s.io/ingress-nginx/controller:v1.4.0@sha256:34ee929b111ffc7aa426ffd409af44da48e5a0eea1eb2207994d9e0c0882d143

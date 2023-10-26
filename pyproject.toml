@@ -1,5 +1,5 @@
 [project]
-name = "x1-icl"
+name = "icl-x1"
 version = "0.0.1"
 description = "API driven Machine Learning suite"
 license = {file = "LICENSE"}
@@ -10,24 +10,49 @@ authors = [
 ]
 requires-python = ">=3.8"
 dependencies = [
+    "boto3",
     "click",
+    "docker",
+    "dynaconf",
+    "fsspec>=2023.9.2",
+    # FIXME: Prefect does not compatible with Pydantic v2, see https://github.com/PrefectHQ/prefect/pull/10144
+    "pydantic<2.0.0",
+    "python-docker",
+    "s3fs>=2023.9.2",
+    "prefect==2.13.0",
+    "kubernetes",
+    # FIXME: Temporary workaround for Prefect 2.13.0, see https://github.com/PrefectHQ/prefect/issues/10567
+    "anyio>=3.4.0,<4.0.0",
+    "asyncio",
 ]
+
+[project.scripts]
+x1 = "x1.cli.main:main"
 
 [project.optional-dependencies]
 build = [
     "build",
     "twine",
 ]
-test = [
-    "botocore-stubs",
-    "boto3-stubs[ec2]",
+unit_tests = [
     "build",
-    "mypy",
     "pytest",
     "pytest-asyncio",
     "pre-commit",
-    "pytest-asyncio",
     "coverage",
+]
+integration_tests = [
+    "minio",
+    "pytest",
+    "pytest-asyncio",
+    "pytest-depends==1.0.1",
+    "pytest-xdist",
+    "ray==2.6.1",
+]
+benchmarks = [
+    "pyyaml",
+    "jinja2",
+    "kubeflow-mpi @ git+https://github.com/kubeflow/mpi-operator#subdirectory=sdk/python/v2beta1",
 ]
 
 [build-system]
@@ -37,6 +62,7 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools.packages.find]
 where = ["src"]
 include = ["x1*"]
+exclude = ["x1.tests.*"]
 namespaces = false
 
 [tool.black]
@@ -55,13 +81,18 @@ quiet = false
 color = true
 # TODO: increase percentage gradually
 fail-under = 62
-# Exclude tests tests
-exclude = []
+# Exclude tests
+exclude = ["src/x1/tests", "scripts/tests", "tests", "build"]
 
 [tool.bandit]
-# exclude_dirs = []
+# ignore unit and integration tests, since they use "assert"
+exclude_dirs = ["src/x1/tests", "scripts/tests", "tests", "build"]
 # tests = []
-# skips = []
+skips = [
+    "B404", # consider possible security implications associated with the subprocess module.
+    "B603", # subprocess call - check for execution of untrusted input.
+    "B104", # possible binding to all interfaces
+]
 
 [tool.pylint.main]
 # Analyse import fallback blocks. This can be used to support both Python 2 and 3
@@ -103,12 +134,12 @@ ignore = ["third_party"]
 # ignore-list. The regex matches against paths and can be in Posix or Windows
 # format. Because '\' represents the directory delimiter on Windows systems, it
 # can't be used as an escape character.
-ignore-paths = []
+ignore-paths = ["examples", "tests"]
 
 # Files or directories matching the regular expression patterns are skipped. The
 # regex matches against base names, not paths. The default value ignores Emacs
 # file locks
-ignore-patterns = []
+ignore-patterns = ["test_*"]
 
 # List of module names for which member attributes should not be checked (useful
 # for modules/projects where namespaces are manipulated during runtime and thus
@@ -329,7 +360,7 @@ min-public-methods = 2
 
 [tool.pylint.exceptions]
 # Exceptions that will emit a warning when caught.
-overgeneral-exceptions = ["StandardError", "Exception", "BaseException"]
+overgeneral-exceptions = ["builtins.StandardError", "builtins.Exception", "builtins.BaseException"]
 
 [tool.pylint.format]
 # Expected format of line ending, e.g. empty (any line ending), LF or CRLF.
