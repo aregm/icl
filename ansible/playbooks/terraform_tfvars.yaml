@@ -1,0 +1,8 @@
+- name: Generate terraform.tfvars file
+  hosts: localhost
+  connection: local
+  gather_facts: no
+  tasks:
+    - copy:
+        dest: "{{ lookup('env', 'HOME') }}/generated/terraform.tfvars"
+        content: "{{ terraform_tfvars | default('') }}"

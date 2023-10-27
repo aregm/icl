@@ -1,0 +1,14 @@
+- name: Add Docker rpm repository
+  become: true
+  command: dnf config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+  args:
+    creates: /etc/yum.repos.d/docker-ce.repo
+
+- name: Install jumphost tools
+  become: true
+  dnf:
+    name:
+      - jq
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io

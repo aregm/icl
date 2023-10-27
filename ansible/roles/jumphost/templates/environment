@@ -1,0 +1,15 @@
+X1_INGRESS_DOMAIN="{{ ingress_domain }}"
+INGRESS_IP="{{ ansible_default_ipv4.address }}"
+
+{% if ray_endpoint is defined %}
+X1_RAY_ENDPOINT="{{ ray_endpoint }}"
+{% endif %}
+
+{% if control_node_image is defined %}
+CONTROL_NODE_IMAGE="{{ control_node_image }}"
+{% endif %}
+
+{% if docker_image_repo is defined %}
+# Required for kind.sh to use DockerHub mirror.
+dockerhub_proxy="{{ docker_image_repo }}"
+{% endif %}

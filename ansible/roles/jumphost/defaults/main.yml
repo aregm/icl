@@ -1,0 +1,2 @@
+# use git archive instead of copying files one by one
+use_git_archive: yes

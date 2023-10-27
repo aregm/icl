@@ -12,8 +12,8 @@ cd ~/kubespray
 ansible-playbook --inventory ~/generated/kubespray-inventory/inventory.yaml --become cluster.yml
 
 cd ~/x1
-ansible-playbook --inventory ~/generated/kubespray-inventory/inventory.yaml jumphost_playbooks/fetch-kubeconfig.yaml
-ansible-playbook --inventory ~/generated/kubespray-inventory/inventory.yaml jumphost_playbooks/terraform_tfvars.yaml
+ansible-playbook --inventory ~/generated/kubespray-inventory/inventory.yaml ansible/playbooks/fetch-kubeconfig.yaml
+ansible-playbook --inventory ~/generated/kubespray-inventory/inventory.yaml ansible/playbooks/terraform_tfvars.yaml
 
 cd ~/x1/terraform/x1
 terraform init -input=false

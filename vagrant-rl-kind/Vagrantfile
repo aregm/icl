@@ -1,0 +1,43 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure(2) do |config|
+  if Vagrant.has_plugin?("vagrant-proxyconf")
+    config.proxy.http = ENV.fetch('http_proxy', false)
+    config.proxy.https = ENV.fetch('https_proxy', false)
+    config.proxy.no_proxy = ENV.fetch('no_proxy', false)
+  end
+
+  libvirt_default_prefix = ENV.fetch("X1_LIBVIRT_DEFAULT_PREFIX", ENV.fetch('USER', "nouser"))
+
+  config.vm.box = "rockylinux/9"
+
+  config.vm.provider "libvirt" do |lv|
+    lv.driver = "kvm"
+    lv.storage_pool_name = "images"
+    lv.default_prefix = "#{libvirt_default_prefix}-"
+  end
+
+  config.vm.define "jumphost" do |jumphost|
+    jumphost.vm.hostname = "jumphost"
+    jumphost.vm.provider "libvirt" do |libvirt|
+      libvirt.memory = "16384"
+      libvirt.cpus = 8
+      # Rocky Linux box is 8GB, expanding to 50GB.
+      libvirt.machine_virtual_size = 50
+    end
+
+    # Expanding /dev/vda5, this works only for the specific box!
+    jumphost.vm.provision "shell", inline: <<-SHELL
+      dnf install -y cloud-utils-growpart
+      growpart /dev/vda 5
+      xfs_growfs /dev/vda5
+    SHELL
+
+    jumphost.vm.provision "ansible" do |ansible|
+      ansible.playbook = "jumphost.yaml"
+      # Pass additional variables, such as `docker_image_repo` to the playbook
+      ansible.extra_vars = ENV.fetch("X1_K8S_EXTRA_SETTINGS_FILE", "/dev/null")
+    end
+  end
+end

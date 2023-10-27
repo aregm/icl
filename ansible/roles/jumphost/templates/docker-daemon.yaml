@@ -1,0 +1,10 @@
+{% if docker_image_repo is defined %}
+registry-mirrors:
+  - "https://{{ docker_image_repo }}"
+{% endif %}
+{% if containerd_insecure_registries is defined %}
+insecure-registries:
+{% for value in containerd_insecure_registries.values() %}
+  - "{{ value | urlsplit('netloc') }}"
+{% endfor %}
+{% endif %}

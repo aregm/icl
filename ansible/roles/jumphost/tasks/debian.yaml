@@ -1,0 +1,32 @@
+- name: Install pip and packages for additional repositories
+  become: true
+  apt:
+    name:
+      - apt-transport-https
+      - ca-certificates
+      - python3
+      - python3-pip
+    state: present
+    update_cache: true
+
+- name: Add an apt signing key for docker apt repository
+  become: true
+  apt_key:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    state: present
+
+- name: Add docker apt repository
+  become: true
+  apt_repository:
+    repo: deb https://download.docker.com/linux/ubuntu jammy stable
+    state: present
+
+- name: Install jumphost tools
+  become: true
+  apt:
+    name:
+      - jq
+      - containerd.io
+      - docker-ce
+      - docker-ce-cli
+    state: present
