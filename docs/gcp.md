@@ -66,7 +66,7 @@ Note that the proxy is only used by the script itself, it is not used in the clu
 ./scripts/deploy/gke.sh --console
 
 # On control node execute
-export INGRESS_DOMAIN=localtest.me
-export RAY_ENDPOINT=ray-api.localtest.me:80
-./x1/scripts/ccn/test.sh
+export X1_INGRESS_DOMAIN=localtest.me
+export X1_RAY_ENDPOINT=ray-api.localtest.me:80
+./scripts/ccn/test.sh
 ```

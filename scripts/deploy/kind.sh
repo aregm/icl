@@ -13,11 +13,12 @@ fi
 : ${KIND_VERSION:="v0.20.0"}
 : ${CLUSTER_NAME:="x1"}
 : ${REDSOCKS_SKIP:="0.0.0.0/8 10.0.0.0/8 100.64.0.0/10 127.0.0.0/8 169.254.0.0/16 172.16.0.0/12 192.168.0.0/16 198.18.0.0/15 224.0.0.0/4 240.0.0.0/4"}
-: ${INGRESS_DOMAIN:="localtest.me"}
 : ${X1_EXTERNALDNS_ENABLED:="false"}
 : ${CONTROL_NODE_IMAGE:=pbchekin/ccn:0.0.1}
 : ${KUBECONFIG:="$HOME/.kube/config"}
 
+export X1_INGRESS_DOMAIN="localtest.me"
+export X1_RAY_ENDPOINT="localtest.me:10001"
 export KUBECONFIG
 
 # https://stackoverflow.com/questions/59895/getting-the-source-directory-of-a-bash-script-from-within
@@ -206,7 +207,7 @@ redsocks {
 function with_corefile() {
   CONTROl_PLANE_IP=$(docker inspect --format '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' "$CLUSTER_NAME-control-plane")
   pass "Cluster IP: $CONTROl_PLANE_IP"
-  control_node "python -m scripts.kubernetes.coredns $CONTROl_PLANE_IP $INGRESS_DOMAIN"
+  control_node "python -m scripts.kubernetes.coredns $CONTROl_PLANE_IP $X1_INGRESS_DOMAIN"
 }
 
 if [[ " $@ " =~ " --help " ]]; then
@@ -230,8 +231,14 @@ EOF
 fi
 
 if [[ " $@ " =~ " --console " ]]; then
-  control_node
-  exit 0
+  shift
+  _rest_args="$@"
+  cmd="bash"
+  if [[ -n "$_rest_args" ]]; then
+    cmd="$_rest_args"
+  fi
+  control_node "$cmd"
+  exit $?
 fi
 
 if [[ " $@ " =~ " --check " ]]; then
@@ -286,8 +293,8 @@ terraform_extra_args=(
   -var local_path_enabled=false         # Kind cluster has local-path-provisioner, another provisioner is not required
   -var default_storage_class="standard" # Kind cluster has local-path-provisioner, it defines "standard" StorageClass
   -var prometheus_enabled=false         # Disable prometheus stack to make footprint smaller
-  -var ingress_domain="$INGRESS_DOMAIN"
-  -var externaldns_enabled="${X1_EXTERNALDNS_ENABLED}"
+  -var ingress_domain="$X1_INGRESS_DOMAIN"
+  -var externaldns_enabled="$X1_EXTERNALDNS_ENABLED"
 )
 
 if [[ " $@ " =~ " --with-clearml " ]]; then
@@ -303,7 +310,7 @@ if [[ " $@ " =~ " --with-cert-manager " ]]; then
 fi
 
 with_corefile
-control_node "terraform -chdir=x1/terraform/x1 init -upgrade -input=false"
-control_node "terraform -chdir=x1/terraform/x1 apply -input=false -auto-approve ${terraform_extra_args[*]}"
+control_node "terraform -chdir=terraform/x1 init -upgrade -input=false"
+control_node "terraform -chdir=terraform/x1 apply -input=false -auto-approve ${terraform_extra_args[*]}"
 
 echo "To delete the cluster run '$0 --delete'"

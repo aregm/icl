@@ -1,0 +1,35 @@
+name: Deploy X1 with kind
+
+# Controls when the workflow will run
+on:
+  # Triggers the workflow on push or pull request events but only for the main branch
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout x1 repository
+        uses: actions/checkout@v4
+
+      - name: Deploy X1 with kind
+        run: |
+          ./scripts/deploy/kind.sh
+
+      - name: Run tests
+        run: |
+          ./scripts/deploy/kind.sh --console ./scripts/ccn/test.sh
+
+      - name: Upload logs
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: logs
+          path: logs
+          if-no-files-found: ignore

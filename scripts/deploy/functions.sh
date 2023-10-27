@@ -21,6 +21,7 @@ function control_node() {
     --volume $X1_ROOT:/work/x1
     --user "$(id -u):$(id -g)"
     --env USER
+    --workdir /work/x1
   )
 
   if [[ -f $KUBECONFIG ]]; then
@@ -117,7 +118,7 @@ function control_node() {
 
 function deploy_x1() {
   control_node "\
-    cd x1/terraform/x1 \
+    cd terraform/x1 \
     && terraform init -upgrade -migrate-state -input=false \
     && terraform apply -input=false -auto-approve $(x1_terraform_args)
   "
@@ -126,7 +127,7 @@ function deploy_x1() {
 # Delete X1 workloads
 function delete_x1() {
   control_node "\
-  cd x1/terraform/x1 \
+  cd terraform/x1 \
   && terraform init -upgrade -migrate-state -input=false \
   && terraform destroy -input=false -auto-approve $(x1_terraform_args) || true"
 }

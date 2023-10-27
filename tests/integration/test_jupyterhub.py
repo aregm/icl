@@ -132,7 +132,7 @@ def test_notebook_in_jupyter_session(address):
         core_v1,
         jupyter_test_pod.metadata.name,
         JUPYTERHUB_NAMESPACE,
-        'test/integration/data/test_notebook.ipynb',
+        'data/test_notebook.ipynb',
         '/tmp/test_notebook.ipynb',
     )
 

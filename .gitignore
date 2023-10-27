@@ -27,3 +27,6 @@ build/
 
 # Ignore files created by Prefect in unit tests
 .prefectignore
+
+# IDEs
+.idea/

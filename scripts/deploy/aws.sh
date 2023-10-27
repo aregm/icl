@@ -70,7 +70,7 @@ function x1_terraform_args() {
 
 
 function deploy_eks() {
-  control_node "terraform -chdir=x1/$WORKSPACE/terraform/aws/ apply -input=false -auto-approve"
+  control_node "terraform -chdir=$WORKSPACE/terraform/aws/ apply -input=false -auto-approve"
 }
 
 function update_config() {
@@ -79,7 +79,7 @@ function update_config() {
 
 # Delete cluster
 function delete_eks() {
-  control_node "terraform -chdir=x1/$WORKSPACE/terraform/aws/ destroy -input=false -auto-approve"
+  control_node "terraform -chdir=$WORKSPACE/terraform/aws/ destroy -input=false -auto-approve"
 }
 
 # Delete workloads, cluster and workspace
@@ -96,9 +96,10 @@ function render_workspace() {
   mkdir -p "$X1_ROOT/$WORKSPACE/terraform/aws"
   touch "$KUBECONFIG"
   control_node "\
-    cp -r /work/x1/terraform/aws/* /work/x1/$WORKSPACE/terraform/aws/ \
+    export PYTHON_PATH=/work/x1/src \
+    && cp -r /work/x1/terraform/aws/* /work/x1/$WORKSPACE/terraform/aws/ \
     && ( python -m x1.deploy.aws.main print-vpc-tfvars > /work/x1/$WORKSPACE/terraform/aws/terraform.tfvars ) \
-    && terraform -chdir=x1/$WORKSPACE/terraform/aws/ init -input=false
+    && terraform -chdir=$WORKSPACE/terraform/aws/ init -input=false
   "
   render_eks_terraform_tfvars
 }

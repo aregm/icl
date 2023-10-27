@@ -113,13 +113,13 @@ function check_gcp_auth()
 # Deploy cluster
 function deploy_gke() {
   check_gcp_auth
-  control_node "terraform -chdir=x1/$WORKSPACE/terraform/gcp/ apply -input=false -auto-approve"
+  control_node "terraform -chdir=$WORKSPACE/terraform/gcp/ apply -input=false -auto-approve"
 }
 
 # Delete cluster
 function delete_gke() {
   check_gcp_auth
-  control_node "terraform -chdir=x1/$WORKSPACE/terraform/gcp/ destroy -input=false -auto-approve"
+  control_node "terraform -chdir=$WORKSPACE/terraform/gcp/ destroy -input=false -auto-approve"
 }
 
 function update_config() {
@@ -144,7 +144,7 @@ function render_workspace() {
 EOF
   fi
   control_node "\
-    terraform -chdir=x1/$WORKSPACE/terraform/gcp/ init -upgrade -input=false
+    terraform -chdir=$WORKSPACE/terraform/gcp/ init -upgrade -input=false
   "
 }
 
