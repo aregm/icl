@@ -187,7 +187,7 @@ module "intel-gpu" {
 }
 
 module "x1-hub" {
-  source = "../modules/x1-hub"
+  source = "../modules/icl-hub"
   namespace_labels = var.namespace_labels
   ingress_domain = var.ingress_domain
 }

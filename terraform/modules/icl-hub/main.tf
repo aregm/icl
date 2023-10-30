@@ -1,14 +1,14 @@
-resource "kubernetes_namespace" "x1-hub" {
+resource "kubernetes_namespace" "icl-hub" {
   metadata {
-    name = "x1-hub"
+    name = "icl-hub"
     labels = var.namespace_labels
   }
 }
 
 resource "kubernetes_config_map" "config" {
   metadata {
-    name = "x1-hub"
-    namespace = kubernetes_namespace.x1-hub.id
+    name = "icl-hub"
+    namespace = kubernetes_namespace.icl-hub.id
     labels = {
       "app.kubernetes.io/managed-by" = "terraform"
     }
@@ -20,10 +20,10 @@ resource "kubernetes_config_map" "config" {
   }
 }
 
-resource "kubernetes_deployment" "x1-hub" {
+resource "kubernetes_deployment" "icl-hub" {
   metadata {
     name = "x1-hub"
-    namespace = kubernetes_namespace.x1-hub.id
+    namespace = kubernetes_namespace.icl-hub.id
     labels = {
       "app.kubernetes.io/managed-by" = "terraform"
     }
@@ -32,18 +32,18 @@ resource "kubernetes_deployment" "x1-hub" {
     replicas = 1
     selector {
       match_labels = {
-        "app.kubernetes.io/name" = "x1-hub"
+        "app.kubernetes.io/name" = "icl-hub"
       }
     }
     template {
       metadata {
         labels = {
-          "app.kubernetes.io/name" = "x1-hub"
+          "app.kubernetes.io/name" = "icl-hub"
         }
       }
       spec {
         container {
-          name = "x1-hub"
+          name = "icl-hub"
           image = "pbchekin/x1-hub:0.0.5"
           command = [
             "python", "-m", "x1.hub.main", "server", "start"
@@ -77,10 +77,10 @@ resource "kubernetes_deployment" "x1-hub" {
   }
 }
 
-resource "kubernetes_service" "x1-hub" {
+resource "kubernetes_service" "icl-hub" {
   metadata {
-    name = "x1-hub"
-    namespace = kubernetes_namespace.x1-hub.id
+    name = "icl-hub"
+    namespace = kubernetes_namespace.icl-hub.id
     labels = {
       "app.kubernetes.io/managed-by" = "terraform"
     }
@@ -94,15 +94,15 @@ resource "kubernetes_service" "x1-hub" {
       protocol = "TCP"
     }
     selector = {
-      "app.kubernetes.io/name" = "x1-hub"
+      "app.kubernetes.io/name" = "icl-hub"
     }
   }
 }
 
-resource "kubernetes_ingress_v1" "x1-hub" {
+resource "kubernetes_ingress_v1" "icl-hub" {
   metadata {
-    name = "x1-hub"
-    namespace = kubernetes_namespace.x1-hub.id
+    name = "icl-hub"
+    namespace = kubernetes_namespace.icl-hub.id
   }
   spec {
     rule {
@@ -112,7 +112,7 @@ resource "kubernetes_ingress_v1" "x1-hub" {
           path = "/"
           backend {
             service {
-              name = "x1-hub"
+              name = "icl-hub"
               port {
                 name = "http"
               }
@@ -127,13 +127,13 @@ resource "kubernetes_ingress_v1" "x1-hub" {
 resource "kubernetes_service_account" "admin" {
   metadata {
     name = "admin"
-    namespace = kubernetes_namespace.x1-hub.id
+    namespace = kubernetes_namespace.icl-hub.id
   }
 }
 
 resource "kubernetes_cluster_role_binding" "admin" {
   metadata {
-    name = "x1-hub-admin"
+    name = "icl-hub-admin"
   }
   role_ref {
     api_group = "rbac.authorization.k8s.io"
@@ -143,6 +143,6 @@ resource "kubernetes_cluster_role_binding" "admin" {
   subject {
     kind = "ServiceAccount"
     name = "admin"
-    namespace = kubernetes_namespace.x1-hub.id
+    namespace = kubernetes_namespace.icl-hub.id
   }
 }
