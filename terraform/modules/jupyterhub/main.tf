@@ -1,6 +1,6 @@
 locals {
   jupyterhub_default_profile = {
-    display_name = "X1"
+    display_name = "Default"
     description = "Prefect, Modin, Ray"
     kubespawner_override = {
       image = var.jupyterhub_singleuser_default_image
@@ -14,8 +14,8 @@ locals {
   }
 
   jupyterhub_gpu_profile = {
-    display_name = "X1 GPU"
-    description = "Prefect, Modin, Ray"
+    display_name = "GPU"
+    description = "GPU with user mode dependencies"
     kubespawner_override = {
       image = var.jupyterhub_gpu_profile_image
       # required for sudo
@@ -30,8 +30,8 @@ locals {
   }
 
   jupyterhub_gpu_admin_profile = {
-    display_name = "X1 GPU with SYS_ADMIN, SYS_PTRACE"
-    description = "Prefect, Modin, Ray"
+    display_name = "GPU with SYS_ADMIN, SYS_PTRACE"
+    description = "GPU with SYS_ADMIN, SYS_PTRACE, and user mode dependencies"
     kubespawner_override = {
       image = var.jupyterhub_gpu_profile_image
       # required for sudo
@@ -54,14 +54,6 @@ locals {
     }
   }
 
-  jupyterhub_oneapi_profile = {
-    display_name = "X1 oneAPI"
-    description = "Prefect, Modin, Ray with oneAPI Base, HPC, AI Toolkits"
-    kubespawner_override = {
-      image = var.jupyterhub_oneapi_profile_image
-    }
-  }
-
   # https://z2jh.jupyter.org/en/latest/resources/reference.html#singleuser-profilelist
   jupyterhub_profiles = concat(
     [
@@ -69,7 +61,6 @@ locals {
     ],
     var.jupyterhub_gpu_profile_enabled ? [local.jupyterhub_gpu_profile] : [],
     var.jupyterhub_gpu_profile_enabled ? [local.jupyterhub_gpu_admin_profile] : [],
-    var.jupyterhub_oneapi_profile_enabled ? [local.jupyterhub_oneapi_profile] : [],
   )
 
   jupyterhub_storage = {
@@ -98,7 +89,7 @@ locals {
 
   # https://z2jh.jupyter.org/en/latest/resources/reference.html#singleuser-extrafiles
   extra_files = {
-    x1settings = {
+    settings = {
       mountPath = "/etc/x1/settings.yaml"
       data = merge(
         {

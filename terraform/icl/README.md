@@ -1,4 +1,4 @@
-## Terraform configuration for X1 Kubernetes workloads
+## Terraform configuration for ICL Kubernetes workloads
 
 ## Prerequisites
 

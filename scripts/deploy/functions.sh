@@ -2,14 +2,14 @@
 
 : ${SCRIPT_DIR:=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )}
 
-: ${CONTROL_NODE_IMAGE:=pbchekin/ccn:0.0.2}
-: ${PROXY_IMAGE:=pbchekin/x1-proxy:0.0.1}
+: ${CONTROL_NODE_IMAGE:=pbchekin/icl-ccn:0.0.1}
+: ${PROXY_IMAGE:=pbchekin/icl-proxy:0.0.1}
 
-X1_ROOT="$( cd $SCRIPT_DIR && cd ../.. && pwd)"
+PROJECT_ROOT="$( cd $SCRIPT_DIR && cd ../.. && pwd)"
 
 function proxy_container_status() {
-  # Returns "running" if container x1-proxy is running, empty string
-  docker container inspect --format '{{.State.Status}}' x1-proxy 2>/dev/null || echo ""
+  # Returns "running" if container icl-proxy is running, empty string
+  docker container inspect --format '{{.State.Status}}' icl-proxy 2>/dev/null || echo ""
 }
 
 # Starts the control code in a ephemeral container.
@@ -18,7 +18,7 @@ function proxy_container_status() {
 function control_node() {
   local docker_cmd=(
     --rm
-    --volume $X1_ROOT:/work/x1
+    --volume $PROJECT_ROOT:/work/x1
     --user "$(id -u):$(id -g)"
     --env USER
     --workdir /work/x1
@@ -118,7 +118,7 @@ function control_node() {
 
 function deploy_x1() {
   control_node "\
-    cd terraform/x1 \
+    cd terraform/icl \
     && terraform init -upgrade -migrate-state -input=false \
     && terraform apply -input=false -auto-approve $(x1_terraform_args)
   "
@@ -127,7 +127,7 @@ function deploy_x1() {
 # Delete X1 workloads
 function delete_x1() {
   control_node "\
-  cd terraform/x1 \
+  cd terraform/icl \
   && terraform init -upgrade -migrate-state -input=false \
   && terraform destroy -input=false -auto-approve $(x1_terraform_args) || true"
 }

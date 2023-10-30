@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Deploys X1 cluster to GCP
+# Deploys ICL cluster to GCP
 
 set -e
 
@@ -19,7 +19,7 @@ set -e
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
 source "$SCRIPT_DIR/functions.sh"
-# workspace is relative to X1_ROOT
+# workspace is relative to PROJECT_ROOT
 WORKSPACE="workspace/$X1_CLUSTER_NAME"
 
 function show_help() {
@@ -178,7 +178,7 @@ then
 fi
 
 # This script is designed to work in the project root
-cd "$X1_ROOT"
+cd "$PROJECT_ROOT"
 
 if [[ " $@ " =~ " --help " ]]; then
   show_help

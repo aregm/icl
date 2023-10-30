@@ -14,12 +14,8 @@ dist/
 *.egg-info/
 
 workspace/
-terraform/x1/.terraform*
-terraform/x1/terraform.tfstate*
-terraform/.terraform*
-terraform/*.tfstate*
-terraform/gcp/.terraform*
-terraform/gcp/*.tfstate*
+terraform/**/.terraform*
+terraform/**/terraform.tfstate*
 
 logs/
 misc/

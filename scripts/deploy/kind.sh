@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Deploys X1 cluster using kind, see https://kind.sigs.k8s.io/.
+# Deploys ICL cluster using kind, see https://kind.sigs.k8s.io/.
 # Loads environment variables from .x1/environment file in the current directory, if exists.
 
 set -e
@@ -140,11 +140,11 @@ function cluster_node() {
 
 
 function pull_images() {
-  cat "$X1_ROOT/scripts/etc/kind/images.txt" | xargs -P4 -n1 docker pull -q
+  xargs -P4 -n1 docker pull -q < "$PROJECT_ROOT/scripts/etc/kind/images.txt"
 }
 
 function load_images() {
-  cat "$X1_ROOT/scripts/etc/kind/images.txt" | xargs -P4 -n1 kind --name $CLUSTER_NAME load docker-image
+  xargs -P4 -n1 kind --name $CLUSTER_NAME load docker-image < "$PROJECT_ROOT/scripts/etc/kind/images.txt"
 }
 
 function with_proxy() {
@@ -247,7 +247,7 @@ if [[ " $@ " =~ " --check " ]]; then
 fi
 
 if [[ " $@ " =~ " --list-images " ]]; then
-  kubectl get pods --all-namespaces -o json | jq -r '.items[].spec.containers[].image' | sort | uniq | tee "$X1_ROOT/scripts/etc/kind/images.txt"
+  kubectl get pods --all-namespaces -o json | jq -r '.items[].spec.containers[].image' | sort | uniq | tee "$PROJECT_ROOT/scripts/etc/kind/images.txt"
   exit 0
 fi
 
@@ -310,7 +310,7 @@ if [[ " $@ " =~ " --with-cert-manager " ]]; then
 fi
 
 with_corefile
-control_node "terraform -chdir=terraform/x1 init -upgrade -input=false"
-control_node "terraform -chdir=terraform/x1 apply -input=false -auto-approve ${terraform_extra_args[*]}"
+control_node "terraform -chdir=terraform/icl init -upgrade -input=false"
+control_node "terraform -chdir=terraform/icl apply -input=false -auto-approve ${terraform_extra_args[*]}"
 
 echo "To delete the cluster run '$0 --delete'"

@@ -209,18 +209,6 @@ variable "jupyterhub_singleuser_default_image" {
   type = string
 }
 
-variable "jupyterhub_oneapi_profile_enabled" {
-  description = "Enable JupyterHub oneAPI profile"
-  type = bool
-  default = false
-}
-
-variable "jupyterhub_oneapi_profile_image" {
-  description = "Docker image for JupyterHub oneAPI profile"
-  type = string
-  default = "pbchekin/jupyterhub-oneapi:1.2.0-20230309"
-}
-
 variable "jupyterhub_gpu_profile_image" {
   description = "Docker image for JupyterHub GPU profile"
   type = string

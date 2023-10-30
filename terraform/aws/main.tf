@@ -53,7 +53,7 @@ module "eks" {
   }
 
   tags = {
-    "X1/Cluster" = var.cluster_name
+    "ICL/Cluster" = var.cluster_name
     ManagedBy = "Terraform"
   }
 }
@@ -73,7 +73,7 @@ module "ebs_csi_irsa_role" {
   }
 
   tags = {
-    "X1/Cluster" = var.cluster_name
+    "ICL/Cluster" = var.cluster_name
     ManagedBy = "Terraform"
   }
 }

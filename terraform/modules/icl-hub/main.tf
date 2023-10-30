@@ -22,7 +22,7 @@ resource "kubernetes_config_map" "config" {
 
 resource "kubernetes_deployment" "icl-hub" {
   metadata {
-    name = "x1-hub"
+    name = "icl-hub"
     namespace = kubernetes_namespace.icl-hub.id
     labels = {
       "app.kubernetes.io/managed-by" = "terraform"

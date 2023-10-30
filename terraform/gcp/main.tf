@@ -9,20 +9,20 @@ provider "kubernetes" {
 }
 
 provider "google" {
-  project = "${var.gcp_project}"
-  #region  = "${var.gcp_region}"
-  zone    = "${var.gcp_zone}"
+  project = var.gcp_project
+  #region  = var.gcp_region
+  zone    = var.gcp_zone
 }
 
-module "gcp-x1-cluster" {
-  source = "./modules/x1-cluster"
+module "icl-cluster" {
+  source = "./modules/icl-cluster"
   cluster_name = var.cluster_name
   node_version = var.node_version
 }
 
 module "firewall-rule-allow-tcp-8443" {
-  depends_on = [ module.gcp-x1-cluster ]
+  depends_on = [ module.icl-cluster ]
   source = "./modules/firewall-rule-allow-tcp-8443"
   cluster_name = var.cluster_name
-  network = module.gcp-x1-cluster.network
+  network = module.icl-cluster.network
 }

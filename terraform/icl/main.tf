@@ -10,7 +10,7 @@ provider "helm" {
 
 terraform {
   backend "kubernetes" {
-    secret_suffix = "x1"
+    secret_suffix = "icl"
     namespace = "kube-system"
   }
 }
@@ -114,8 +114,6 @@ module "jupyterhub" {
   jupyterhub_pre_puller_enabled = var.jupyterhub_pre_puller_enabled
   jupyterhub_singleuser_volume_size = var.jupyterhub_singleuser_volume_size
   jupyterhub_singleuser_default_image = var.jupyterhub_singleuser_default_image
-  jupyterhub_oneapi_profile_enabled = var.jupyterhub_oneapi_profile_enabled
-  jupyterhub_oneapi_profile_image = var.jupyterhub_oneapi_profile_image
   jupyterhub_gpu_profile_enabled = var.intel_gpu_enabled
   jupyterhub_gpu_profile_image = var.jupyterhub_gpu_profile_image
   jupyterhub_cluster_admin_enabled = var.jupyterhub_cluster_admin_enabled
@@ -186,7 +184,7 @@ module "intel-gpu" {
   source = "../modules/intel-gpu"
 }
 
-module "x1-hub" {
+module "icl-hub" {
   source = "../modules/icl-hub"
   namespace_labels = var.namespace_labels
   ingress_domain = var.ingress_domain

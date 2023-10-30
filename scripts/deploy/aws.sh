@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Deploys X1 cluster to AWS
+# Deploys ICL cluster to AWS
 
 set -e
 
@@ -16,9 +16,9 @@ SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 source "$SCRIPT_DIR/functions.sh"
 
 export AWS_DEFAULT_REGION
-# workspace is relative to X1_ROOT
+# workspace is relative to PROJECT_ROOT
 WORKSPACE="workspace/$X1_CLUSTER_NAME"
-KUBECONFIG="$X1_ROOT/$WORKSPACE/kubeconfig"
+KUBECONFIG="$PROJECT_ROOT/$WORKSPACE/kubeconfig"
 
 function show_help() {
   cat <<EOF
@@ -93,7 +93,7 @@ function delete_cluster() {
 # Create workspace
 # TODO: move to x1.deploy.aws
 function render_workspace() {
-  mkdir -p "$X1_ROOT/$WORKSPACE/terraform/aws"
+  mkdir -p "$PROJECT_ROOT/$WORKSPACE/terraform/aws"
   touch "$KUBECONFIG"
   control_node "\
     export PYTHON_PATH=/work/x1/src \
@@ -105,7 +105,7 @@ function render_workspace() {
 }
 
 # This script is designed to work in the project root
-cd "$X1_ROOT"
+cd "$PROJECT_ROOT"
 
 if [[ " $@ " =~ " --help " ]]; then
   show_help

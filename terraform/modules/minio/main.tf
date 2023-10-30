@@ -49,7 +49,7 @@ resource "kubernetes_ingress_v1" "endpoint" {
   }
 }
 
-resource "kubernetes_secret" "x1miniouser" {
+resource "kubernetes_secret" "default_user" {
   depends_on = [helm_release.operator]
   metadata {
     name = "x1miniouser"
@@ -63,7 +63,7 @@ resource "kubernetes_secret" "x1miniouser" {
 
 # https://github.com/minio/operator/tree/master/helm/tenant
 resource "helm_release" "minio_ha" {
-  depends_on = [helm_release.operator, kubernetes_secret.x1miniouser]
+  depends_on = [helm_release.operator, kubernetes_secret.default_user]
   count = var.minio_ha_enabled ? 1 : 0
   name = "minio"
   namespace = "minio"
@@ -99,7 +99,7 @@ resource "helm_release" "minio_ha" {
 
 # https://github.com/minio/operator/tree/master/helm/tenant
 resource "helm_release" "minio" {
-  depends_on = [helm_release.operator, kubernetes_secret.x1miniouser]
+  depends_on = [helm_release.operator, kubernetes_secret.default_user]
   count = var.minio_ha_enabled ? 0 : 1
   name = "minio"
   namespace = "minio"

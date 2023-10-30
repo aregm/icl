@@ -1,13 +1,13 @@
 # Functions used by other scripts
 
-: ${CONTROL_NODE_IMAGE:=pbchekin/ccn-kubespray:0.0.2}
+: ${CONTROL_NODE_IMAGE:=pbchekin/icl-ccn-kubespray:0.0.1}
 : ${COREDNS_IMAGE:=registry.k8s.io/coredns/coredns:v1.8.6}
 : ${NGINX_IMAGE:=nginx:stable}
 : ${ARTIFACTS_DIR:=$HOME/generated}
 : ${X1_INGRESS_DOMAIN:=localtest.me}
 : ${INGRESS_IP:=127.0.0.1}
 
-# Load x1/environment file in the current directory, if exists. This file contains custom settings
+# Load .x1/environment file in the current directory, if exists. This file contains custom settings
 # for this environment, such as ingress domain and ingress IP address.
 if [[ -f .x1/environment ]]; then
   source .x1/environment

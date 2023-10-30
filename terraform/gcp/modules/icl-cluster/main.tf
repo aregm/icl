@@ -1,4 +1,4 @@
-resource "google_container_cluster" "x1-cluster" {
+resource "google_container_cluster" "cluster" {
   name = var.cluster_name
   # count per zone
   initial_node_count = 1
@@ -12,9 +12,9 @@ resource "google_container_cluster" "x1-cluster" {
 }
 
 output "network" {
-  value = google_container_cluster.x1-cluster.network
+  value = google_container_cluster.cluster.network
 }
 
 output "cluster_name" {
-    value = google_container_cluster.x1-cluster.name
+    value = google_container_cluster.cluster.name
 }
