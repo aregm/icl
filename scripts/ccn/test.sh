@@ -28,6 +28,7 @@ cd "$PROJECT_DIR"
 export PREFECT_API_URL
 export PYTHONUNBUFFERED=1
 export PATH=$HOME/.local/bin:$PATH
+export PYTHONPATH="$PROJECT_DIR/src:$PROJECT_DIR/tests/smoke:$PROJECT_DIR/tests/integration"
 
 function dependencies() {
   cd "$PROJECT_DIR"

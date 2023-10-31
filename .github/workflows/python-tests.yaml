@@ -32,5 +32,5 @@ jobs:
 
       - name: Run unit tests
         run: |
-          coverage run --branch -m pytest src/x1 -vv
+          coverage run --branch -m pytest src/infractl/tests -vv
           coverage report

@@ -1,4 +1,3 @@
-import os
 import pathlib
 import shutil
 import time
@@ -6,8 +5,8 @@ import uuid
 
 import pytest
 
-import x1
-from x1 import docker
+import infractl
+from infractl import docker
 
 DOCKERFILE = """
 FROM scratch
@@ -26,7 +25,7 @@ def test_local_builder(tmp_path: pathlib.Path, address):
     (tmp_path / 'test_file').write_text('test file')
 
     builder = docker.builder(
-        infrastructure=x1.infrastructure(address=address),
+        infrastructure=infractl.infrastructure(address=address),
         kind='docker',
     )
 
@@ -49,7 +48,7 @@ def test_remote_builder(tmp_path: pathlib.Path, address):
     (tmp_path / 'test_file').write_text('test file')
 
     builder = docker.builder(
-        infrastructure=x1.infrastructure(address=address),
+        infrastructure=infractl.infrastructure(address=address),
         kind='prefect',
     )
 
