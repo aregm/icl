@@ -1,14 +1,14 @@
 # Infrastructure Control Language
 
-Tool to easily run your data science, machine learning or deep learning experiments anywhere - local, on-prem cluster or hybrid cloud. 
-Based on Infrastructure as Code, but pushed to the next level. Provides cosmic level of infrastructure control bringing old good days back when you can run program on the machine you develop.
+Tool to easily run your data science, machine learning or deep learning experiments anywhere: locally, on-prem clusters, or hybrid clouds. 
+Based on Infrastructure as Code, but pushed to the next level.
+Provides cosmic level of infrastructure control bringing old good days back when you run program on the machine you develop.
 
 Still in engineering Alpha mode. Use with caution. But let us know what you think!
 
-## Install
+## Quick start
 
-OS - Ubuntu 22.04 or later, Rocky Linux 9. 
-Docker should be installed. 
+The simplest way to start with ICL is to create a local ICL cluster in a container:
 
 ```bash
 git clone https://github.com/intel-ai/icl.git
@@ -16,33 +16,40 @@ cd icl
 ./scripts/deploy/kind.sh
 ```
 
-## What's in Package?
-
-Out of the box ICL will provide an integrated set of data science libraries:
-
-Pandas/Modin
-Scikit-Learn
-XGBoost
-PyTorch/Tensorflow
-Ray
-MatplotLib
-
-## Quick start
-
 The cluster's endpoints are accessible only from localhost:
 
-* http://dashboard.localtest.me
 * http://jupyter.localtest.me
+* http://dashboard.localtest.me
 * http://minio.localtest.me
 * http://prefect.localtest.me
 
 In your browser, navigate to http://jupyter.localtest.me.
 
-### Define a flow
+Install Python package `infractl` package with `pip`:
 
-Currently, ICL uses [Prefect](https://docs.prefect.io/) for defining basic workflow building blocks: [flow and tasks](https://docs.prefect.io/tutorials/first-steps/#flows-tasks-and-subflows).
+```bash
+pip install infractl
+```
 
-Create a Python file `my_flow.py` that defines a single flow `my_flow`: 
+ICL allows running a local Python program of [Prefect](https://docs.prefect.io/) flow in a cluster.
+
+Create a Python file `my_program.py`:
+
+```python
+if __name__ == '__main__':
+    print('Hello from my_program')
+```
+
+Then execute the program in your cluster:
+
+```python
+import infractl
+
+program = await infractl.deploy(infractl.program('my_program.py'))
+await program.run()
+```
+
+Create a Python file `my_flow.py` with Prefect flow definition:
 
 ```python
 from prefect import flow
@@ -52,20 +59,20 @@ def my_flow():
     print('Hello from my_flow')
 ```
 
-Note this is a regular Python file, so it can be developed, tested, and executed locally.
-
-### Deploy and run a flow
-
-The following code deploys and runs flow `my_flow` in the default infrastructure:
+Then execute the flow in your cluster:
 
 ```python
-import x1
+import infractl
 
-program = await x1.deploy('my_flow.py')
+program = await infractl.deploy(infractl.program('my_flow.py'))
 await program.run()
 ```
 
-## Links
+Note that the program and flow can be developed, tested, and executed locally.
+ICL allows executing the same program or flow in your local or remote ICL cluster.
 
-* [docs/kind.md](docs/kind.md)
+## Next steps
 
+In addition to running a local ICL cluster ([docs/kind.md](docs/kind.md)),
+there are scripts that allow running ICL clusters in AWS ([docs/aws.md](docs/aws.md)) and GCP ([docs/gcp.md](docs/gcp.md)).
+We also support deploying ICL into an existing Kubernetes or OpenShift clusters, provisioning bare-metal machines, see ([docs/deployment.md](docs/deployment.md)).
