@@ -1,6 +1,6 @@
 [project]
 name = "infractl"
-version = "0.0.1"
+version = "0.0.2"
 description = "API driven Machine Learning suite"
 license = {file = "LICENSE"}
 readme = "README.md"
@@ -9,6 +9,15 @@ authors = [
     {name = "Pavel Chekin", email = "pbchekin@gmail.com"},
 ]
 requires-python = ">=3.8"
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: GPU",
+    "Framework :: Jupyter :: JupyterLab",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+
+]
 dependencies = [
     "boto3",
     "click",
@@ -25,6 +34,9 @@ dependencies = [
     "anyio>=3.4.0,<4.0.0",
     "asyncio",
 ]
+
+[project.urls]
+"Homepage" = "https://github.com/intel-ai/icl"
 
 [project.scripts]
 infractl = "infractl.cli.main:main"
