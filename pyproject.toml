@@ -49,11 +49,6 @@ integration_tests = [
     "pytest-xdist",
     "ray==2.6.1",
 ]
-benchmarks = [
-    "pyyaml",
-    "jinja2",
-    "kubeflow-mpi @ git+https://github.com/kubeflow/mpi-operator#subdirectory=sdk/python/v2beta1",
-]
 
 [build-system]
 requires = ["setuptools"]
