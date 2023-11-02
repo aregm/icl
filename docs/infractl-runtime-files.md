@@ -11,33 +11,31 @@ Runtime files can be used for:
 Example:
 
 ```python
-import x1
-
-runtime = x1.runtime(
+runtime = infractl.runtime(
     # 'data.csv' from the local working directory will be copied to the runtime working directory 
     files=['data.csv'],
 )
-program = await x1.deploy(x1.program('my_flow.py'), runtime=runtime)
+await infractl.run(infractl.program('my_flow.py'), runtime=runtime)
 ```
 
 The value for `files` is a list, where each item is:
 
 * `str`
 * `dict`
-* instance of `x1.base.RuntimeFile`
+* instance of `infractl.base.RuntimeFile`
 
-A `str` item is converted to `x1.base.RuntimeFile` with `src` equal to the item:
+A `str` item is converted to `infractl.base.RuntimeFile` with `src` equal to the item:
 
 ```python
-runtime1 = x1.runtime(files=['foo'])
-runtime2 = x1.runtime(files=[RuntimeFile(src='foo')])
+runtime1 = infractl.runtime(files=['foo'])
+runtime2 = infractl.runtime(files=[RuntimeFile(src='foo')])
 ```
 
-A `dict` item is converted `x1.base.RuntimeFile` with arguments from the dict:
+A `dict` item is converted `infractl.base.RuntimeFile` with arguments from the dict:
 
 ```python
-runtime1 = x1.runtime(files=[{'src': 'foo', 'dst': 'bar'}])
-runtime2 = x1.runtime(files=[RuntimeFile(src='foo', dst='bar')])
+runtime1 = infractl.runtime(files=[{'src': 'foo', 'dst': 'bar'}])
+runtime2 = infractl.runtime(files=[RuntimeFile(src='foo', dst='bar')])
 ```
 
 Currently, runtime files are supported only for Prefect programs.

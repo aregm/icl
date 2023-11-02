@@ -8,7 +8,7 @@ Still in engineering Alpha mode. Use with caution. But let us know what you thin
 
 ## Quick start
 
-The simplest way to start with ICL is to create a local ICL cluster in a container:
+The simplest way to start with ICL is to create a local ICL cluster in a Docker container:
 
 ```bash
 git clone https://github.com/intel-ai/icl.git
@@ -45,8 +45,7 @@ Then execute the program in your cluster:
 ```python
 import infractl
 
-program = await infractl.deploy(infractl.program('my_program.py'))
-await program.run()
+await infractl.run(infractl.program('my_program.py'))
 ```
 
 Create a Python file `my_flow.py` with Prefect flow definition:
@@ -64,8 +63,7 @@ Then execute the flow in your cluster:
 ```python
 import infractl
 
-program = await infractl.deploy(infractl.program('my_flow.py'))
-await program.run()
+await infractl.run(infractl.program('my_flow.py'))
 ```
 
 Note that the program and flow can be developed, tested, and executed locally.
@@ -73,6 +71,6 @@ ICL allows executing the same program or flow in your local or remote ICL cluste
 
 ## Next steps
 
-In addition to running a local ICL cluster ([docs/kind.md](docs/kind.md)),
-there are scripts that allow running ICL clusters in AWS ([docs/aws.md](docs/aws.md)) and GCP ([docs/gcp.md](docs/gcp.md)).
-We also support deploying ICL into an existing Kubernetes or OpenShift clusters, provisioning bare-metal machines, see ([docs/deployment.md](docs/deployment.md)).
+In addition to a local ICL cluster, there are scripts to create multi node ICL clusters in AWS, GCP.
+We also support deploying ICL into an existing Kubernetes or OpenShift clusters, provisioning bare-metal machines.
+Check our documentation at https://intel-ai.github.io/icl/.

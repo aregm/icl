@@ -1,4 +1,4 @@
-# OpenVINO in X1
+# OpenVINO in ICL cluster
 
 ## Model Server with a single model
 

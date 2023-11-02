@@ -1,4 +1,4 @@
-# MPI in X1
+# MPI in ICL cluster
 
 ## CPU
 

@@ -1,4 +1,4 @@
-# Deploy X1 locally in Docker containers
+# Deploying a local ICL cluster
 
 ## Prerequisites:
 
@@ -7,7 +7,7 @@
 
 In Windows, WSL (Windows Subsystem for Linux) version 1.1.2.0 or newer (version 1.1.0.0 has a bug with port forwarding https://github.com/microsoft/WSL/issues/9508).  
 
-## Create a local X1 cluster
+## Create a local ICL cluster
 
 ```
 ./scripts/deploy/kind.sh
@@ -42,7 +42,7 @@ control_node
 control_node "kubectl get namespaces"
 ```
 
-## Delete a local X1 cluster
+## Delete a local ICL cluster
 
 ```
 ./scripts/deploy/kind.sh --delete

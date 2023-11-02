@@ -1,4 +1,4 @@
-# Deploy X1 to GCP
+# Deploying ICL cluster to GCP
 
 ## Prerequisites
 
@@ -22,7 +22,7 @@
         export GOOGLE_APPLICATION_CREDENTIALS="$PWD/credentials.json"
         ```
 
-## Deploy X1 cluster
+## Deploy ICL cluster
 
 ```shell
 ./scripts/deploy/gke.sh
@@ -31,7 +31,7 @@
 * `~/.config/gcloud` will be mounted inside
 * If using user account, you'll be asked to grant access using a browser session (if not yet done)
 
-## Delete X1 cluster
+## Delete ICL cluster
 
 ```shell
 ./scripts/deploy/gke.sh --delete
@@ -66,7 +66,8 @@ Note that the proxy is only used by the script itself, it is not used in the clu
 ./scripts/deploy/gke.sh --console
 
 # On control node execute
-export X1_INGRESS_DOMAIN=localtest.me
-export X1_RAY_ENDPOINT=ray-api.localtest.me:80
+export X1_INGRESS_DOMAIN={ingress_domain}
+# Ray client endpoint is not currently supported on GKE
+export DISABLE_RAY_TEST=1
 ./scripts/ccn/test.sh
 ```

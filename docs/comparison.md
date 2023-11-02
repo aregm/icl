@@ -149,4 +149,4 @@ Cons:
     * Proprietary solution.
     * Interesting features:
         * Tag based cost report.
-        * Blueprints. For x1 it can be like a predefined description of the infrastructure and runtime, which can be accessed by file name when deploying programs. It is worth considering two views, a high-level one - python scripts, and an internal view into which x1 will translate the python code before deployment (potentially one-to-one corresponding to the resources of the provider).
+        * Blueprints. For ICL it can be like a predefined description of the infrastructure and runtime, which can be accessed by file name when deploying programs. It is worth considering two views, a high-level one - python scripts, and an internal view into which ICL will translate the python code before deployment (potentially one-to-one corresponding to the resources of the provider).

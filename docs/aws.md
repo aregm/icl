@@ -1,4 +1,4 @@
-# Deploy X1 to AWS
+# Deploying ICL cluster to AWS
 
 ## Prerequisites
 
@@ -19,13 +19,13 @@
 
 * In the specified AWS account and region, a default VPC must exist with at least 2 default subnets for different availability zones.
 
-## Deploy X1 cluster
+## Deploy ICL cluster
 
 ```shell
 ./scripts/deploy/aws.sh
 ```
 
-## Delete X1 cluster
+## Delete ICL cluster
 
 ```shell
 ./scripts/deploy/aws.sh --delete
@@ -118,17 +118,19 @@ Where
 
 ### Tests
 
+Replace `{ingress_domain}` with the cluster ingress domain.
+
 ```shell
-# Optional, use only when X1 endpoints are accessible via HTTP proxy
+# Optional, use only when ICL endpoints are accessible via HTTP proxy
 ./scripts/deploy/aws.sh --start-proxy
 
 ./scripts/deploy/aws.sh --console
 
 # On control node execute
-export X1_INGRESS_DOMAIN=test.x1infra.com
-export X1_RAY_ENDPOINT=ray-api.test.x1infra.com:80
+export X1_INGRESS_DOMAIN={ingress_domain}
+export X1_RAY_ENDPOINT=ray-api.{ingress_domain}:80
 ./scripts/ccn/test.sh
 
-# Optional, use only when X1 endpoints are accessible via HTTP proxy
+# Optional, use only when ICL endpoints are accessible via HTTP proxy
 ./scripts/deploy/aws.sh --stop-proxy
 ```

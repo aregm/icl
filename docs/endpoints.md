@@ -1,6 +1,6 @@
-# X1 endpoints
+# ICL cluster endpoints
 
-There are two types of the X1 endpoints:
+There are two types of the ICL cluster endpoints:
 
 * **External endpoints** accessible from the public network.
 * **Internal endpoints** accessible from the cluster only, specifically from the containers running in the cluster.
@@ -73,19 +73,19 @@ Examples:
 ## External LB by name
 
 ```
-test.x1infra.com. 300 IN CNAME aws-elb-id.us-east-1.elb.amazonaws.com.
-*.test.x1infra.com. 300 IN CNAME test.x1infra.com.
+test.example.com. 300 IN CNAME aws-elb-id.us-east-1.elb.amazonaws.com.
+*.test.example.com. 300 IN CNAME test.example.com.
  
 # Optional, ClearML requires its own subdomain.
-*.clearml.test.x1infra.com. 300 IN CNAME test.x1infra.com.
+*.clearml.test.example.com. 300 IN CNAME test.example.com.
 ```
 
 ## External LB by IP
 
 ```
-test.x1infra.com. 300 IN A 1.2.3.4
-*.test.x1infra.com. 300 IN CNAME test.x1infra.com.
+test.example.com. 300 IN A 1.2.3.4
+*.test.example.com. 300 IN CNAME test.example.com.
  
 # Optional, ClearML requires its own subdomain.
-*.clearml.test.x1infra.com. 300 IN CNAME test.x1infra.com.
+*.clearml.test.example.com. 300 IN CNAME test.example.com.
 ```

@@ -1,6 +1,6 @@
 [project]
 name = "infractl"
-version = "0.0.2"
+version = "0.0.3"
 description = "API driven Machine Learning suite"
 license = {file = "LICENSE"}
 readme = "README.md"
@@ -36,7 +36,8 @@ dependencies = [
 ]
 
 [project.urls]
-"Homepage" = "https://github.com/intel-ai/icl"
+"Homepage" = "https://intel-ai.github.io/icl"
+"Source" = "https://github.com/intel-ai/icl"
 
 [project.scripts]
 infractl = "infractl.cli.main:main"
