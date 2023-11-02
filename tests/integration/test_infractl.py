@@ -6,7 +6,7 @@ see [docs/kind.md](../../docs/kind.md) for the details.
 These tests are intended to be executed outside the cluster.
 
 When using HTTP/HTTPS proxy make sure `localtest.me` is added to "no proxy" lists, such as
-NO_PROXY` and `no_proxy`.
+`NO_PROXY` and `no_proxy`.
 """
 
 import asyncio
@@ -18,6 +18,17 @@ import pytest
 from flows.flow2 import flow2
 
 import infractl
+
+
+@pytest.mark.asyncio
+async def test_flow_with_shorcut_and_file_name(address):
+    infrastructure = infractl.infrastructure(address=address)
+    runtime = infractl.runtime()
+    program_run = await infractl.run(
+        infractl.program('flows/flow1.py'), runtime=runtime, infrastructure=infrastructure
+    )
+    assert program_run.is_completed()
+    assert 'Completed' in str(program_run), '__str__ for ProgramRun returns state'
 
 
 @pytest.mark.asyncio
