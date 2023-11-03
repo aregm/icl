@@ -85,10 +85,10 @@ function control_node() {
 
   proxy_status="$(proxy_container_status)"
   if [[ $proxy_status == "running" ]]; then
-    docker_cmd+=( --network "container:x1-proxy" )
+    docker_cmd+=( --network "container:icl-proxy" )
   else
     if [[ $proxy_status ]]; then
-      echo "Container x1-proxy exists, but not running"
+      echo "Container icl-proxy exists, but not running"
     fi
 
     # Only set {http,https,no}_proxy when a sidecar proxy container is not used.
@@ -139,12 +139,12 @@ function delete_pvs() {
 
 function start_proxy() {
   echo "Starting proxy container ..."
-  docker run --detach --rm --privileged --env http_proxy --name x1-proxy "$PROXY_IMAGE" > /dev/null
+  docker run --detach --rm --privileged --env http_proxy --name icl-proxy "$PROXY_IMAGE" > /dev/null
 }
 
 function stop_proxy() {
   echo "Stopping proxy container ..."
-  docker kill x1-proxy &>/dev/null || true
+  docker kill icl-proxy &>/dev/null || true
 }
 
 RED="\e[31m"
