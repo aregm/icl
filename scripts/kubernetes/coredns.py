@@ -100,6 +100,7 @@ def main(ip: str, domain: str):
         'dashboard',
         'dask',
         'grafana',
+        'hub',
         'jupyter',
         'minio',
         'prefect',

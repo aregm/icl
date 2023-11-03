@@ -15,7 +15,7 @@ kuberay/operator:v0.4.0
 kubernetesui/dashboard:v2.6.0
 minio/console:v0.20.3
 minio/operator:v4.5.1
-pbchekin/x1-jupyterhub:0.0.17
+pbchekin/icl-jupyterhub:0.0.17
 pbchekin/x1-prefect:2.13.0-python3.9-20231010
 pbchekin/x1-ray:2.6.1-py39-20230803
 prefecthq/prefect:2.13.0-python3.9

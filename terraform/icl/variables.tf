@@ -205,14 +205,14 @@ variable "jupyterhub_singleuser_volume_size" {
 variable "jupyterhub_singleuser_default_image" {
   description = "Default Docker image for JupyterHub default profile"
   # original image: jupyterhub/k8s-singleuser-sample:2.0.1-0.dev.git.6035.h643c0f0c
-  default = "pbchekin/x1-jupyterhub:0.0.17"
+  default = "pbchekin/icl-jupyterhub:0.0.17"
   type = string
 }
 
 variable "jupyterhub_gpu_profile_image" {
   description = "Docker image for JupyterHub GPU profile"
   type = string
-  default = "pbchekin/x1-jupyterhub-gpu:0.0.17"
+  default = "pbchekin/icl-jupyterhub-gpu:0.0.17"
 }
 
 variable "jupyterhub_cluster_admin_enabled" {
