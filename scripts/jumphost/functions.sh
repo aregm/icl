@@ -4,7 +4,7 @@
 : ${COREDNS_IMAGE:=registry.k8s.io/coredns/coredns:v1.8.6}
 : ${NGINX_IMAGE:=nginx:stable}
 : ${ARTIFACTS_DIR:=$HOME/generated}
-: ${X1_INGRESS_DOMAIN:=localtest.me}
+: ${ICL_INGRESS_DOMAIN:=localtest.me}
 : ${INGRESS_IP:=127.0.0.1}
 
 # Load .x1/environment file in the current directory, if exists. This file contains custom settings
@@ -84,10 +84,10 @@ function render_corefile() {
 . {
     errors
     hosts {
-        ${INGRESS_IP} ${X1_INGRESS_DOMAIN}
-        ${INGRESS_IP} prefect.${X1_INGRESS_DOMAIN}
-        ${INGRESS_IP} s3.${X1_INGRESS_DOMAIN}
-        ${INGRESS_IP} ray.${X1_INGRESS_DOMAIN}
+        ${INGRESS_IP} ${ICL_INGRESS_DOMAIN}
+        ${INGRESS_IP} prefect.${ICL_INGRESS_DOMAIN}
+        ${INGRESS_IP} s3.${ICL_INGRESS_DOMAIN}
+        ${INGRESS_IP} ray.${ICL_INGRESS_DOMAIN}
         fallthrough
     }
     forward . /etc/resolv.conf

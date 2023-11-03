@@ -127,8 +127,8 @@ Replace `{ingress_domain}` with the cluster ingress domain.
 ./scripts/deploy/aws.sh --console
 
 # On control node execute
-export X1_INGRESS_DOMAIN={ingress_domain}
-export X1_RAY_ENDPOINT=ray-api.{ingress_domain}:80
+export ICL_INGRESS_DOMAIN={ingress_domain}
+export ICL_RAY_ENDPOINT=ray-api.{ingress_domain}:80
 ./scripts/ccn/test.sh
 
 # Optional, use only when ICL endpoints are accessible via HTTP proxy

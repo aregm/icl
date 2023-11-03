@@ -26,7 +26,8 @@ def f(x):
 
 
 @mark.skipif(
-    getenv("DISABLE_RAY_TEST") != None, reason="Ray test is disabled by setting DISABLE_RAY_TEST"
+    getenv("ICL_DISABLE_RAY_TEST") is not None,
+    reason="Ray test is disabled by setting ICL_DISABLE_RAY_TEST",
 )
 def test_ray(ray_endpoint):
     ray_init(address=f'ray://{ray_endpoint}')

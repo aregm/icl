@@ -17,8 +17,8 @@ fi
 : ${CONTROL_NODE_IMAGE:=pbchekin/ccn:0.0.1}
 : ${KUBECONFIG:="$HOME/.kube/config"}
 
-export X1_INGRESS_DOMAIN="localtest.me"
-export X1_RAY_ENDPOINT="localtest.me:10001"
+export ICL_INGRESS_DOMAIN="localtest.me"
+export ICL_RAY_ENDPOINT="localtest.me:10001"
 export KUBECONFIG
 
 # https://stackoverflow.com/questions/59895/getting-the-source-directory-of-a-bash-script-from-within
@@ -207,7 +207,7 @@ redsocks {
 function with_corefile() {
   CONTROl_PLANE_IP=$(docker inspect --format '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' "$CLUSTER_NAME-control-plane")
   pass "Cluster IP: $CONTROl_PLANE_IP"
-  control_node "python -m scripts.kubernetes.coredns $CONTROl_PLANE_IP $X1_INGRESS_DOMAIN"
+  control_node "python -m scripts.kubernetes.coredns $CONTROl_PLANE_IP $ICL_INGRESS_DOMAIN"
 }
 
 if [[ " $@ " =~ " --help " ]]; then
@@ -293,7 +293,7 @@ terraform_extra_args=(
   -var local_path_enabled=false         # Kind cluster has local-path-provisioner, another provisioner is not required
   -var default_storage_class="standard" # Kind cluster has local-path-provisioner, it defines "standard" StorageClass
   -var prometheus_enabled=false         # Disable prometheus stack to make footprint smaller
-  -var ingress_domain="$X1_INGRESS_DOMAIN"
+  -var ingress_domain="$ICL_INGRESS_DOMAIN"
   -var externaldns_enabled="$X1_EXTERNALDNS_ENABLED"
 )
 

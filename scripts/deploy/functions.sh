@@ -66,6 +66,10 @@ function control_node() {
     docker_cmd+=( --env $x1_var )
   done
 
+  for icl_var in $(env | grep -E '^ICL_'  | cut -f1 -d=); do
+    docker_cmd+=( --env $icl_var )
+  done
+
   if [[ -v GOOGLE_APPLICATION_CREDENTIALS ]]; then
     docker_cmd+=( --env GOOGLE_APPLICATION_CREDENTIALS=/work/.config/gcloud/credentials.json )
     docker_cmd+=( -v $GOOGLE_APPLICATION_CREDENTIALS:/work/.config/gcloud/credentials.json )

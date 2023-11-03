@@ -10,7 +10,7 @@
 
 set -e
 
-: ${X1_INGRESS_DOMAIN:=localtest.me}
+: ${ICL_INGRESS_DOMAIN:=localtest.me}
 
 if [[ -f .x1/environment ]]; then
   source .x1/environment
@@ -21,9 +21,9 @@ PROJECT_DIR="$( cd -- "$SCRIPT_DIR/../../" &> /dev/null && pwd )"
 
 cd "$PROJECT_DIR"
 
-: ${PREFECT_API_URL:="http://prefect.${X1_INGRESS_DOMAIN}/api"}
-: ${X1_S3_ENDPOINT:="s3.${X1_INGRESS_DOMAIN}"}
-: ${X1_RAY_ENDPOINT:="ray.${X1_INGRESS_DOMAIN}:443"}
+: ${PREFECT_API_URL:="http://prefect.${ICL_INGRESS_DOMAIN}/api"}
+: ${ICL_S3_ENDPOINT:="s3.${ICL_INGRESS_DOMAIN}"}
+: ${ICL_RAY_ENDPOINT:="ray.${ICL_INGRESS_DOMAIN}:443"}
 
 export PREFECT_API_URL
 export PYTHONUNBUFFERED=1
@@ -48,20 +48,20 @@ function dump_logs() {(
 function smoke_check() {
   cd "$PROJECT_DIR/tests/smoke"
   echo "PREFECT_API_URL=$PREFECT_API_URL"
-  echo "X1_S3_ENDPOINT=$X1_S3_ENDPOINT"
-  echo "X1_RAY_ENDPOINT=$X1_RAY_ENDPOINT"
+  echo "ICL_S3_ENDPOINT=$ICL_S3_ENDPOINT"
+  echo "ICL_RAY_ENDPOINT=$ICL_RAY_ENDPOINT"
   pytest -v . \
-    --s3-endpoint $X1_S3_ENDPOINT \
-    --ray-endpoint $X1_RAY_ENDPOINT
+    --s3-endpoint "$ICL_S3_ENDPOINT" \
+    --ray-endpoint "$ICL_RAY_ENDPOINT"
 }
 
 function integration_tests() {
   cd "$PROJECT_DIR/tests/integration"
-  pytest -n 4 -v . --address $X1_INGRESS_DOMAIN
+  pytest -n 4 -v . --address "$ICL_INGRESS_DOMAIN"
 }
 
 function test_all() {
-  export X1_LOGGING_TO_FILE="TRUE"
+  export ICL_LOGGING_TO_FILE="TRUE"
   smoke_check
   integration_tests
 }

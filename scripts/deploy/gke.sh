@@ -7,7 +7,7 @@ set -e
 # Default values that can be overriden by corresponding environment variables
 : ${X1_CLUSTER_NAME:="x1-$USER"}
 : ${X1_GCP_ZONE:="us-central1-a"}
-: ${X1_INGRESS_DOMAIN:="test.x1infra.com"}
+: ${ICL_INGRESS_DOMAIN:="test.x1infra.com"}
 : ${X1_CLUSTER_VERSION:="1.28"}
 : ${X1_EXTERNALDNS_ENABLED:="false"}
 : ${CONTROL_NODE_IMAGE:="pbchekin/ccn-gcp:0.0.2"}
@@ -46,7 +46,7 @@ Environment variables:
   X1_CLUSTER_NAME                Cluster name, must be unique in the region, default is x1-$USER
   X1_GCP_PROJECT_NAME            GCP project name
   X1_GCP_ZONE                    GCP zone to use, default is us-central1-a
-  X1_INGRESS_DOMAIN              Domain for ingress, default is test.x1infra.com
+  ICL_INGRESS_DOMAIN             Domain for ingress, default is test.x1infra.com
   GOOGLE_APPLICATION_CREDENTIALS Location of a Google Cloud credential JSON file.
   TF_PG_CONN_STR                 If set, PostgreSQL backend will be used to store Terraform state 
   PGUSER                         PostgreSQL username for Terraform state
@@ -55,7 +55,7 @@ EOF
 }
 
 function show_parameters() {
-  for var in X1_GCP_ZONE X1_INGRESS_DOMAIN WORKSPACE; do
+  for var in X1_GCP_ZONE ICL_INGRESS_DOMAIN WORKSPACE; do
     echo "$var: ${!var}"
   done
 }
@@ -82,7 +82,7 @@ EOF
 function x1_terraform_args() {
   terraform_extra_args=(
     -var prometheus_enabled=false
-    -var ingress_domain="${X1_INGRESS_DOMAIN}"
+    -var ingress_domain="${ICL_INGRESS_DOMAIN}"
     -var ingress_nginx_service_enabled=true
     -var local_path_enabled=false # use standard-rwo for GKE instead
     -var default_storage_class="standard-rwo"
