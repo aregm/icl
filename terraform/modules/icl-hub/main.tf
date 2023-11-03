@@ -44,9 +44,9 @@ resource "kubernetes_deployment" "icl-hub" {
       spec {
         container {
           name = "icl-hub"
-          image = "pbchekin/x1-hub:0.0.5"
+          image = "pbchekin/icl-hub:0.0.1"
           command = [
-            "python", "-m", "x1.hub.main", "server", "start"
+            "python", "-m", "infractl.hub.main", "server", "start"
           ]
           liveness_probe {
             http_get {
