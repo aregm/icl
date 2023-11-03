@@ -36,25 +36,6 @@ def list_users_cmd():
         print('\n'.join(users))
 
 
-@jupyterhub.command('update-infractl')
-def update_infractl_cmd():
-    """Update infractl in all JupyterHub sessions."""
-    for pod in get_user_pods(JUPYTERHUB_NAMESPACE):
-        print('Pod:', pod.metadata.name)
-        response = stream.stream(
-            kube.api().core_v1().connect_get_namespaced_pod_exec,
-            pod.metadata.name,
-            JUPYTERHUB_NAMESPACE,
-            container='notebook',
-            command=['/bin/bash', '-ce', _update_infractl_script()],
-            stderr=True,
-            stdin=False,
-            stdout=True,
-            tty=False,
-        )
-        print(response)
-
-
 @jupyterhub.group()
 def ssh():
     """Manage SSH access to JupyterHub session."""
@@ -159,25 +140,6 @@ def list_users() -> List[str]:
     if response.returncode != 0:
         raise Exception(response.read_stderr())
     return response.read_stdout().strip().splitlines()
-
-
-def _update_infractl_script() -> str:
-    """Returns Bash script to update infractl."""
-    return """
-        source /home/jovyan/.conda/etc/profile.d/conda.sh
-        conda env list --json | jq -r .envs[] | while read prefix; do
-            echo activating conda environment at $prefix
-            conda activate $prefix
-            if pip show -q infractl 2>/dev/null; then
-                echo updating infractl at $prefix
-                pip install \
-                    --quiet \
-                    --upgrade \
-                    --extra-index-url http://pypi.glados.intel.com \
-                    --trusted-host pypi.glados.intel.com infractl
-            fi
-        done 
-    """
 
 
 def _enable_ssh_script() -> str:
