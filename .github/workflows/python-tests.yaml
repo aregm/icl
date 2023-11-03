@@ -15,7 +15,7 @@ jobs:
   tests:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout x1 repository
+      - name: Checkout repository
         uses: actions/checkout@v3
 
       - uses: actions/setup-python@v4

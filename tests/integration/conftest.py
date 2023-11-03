@@ -7,7 +7,7 @@ def pytest_addoption(parser):
         action="store",
         default='localtest.me',
         type=str,
-        help="X1 infrastructure address, default: localtest.me",
+        help="ICL infrastructure address, default: localtest.me",
     )
 
 

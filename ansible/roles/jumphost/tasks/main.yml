@@ -5,7 +5,7 @@
   debug:
     msg: "{{ ansible_os_family }}"
 
-- name: Copy X1 files to jumphost
+- name: Copy required files to jumphost
   copy:
     # Source path should point to root location of repo relative to
     # "configure-jumphost" role folder.
@@ -15,7 +15,7 @@
   loop:
     - ../../../ansible
     - ../../../terraform
-    - ../../../x1
+    - ../../../src
     - ../../../tests
     - ../../../scripts
     - ../../../pyproject.toml
@@ -24,17 +24,17 @@
 - name: Create git archive
   local_action:
     module: shell
-    cmd: cd "$(git rev-parse --show-toplevel)" && git archive --format tgz --output /tmp/x1-$USER.tgz --prefix x1/ HEAD
+    cmd: cd "$(git rev-parse --show-toplevel)" && git archive --format tgz --output /tmp/icl-$USER.tgz --prefix x1/ HEAD
   when: use_git_archive
 
 - name: Copy git archive to the jumphost
   copy:
-    src: /tmp/x1-{{ lookup('env', 'USER') }}.tgz
-    dest: /tmp/x1.tgz
+    src: /tmp/icl-{{ lookup('env', 'USER') }}.tgz
+    dest: /tmp/icl.tgz
   when: use_git_archive
 
 - name: Extract git archive
-  command: tar zxf /tmp/x1.tgz
+  command: tar zxf /tmp/icl.tgz
   when: use_git_archive
 
 - name: Setup for Debian family

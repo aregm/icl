@@ -1,4 +1,4 @@
-name: Single node x1 with vagrant, rl, kind
+name: Single node cluster with Vagrant, Rocky Linux, Kind
 
 # Controls when the workflow will run
 on:
@@ -17,7 +17,7 @@ jobs:
       - self-hosted
       - libvirt-vagrant
     steps:
-      - name: Checkout x1 repository
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Checkout x1-cluster-profiles repository
@@ -27,7 +27,7 @@ jobs:
           path: x1-cluster-profiles
           token: ${{ secrets.X1_GITHUB_TOKEN }}
 
-      - name: Deploy X1 to Vagrant VMs
+      - name: Deploy a cluster on Vagrant VM
         run: ./scripts/ci/vagrant-rl-kind.sh
 
       - name: Upload logs

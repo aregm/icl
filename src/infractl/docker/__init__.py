@@ -1,4 +1,4 @@
-"""X1 Docker API."""
+"""ICL Docker API."""
 
 from infractl.docker.builder import (
     Builder,

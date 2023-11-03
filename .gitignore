@@ -26,3 +26,4 @@ build/
 
 # IDEs
 .idea/
+*.swp

@@ -1,4 +1,4 @@
-name: Single node x1 with kind
+name: Single node cluster with Kind
 
 # Controls when the workflow will run
 on:
@@ -9,10 +9,10 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout x1 repository
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Deploy X1 with kind
+      - name: Deploy a cluster with kind
         run: |
           ./scripts/deploy/kind.sh
 

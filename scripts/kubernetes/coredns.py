@@ -131,7 +131,7 @@ def main(ip: str, domain: str):
     annotations = response.spec.template.metadata.annotations
     if annotations is None:
         annotations = {}
-    annotations['x1/corefile-sha256'] = corefile_sha256
+    annotations['icl/corefile-sha256'] = corefile_sha256
     apps_v1.patch_namespaced_deployment(
         namespace='kube-system',
         name='coredns',

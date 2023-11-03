@@ -19,7 +19,7 @@ def pytest_addoption(parser):
         action="store",
         default=None,
         type=str,
-        help="Name of ray address to use, e.g. ray.x1-jumphost.example.com:443.",
+        help="Name of ray address to use, e.g. ray.jumphost.example.com:443.",
     )
 
     parser.addoption(
@@ -27,7 +27,7 @@ def pytest_addoption(parser):
         action="store",
         default=None,
         type=str,
-        help="Name of s3 endpoint to use, e.g. s3.x1-jumphost.example.com.",
+        help="Name of s3 endpoint to use, e.g. s3.jumphost.example.com.",
     )
 
 
@@ -154,6 +154,6 @@ async def prefect_configure(s3_endpoint, minio_credentials, s3_bucket):
         # to wait for the pod should help with some test flakiness that we observed in some cases.
         pod_watch_timeout_seconds=240,
     )
-    infra_name = "x1-infra"
+    infra_name = "smoke-check"
     await infra.save(infra_name, overwrite=True)
     yield storage_name, infra_name

@@ -8,7 +8,7 @@ set -e
 : ${X1_CLUSTER_NAME:="x1-$USER"}
 : ${AWS_DEFAULT_REGION:="us-east-1"}
 : ${X1_CLUSTER_VERSION:="1.28"}
-: ${CONTROL_NODE_IMAGE:="pbchekin/ccn-aws:0.0.2"}
+: ${CONTROL_NODE_IMAGE:="pbchekin/icl-ccn-aws:0.0.1"}
 
 # https://stackoverflow.com/questions/59895/getting-the-source-directory-of-a-bash-script-from-within
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
@@ -91,14 +91,14 @@ function delete_cluster() {
 }
 
 # Create workspace
-# TODO: move to x1.deploy.aws
+# TODO: move to infractl.deploy.aws
 function render_workspace() {
   mkdir -p "$PROJECT_ROOT/$WORKSPACE/terraform/aws"
   touch "$KUBECONFIG"
   control_node "\
     export PYTHON_PATH=/work/x1/src \
     && cp -r /work/x1/terraform/aws/* /work/x1/$WORKSPACE/terraform/aws/ \
-    && ( python -m x1.deploy.aws.main print-vpc-tfvars > /work/x1/$WORKSPACE/terraform/aws/terraform.tfvars ) \
+    && ( python -m infractl.deploy.aws.main print-vpc-tfvars > /work/x1/$WORKSPACE/terraform/aws/terraform.tfvars ) \
     && terraform -chdir=$WORKSPACE/terraform/aws/ init -input=false
   "
   render_eks_terraform_tfvars

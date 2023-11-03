@@ -127,12 +127,11 @@ def test_notebook_in_jupyter_session(address):
 
     jupyter_test_pod = jupyter_all_test_user_pods[0]
 
-    # Relative paths: assuming we're in x1 root directory
     copy_file_to_pod(
         core_v1,
         jupyter_test_pod.metadata.name,
         JUPYTERHUB_NAMESPACE,
-        'data/test_notebook.ipynb',
+        'data/test_notebook.ipynb',  # relative to tests/integration
         '/tmp/test_notebook.ipynb',
     )
 
@@ -157,5 +156,5 @@ def test_notebook_in_jupyter_session(address):
         JUPYTERHUB_NAMESPACE,
         ["/bin/cat", "/tmp/test_notebook.nbconvert.ipynb"],
     )
-    asser_value = "\'x1   "
+    asser_value = "\'infractl   "
     assert asser_value in output, f"There is no {asser_value} in output: {output}"

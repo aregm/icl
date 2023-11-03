@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # This script is called from GitHub workflow.
-# Single node X1 with Kind on Vagrant VM with Rocky Linux.
+# Single node ICL cluster with Kind on Vagrant VM with Rocky Linux.
 
 set -e
 
