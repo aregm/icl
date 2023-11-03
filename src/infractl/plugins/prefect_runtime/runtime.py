@@ -520,7 +520,7 @@ class PrefectRuntimeImplementation(
         }
 
         # TODO: move the default image to discover
-        image = self.settings('prefect_image', 'pbchekin/x1-prefect:2.13.0-python3.9-20231010')
+        image = self.settings('prefect_image', 'pbchekin/icl-prefect:2.13.0-py3.9-icl0.0.3')
         if image:
             job_args['image'] = image
 
@@ -534,7 +534,7 @@ class PrefectRuntimeImplementation(
             job_args['command'] = [
                 'python',
                 '-m',
-                'x1.prefect.engine',
+                'infractl.prefect.engine',
                 '--block',
                 self._files_block,
                 '--script',
