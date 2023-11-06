@@ -1,0 +1,20 @@
+- name: Node pre-setup
+  hosts: all
+  roles:
+    - role: ../ansible/roles/fix-dns
+      become: true
+
+- name: Add ssh key from jumphost
+  hosts: all
+  tasks:
+    - name: Get Public Key
+      local_action:
+        module: command
+        cmd: cat generated/id_rsa.pub
+      register: ssh_key
+
+    - name: Add user public key to authorized keys
+      authorized_key:
+        user: "{{ ansible_facts.env.USER }}"
+        state: present
+        key: "{{ ssh_key.stdout }}"

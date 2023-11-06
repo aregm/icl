@@ -1,0 +1,3 @@
+etc_nginx: /etc/nginx
+ingress_domain: localtest.me
+upstream_hosts: []

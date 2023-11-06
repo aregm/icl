@@ -1,0 +1,17 @@
+---
+
+- name: Install iptables-persistent
+  become: true
+  apt:
+    name:
+      - iptables-persistent
+    state: present
+    update_cache: true
+
+- name: Enable persistent iptables
+  become: true
+  systemd:
+    name: netfilter-persistent
+    state: started
+    enabled: true
+    daemon_reload: true

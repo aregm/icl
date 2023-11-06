@@ -1,0 +1,138 @@
+---
+# tasks for setup-redsocks
+
+- name: Install redsocks
+  become: true
+  apt:
+    name:
+      - redsocks
+    state: present
+    update_cache: true
+
+- name: Patch redsocks service file
+  become: true
+  lineinfile:
+    path: /lib/systemd/system/redsocks.service
+    search_string: "After=network.target"
+    state: present
+    line: "After=network-online.target"
+
+- name: Patch redsocks service file again
+  become: true
+  lineinfile:
+    path: /lib/systemd/system/redsocks.service
+    insertafter: "^After=network-online.target$"
+    state: present
+    line: "Wants=network-online.target"
+
+- name: Place redsocks configuration
+  become: true
+  template:
+    src: templates/redsocks.conf.j2
+    dest: /etc/redsocks.conf
+    mode: 0644
+
+- name: Create redsocks chain
+  become: true
+  iptables:
+    table: nat
+    chain: REDSOCKS
+    chain_management: true
+    state: present
+
+- name: Add jumphost to static redsocks exception
+  become: true
+  iptables:
+    table: nat
+    chain: REDSOCKS
+    action: append
+    destination: "{{ vm_jumphost_ip_address }}"
+    jump: RETURN
+
+- name: Create static redsocks exceptions
+  become: true
+  iptables:
+    table: nat
+    chain: REDSOCKS
+    action: append
+    destination: "{{ item }}"
+    jump: RETURN
+  with_items:
+    - "0.0.0.0/8"
+    - "10.0.0.0/8"
+    - "127.0.0.0/8"
+    - "169.254.0.0/16"
+    - "172.16.0.0/12"
+    - "192.168.0.0/16"
+    - "224.0.0.0/4"
+    - "240.0.0.0/4"
+
+- name: Add http(s) redirection
+  become: true
+  iptables:
+    table: nat
+    chain: REDSOCKS
+    action: append
+    protocol: tcp
+    destination_ports: [ 443 ]
+    jump: REDIRECT
+    to_ports: 12346
+
+- name: Add hkp redirection
+  become: true
+  iptables:
+    table: nat
+    chain: REDSOCKS
+    action: append
+    protocol: tcp
+    destination_ports: [ 80, 11371 ]
+    jump: REDIRECT
+    to_ports: 12345
+
+- name: Add redsocks for http(s) and hkp ports into PREROUTING chain
+  become: true
+  iptables:
+    table: nat
+    chain: PREROUTING
+    action: append
+    in_interface: "{{ cluster_subnet_interface }}"
+    protocol: tcp
+    destination_ports: [ 80, 443, 11371 ]
+    jump: REDSOCKS
+
+- name: Add redsocks to OUTPUT chain
+  become: true
+  iptables:
+    table: nat
+    chain: OUTPUT
+    action: append
+    protocol: tcp
+    jump: REDSOCKS
+
+# This a workaround for the issue that started happening in the end of May 2023, when REDSOCKS chain
+# started to have a rule without a target, which acts as a counter for any src and dst (0.0.0.0/0).
+# Note that the counter stops processing a packet further in the chain and breaks the normal
+# REDSOCKS iptables logic.
+#
+#  Chain REDSOCKS (0 references)
+#  target     prot opt source               destination
+#             all  --  0.0.0.0/0            0.0.0.0/0
+#
+# The root cause is unknown (potentially a bug in ansible.builtin.iptables), but seems like
+# removing this rule is safe and works as workaround.
+- name: Remove REDSOCKS rule without target
+  become: true
+  iptables:
+    table: nat
+    chain: REDSOCKS
+    destination: 0.0.0.0/0
+    source: 0.0.0.0/0
+    state: absent
+
+- name: Enable redsocks service
+  become: true
+  systemd:
+    name: redsocks
+    state: restarted
+    enabled: true
+    daemon_reload: true

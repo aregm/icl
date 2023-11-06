@@ -1,0 +1,6 @@
+---
+cluster_ssh_user: "{% if x1_node_os == \"rocky\" %}cloud-user{% else %}ubuntu{% endif %}"
+cluster_ssh_port: 22
+cluster_nodes: 3
+cluster_inventory_directory: "{{ ansible_facts.env.HOME + '/generated/kubespray-inventory' }}"
+

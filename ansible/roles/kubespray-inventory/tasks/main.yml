@@ -1,0 +1,33 @@
+---
+
+- name: Sort inventory list
+  set_fact:
+    sorted_cluster_inventory:
+      "{{ cluster_inventory.keys() | list | sort }}"
+
+- name: Generate control nodes list
+  set_fact:
+    cluster_control_plane_hosts:
+      "{{ cluster_control_plane_hosts | default([]) +
+      [ sorted_cluster_inventory[item|int] ] }}"
+  with_sequence: start=0 end={{ cluster_nodes - 1 }}
+
+- name: Make inventory directory
+  file:
+    path: "{{ cluster_inventory_directory }}/group_vars/all"
+    state: directory
+
+- debug: var=cluster_inventory
+- debug: var=sorted_cluster_inventory
+- debug: var=cluster_control_plane_hosts
+
+- name: Generate inventory
+  template:
+    src: templates/inventory.yaml.j2
+    dest: "{{ cluster_inventory_directory }}/inventory.yaml"
+
+- name: Copy k8s extra settings file
+  copy:
+    src: "{{ lookup('env', 'X1_K8S_EXTRA_SETTINGS_FILE') }}"
+    dest: "{{ cluster_inventory_directory }}/group_vars/all/extra_settings.yaml"
+  when: lookup('env', 'X1_K8S_EXTRA_SETTINGS_FILE') != ""

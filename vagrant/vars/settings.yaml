@@ -1,0 +1,4 @@
+---
+# This variable means that we are dealing with real metal HW instead of VMs
+vm_mode: true
+cluster_subnet_interface: eth1

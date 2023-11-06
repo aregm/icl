@@ -1,0 +1,73 @@
+- name: Jumphost pre-setup (fix generic/ubuntu DNS issue)
+  hosts: all
+  roles:
+    - role: ../ansible/roles/fix-dns
+      become: true
+
+- name: Jumphost setup
+  hosts: jumphost
+  vars_files:
+    - settings.yaml
+  pre_tasks:
+    - name: Set cluster subnet
+      set_fact:
+        cluster_subnet:
+          "{{ (lookup('env', 'X1_NOMAAS_CLUSTER_SUBNET_PREFIX') + '.0/24')
+            if lookup('env', 'X1_NOMAAS_CLUSTER_SUBNET_PREFIX') != '' else
+            '172.23.3.0/24' }}"
+    - name: Set jumphost IP
+      set_fact:
+        vm_jumphost_ip_address:
+          "{{ (lookup('env', 'X1_NOMAAS_CLUSTER_SUBNET_PREFIX') + '.254')
+            if lookup('env', 'X1_NOMAAS_CLUSTER_SUBNET_PREFIX') != '' else
+            '172.23.3.254' }}"
+
+  tasks:
+    - name: Proxy setup
+      block:
+        - import_role:
+            name: ../ansible/roles/parse-proxy-url
+        - import_role:
+            name: ../ansible/roles/jumphost-packet-forwarding
+        - import_role:
+            name: ../ansible/roles/setup-redsocks
+        - import_role:
+            name: ../ansible/roles/setup-persistent-iptables
+      when: ansible_env.http_proxy is defined
+
+    - name: Copy private key locally to allow access to deployed systems
+      copy:
+        src: generated/id_rsa
+        dest: "~/.ssh/id_rsa"
+        mode: "0600"
+        follow: true
+
+    - name: Copy public key locally to allow access to deployed systems
+      copy:
+        src: generated/id_rsa.pub
+        dest: "~/.ssh/id_rsa.pub"
+        mode: "0600"
+        follow: true
+
+    - include_role:
+        name: ../ansible/roles/jumphost
+
+- name: Generate kubespray inventory
+  hosts: jumphost
+  vars_files:
+    - generated/cluster_info.yaml
+    - settings.yaml
+  roles:
+    - role: ../ansible/roles/kubespray-inventory
+
+- name: Generate nginx configuration
+  hosts: jumphost
+
+  vars_files:
+    - generated/cluster_info.yaml
+
+  roles:
+    - role: ../ansible/roles/ingress-nginx
+      vars:
+        etc_nginx: "{{ ansible_facts.env.HOME + '/generated/nginx' }}"
+        upstream_hosts: "{{ cluster_inventory | dict2items | map (attribute='value.ip_address') }}"

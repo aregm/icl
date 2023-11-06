@@ -1,0 +1,27 @@
+# Vagrant boxes generic/ubuntu have "fail-safe" DNS settings that do not work, disabling them
+
+- name: Ensure systemd-resolved drop-ins directory exists
+  file:
+    path: /etc/systemd/resolved.conf.d
+    state: directory
+
+- name: Disable default DNS servers and DNSSEC
+  copy:
+    dest: /etc/systemd/resolved.conf.d/dns.conf
+    content: |
+      [Resolve]
+      DNS=
+      DNSSEC=no
+  register: resolved_result
+
+- name: Ensure /etc/netplan/01-netcfg.yaml is deleted
+  file:
+    path: /etc/netplan/01-netcfg.yaml
+    state: absent
+  register: netplan_result
+
+- name: Apply netplan and restart systemd-resolved
+  shell: |
+    netplan apply
+    systemctl restart systemd-resolved
+  when: resolved_result or netcfg_result.changed

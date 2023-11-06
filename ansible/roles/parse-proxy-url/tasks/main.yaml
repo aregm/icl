@@ -1,0 +1,11 @@
+---
+
+- name: Set proxy host
+  set_fact:
+    http_proxy_host:
+      "{{ ansible_env.http_proxy.split(':')[1].replace('/', '') }} "
+
+- name: Set proxy port
+  set_fact:
+    http_proxy_port:
+      "{{ ansible_env.http_proxy.split(':')[2].replace('/', '') }}"

@@ -1,0 +1,54 @@
+all:
+  hosts:
+{% for item in sorted_cluster_inventory %}
+    {{ item }}:
+      ansible_host: {{ cluster_inventory[item].ip_address }}
+      ansible_port: {{ cluster_ssh_port }}
+      ansible_user: "{{ cluster_ssh_user }}"
+{% if cluster_inventory[item].private_key is defined %}
+      ansible_ssh_private_key_file: "{{ '{{' }} private_keys_location {{ '}}' }}/{{ cluster_inventory[item].private_key }}"
+{% endif %}
+{% endfor %}
+  vars:
+    # Ansible variables
+    ansible_ssh_common_args: "-o StrictHostKeyChecking=no"
+{% if ansible_env.http_proxy is defined %}
+    http_proxy: "{{ ansible_env.http_proxy }}"
+{% endif %}
+{% if ansible_env.https_proxy is defined %}
+    https_proxy: "{{ ansible_env.https_proxy }}"
+{% endif %}
+{% if ansible_env.no_proxy is defined %}
+    additional_no_proxy: "{{ ansible_env.no_proxy }}"
+{% endif %}
+
+    # Kubespray variables
+    # Make a copy of kubeconfig on the host that runs Ansible in {{ inventory_dir }}/artifacts
+    kubeconfig_localhost: true
+    # Use ansible_host as external api ip when copying over kubeconfig.
+    kubeconfig_localhost_ansible_host: true
+    # Supplementary addresses that can be added in kubernetes ssl keys.
+    # That can be useful for example to setup a keepalived virtual IP
+    supplementary_addresses_in_ssl_keys: [{% for item in cluster_control_plane_hosts %}{{ cluster_inventory[item].ip_address }}{% if not loop.last %}, {% endif %}{% endfor %}]
+  children:
+    kube_control_plane:
+      hosts:
+{% for item in cluster_control_plane_hosts %}
+        {{ item }}:
+{% endfor %}
+    etcd:
+      hosts:
+{% for item in cluster_control_plane_hosts %}
+        {{ item }}:
+{% endfor %}
+    kube_node:
+      hosts:
+{% for item in sorted_cluster_inventory %}
+        {{ item }}:
+{% endfor %}
+    calico_rr:
+    k8s_cluster:
+      children:
+        kube_control_plane:
+        kube_node:
+        calico_rr:

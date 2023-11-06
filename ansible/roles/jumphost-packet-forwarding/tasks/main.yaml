@@ -1,0 +1,29 @@
+---
+
+- name: Enable net.ipv4.ip_forward
+  become: true
+  ansible.posix.sysctl:
+    name: net.ipv4.ip_forward
+    value: '1'
+    sysctl_set: yes
+
+- name: Enable masquerading
+  become: true
+  iptables:
+    table: nat
+    chain: POSTROUTING
+    protocol: all
+    source: "{{ cluster_subnet }}"
+    destination: "! {{ cluster_subnet }}"
+    jump: MASQUERADE
+
+- name: Accept established
+  become: true
+  iptables:
+    chain: FORWARD
+    protocol: all
+    out_interface: "{{ cluster_subnet_interface }}"
+    destination: "{{ cluster_subnet }}"
+    ctstate: ESTABLISHED,RELATED
+    jump: ACCEPT
+

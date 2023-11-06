@@ -1,5 +1,5 @@
 ---
-# tasks file for configure-jumphost
+# tasks file for jumphost
 
 - name: Show OS family
   debug:
@@ -8,7 +8,7 @@
 - name: Copy required files to jumphost
   copy:
     # Source path should point to root location of repo relative to
-    # "configure-jumphost" role folder.
+    # "jumphost" role folder.
     src: "{{ item }}"
     dest: x1/
     mode: preserve

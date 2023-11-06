@@ -1,0 +1,23 @@
+upstream ray_{{ ingress_domain | replace(".", "_") | replace("-", "_") }} {
+{% for host in upstream_hosts %}
+    server {{ host }}:30009;
+{% endfor %}
+}
+
+server {
+    listen 443 http2;
+
+    server_name ray.{{ ingress_domain }};
+
+    # https://docs.ray.io/en/master/cluster/running-applications/job-submission/ray-client.html#connection-through-the-ingress
+    ignore_invalid_headers on;
+    underscores_in_headers on;
+    # allow any size file to be uploaded.
+    client_max_body_size 0;
+    # disable buffering
+    proxy_buffering off;
+
+    location / {
+        grpc_pass grpc://ray_{{ ingress_domain | replace(".", "_") | replace("-", "_") }};
+    }
+}

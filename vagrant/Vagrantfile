@@ -1,0 +1,83 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+require 'fileutils'
+
+Vagrant.configure(2) do |config|
+  if Vagrant.has_plugin?("vagrant-proxyconf")
+    config.proxy.http     = ENV.fetch('http_proxy', false)
+    config.proxy.https    = ENV.fetch('https_proxy', false)
+    config.proxy.no_proxy = ENV.fetch('no_proxy', false)
+  end
+
+  libvirt_default_prefix = ENV.fetch("X1_LIBVIRT_DEFAULT_PREFIX", ENV.fetch('USER', "nouser"))
+
+  cluster_vm_name_prefix = "cluster"
+  cluster_size = 3
+  cluster_subnet_ip_prefix = ENV.fetch("X1_NOMAAS_CLUSTER_SUBNET_PREFIX", "172.33.3")
+  config.vm.box = "generic/ubuntu2204"
+
+  config.vm.provider "libvirt" do |lv|
+    lv.driver = "kvm"
+    lv.storage_pool_name = "images"
+    lv.default_prefix = "#{libvirt_default_prefix}-"
+  end
+
+  config.vm.define "jumphost" do |jh|
+    jh.vm.hostname = "jumphost"
+    jh.vm.network "private_network", ip: "#{cluster_subnet_ip_prefix}.254"
+    jh.vm.provider "libvirt" do |lv|
+      lv.memory = "8192"
+      lv.cpus = 4
+    end
+
+    extra_vars = ENV["X1_K8S_EXTRA_SETTINGS_FILE"] ? YAML.load_file(ENV["X1_K8S_EXTRA_SETTINGS_FILE"]) : {}
+    os = ENV["X1_NODE_OS"] ? ENV["X1_NODE_OS"] : "ubuntu"
+    extra_vars["x1_node_os"] = os
+    extra_vars["github_token"] = ENV["GITHUB_TOKEN"]
+
+    jh.vm.provision "ansible" do |ansible|
+      ansible.playbook = "jumphost.yaml"
+      # Pass additional variables, such as `docker_image_repo` to the playbook
+      ansible.extra_vars = extra_vars
+    end
+
+    jh.vm.post_up_message = <<~END
+      --------------------------------------------
+      To install kubernetes and X1 software on cluster login to jumphost and
+      run ./everything.sh script. You can also run ansible playbooks from this
+      script separately.
+      --------------------------------------------
+    END
+  end
+
+  FileUtils.mkdir_p 'generated'
+  info_file = File.open("generated/cluster_info.yaml", "w")
+  info_file.write("# Do not modify this file, it is automatically overwritten every time you run vagrant command!\n")
+  info_file.write("cluster_ssh_user: vagrant\n")
+  info_file.write("cluster_inventory:\n")
+  (1..cluster_size).each do |i|
+    info_file.write("  #{cluster_vm_name_prefix}-#{i}:\n")
+    info_file.write("    ip_address: #{cluster_subnet_ip_prefix}.#{1+i}\n")
+  end
+  info_file.close
+
+  (1..cluster_size).each do |i|
+    config.vm.define "#{cluster_vm_name_prefix}-#{i}" do |node|
+      node.vm.hostname = "#{cluster_vm_name_prefix}-#{i}"
+      if ENV.fetch("http_proxy", "") != "" then
+        node.vm.network "private_network", ip: "#{cluster_subnet_ip_prefix}.#{1+i}", gateway: "#{cluster_subnet_ip_prefix}.254"
+      else
+        node.vm.network "private_network", ip: "#{cluster_subnet_ip_prefix}.#{1+i}"
+      end
+      node.vm.provider "libvirt" do |lv|
+        lv.memory = "16384"
+        lv.cpus = 8
+      end
+      node.vm.provision "ansible" do |ansible|
+        ansible.playbook = "node.yaml"
+      end
+    end
+  end
+
+end

@@ -1,0 +1,27 @@
+- name: Ensure nginx configuration directories exist
+  file:
+    path: "{{ item }}"
+    state: directory
+  loop:
+    - "{{ etc_nginx }}/sites-available"
+    - "{{ etc_nginx }}/sites-enabled"
+
+- name: Create configuration for all services
+  template:
+    src: templates/all.conf.j2
+    dest: "{{ etc_nginx }}/sites-available/{{ ingress_domain }}.conf"
+
+- name: Create configuration for ray service
+  template:
+    src: templates/ray.conf.j2
+    dest: "{{ etc_nginx }}/sites-available/ray.{{ ingress_domain }}.conf"
+    mode: 0644
+
+- name: Create symlinks from sites-enabled
+  file:
+    state: link
+    path: "{{ etc_nginx }}/sites-enabled/{{ item }}"
+    src: "../sites-available/{{ item }}"
+  with_items:
+    - "{{ ingress_domain }}.conf"
+    - "ray.{{ ingress_domain }}.conf"
