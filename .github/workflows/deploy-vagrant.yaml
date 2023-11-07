@@ -1,4 +1,4 @@
-name: Multi node x1 with vagrant, Ubuntu, kind
+name: Multi node cluster with Vagrant, Ubuntu, Kubespray
 
 # Controls when the workflow will run
 on:
