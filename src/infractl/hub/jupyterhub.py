@@ -1,8 +1,10 @@
 """icl-hub JupyterHub commands."""
 
 import base64
+import logging
 import subprocess
-from typing import List, Optional
+import sys
+from typing import Callable, List, Optional, Union
 
 import click
 from kubernetes import client, stream
@@ -54,6 +56,74 @@ def enable_ssh_cmd(username: str, key: Optional[str] = None):
 def disable_ssh_cmd(username: str):
     """Disable ssh to JupyterHub session."""
     disable_ssh(username)
+
+
+ResponseCallback = Callable[[str], None]
+
+
+class JupyterHubError(Exception):
+    """JupyterHub error."""
+
+
+def _stdout_callback(line: str):
+    """Callback for printing a line on stdout."""
+    print(line)
+
+
+def _stderr_callback(line: str):
+    """Callback for printing a line on stderr."""
+    print(line, file=sys.stderr)
+
+
+def execute_in_pod(
+    *,
+    pod: str,
+    container: Optional[str] = None,
+    namespace: Optional[str] = None,
+    command: Union[str, List[str]],
+    stdout_callback: ResponseCallback = _stdout_callback,
+    stderr_callback: ResponseCallback = _stderr_callback,
+    check: bool = True,
+):
+    """Execute a command in pod."""
+    if isinstance(command, str):
+        command = ['/bin/bash', '-c', command]
+    response = stream.stream(
+        kube.api().core_v1().connect_get_namespaced_pod_exec,
+        pod,
+        namespace or JUPYTERHUB_NAMESPACE,
+        container=container,
+        command=command,
+        stderr=True,
+        stdin=False,
+        stdout=True,
+        tty=False,
+        _preload_content=False,
+    )
+    while response.is_open():
+        response.update()
+        if response.peek_stderr():
+            stderr_callback(response.readline_stderr())
+        if response.peek_stdout():
+            stdout_callback(response.readline_stdout())
+    if check and response.returncode != 0:
+        raise JupyterHubError(f'Process returned {response.returncode}')
+
+
+def execute_in_pod_with_logger(logger: logging.Logger, **kwargs):
+    """Execute a command in pod and send stderr/stdout to logger."""
+
+    def logger_out(line: str):
+        """Log the line with info."""
+        logger.info(line)
+
+    def logger_err(line: str):
+        """Log the line with error."""
+        logger.error(line)
+
+    kwargs['stdout_callback'] = logger_out
+    kwargs['stderr_callback'] = logger_err
+    execute_in_pod(**kwargs)
 
 
 def get_user_pod(username: str) -> Optional[client.V1Pod]:
