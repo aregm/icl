@@ -520,7 +520,7 @@ class PrefectRuntimeImplementation(
         }
 
         # TODO: move the default image to discover
-        image = self.settings('prefect_image', 'pbchekin/icl-prefect:2.13.0-py3.9-icl0.0.3')
+        image = self.settings('prefect_image', 'pbchekin/icl-prefect:2.13.6-py3.9-icl0.0.3')
         if image:
             job_args['image'] = image
 

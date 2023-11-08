@@ -120,7 +120,7 @@ variable "docker_registry_storage_size" {
 
 variable "prefect_image_tag" {
   description = "Tag of the official Prefect Docker image"
-  default = "2.13.0-python3.9"
+  default = "2.13.6-python3.9"
   type = string
 }
 
