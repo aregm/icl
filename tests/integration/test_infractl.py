@@ -21,24 +21,12 @@ import infractl
 
 
 @pytest.mark.asyncio
-async def test_flow_with_shorcut_and_file_name(address):
+async def test_flow_with_file_name(address):
     infrastructure = infractl.infrastructure(address=address)
     runtime = infractl.runtime()
     program_run = await infractl.run(
         infractl.program('flows/flow1.py'), runtime=runtime, infrastructure=infrastructure
     )
-    assert program_run.is_completed()
-    assert 'Completed' in str(program_run), '__str__ for ProgramRun returns state'
-
-
-@pytest.mark.asyncio
-async def test_flow_with_file_name(address):
-    infrastructure = infractl.infrastructure(address=address)
-    runtime = infractl.runtime()
-    program = await infractl.deploy(
-        infractl.program('flows/flow1.py'), runtime=runtime, infrastructure=infrastructure
-    )
-    program_run = await program.run()
     assert program_run.is_completed()
     assert 'Completed' in str(program_run), '__str__ for ProgramRun returns state'
 
@@ -293,10 +281,9 @@ async def test_flow_with_customizations(address):
 async def test_python_program(address):
     infrastructure = infractl.infrastructure(address=address)
     runtime = infractl.runtime()
-    program = await infractl.deploy(
+    program_run = await infractl.run(
         infractl.program('flows/program1.py'), runtime=runtime, infrastructure=infrastructure
     )
-    program_run = await program.run()
     assert program_run.is_completed()
 
 
@@ -304,13 +291,13 @@ async def test_python_program(address):
 async def test_python_program_with_parameters(address):
     infrastructure = infractl.infrastructure(address=address)
     runtime = infractl.runtime()
-    program = await infractl.deploy(
+    program_run = await infractl.run(
         infractl.program('flows/program1.py'),
         runtime=runtime,
         infrastructure=infrastructure,
         name='program-with-parameters',
+        parameters=['arg1', 'arg2'],
     )
-    program_run = await program.run(parameters=['arg1', 'arg2'])
     assert program_run.is_completed()
 
 
