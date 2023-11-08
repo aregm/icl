@@ -52,6 +52,9 @@ class PrefectProgramRun(infractl.base.ProgramRun):
     def get_flow_run(self) -> prefect.client.schemas.FlowRun:
         return self._flow_run
 
+    async def result(self) -> Any:
+        return await self._flow_run.state.result(fetch=True)
+
     async def update(self) -> None:
         self._flow_run = await self._prefect_client.read_flow_run(self._flow_run.id)
 

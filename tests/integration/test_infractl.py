@@ -83,6 +83,7 @@ async def test_flow_with_parameters(address):
         },
     )
     assert program_run.is_completed()
+    assert await program_run.result() == ('1', 2)
 
 
 @pytest.mark.asyncio
