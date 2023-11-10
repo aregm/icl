@@ -46,7 +46,7 @@ spec:
              - "16"
              - --oversubscribe
              - -x
-             - UNIDIST_IS_MPI_SPAWN_WORKERS=False
+             - UNIDIST_MPI_SPAWN=False
              - -x
              - UNIDIST_MPI_LOG=True
              - -x
