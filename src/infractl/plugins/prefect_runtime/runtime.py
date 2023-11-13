@@ -368,6 +368,9 @@ class PrefectRuntimeImplementation(
             manifest_filter=manifest_filter,
         )
 
+        prefect_default_storage_block = await self.create_result_block('prefect-persistent-results')
+        logger.info('Default result storage block: "%s"', prefect_default_storage_block)
+
         prefect_flow_entrypoint = f'{flow_file_name}:{prefect_flow.fn.__name__}'
         prefect_deployment = await deployments.Deployment.build_from_flow(
             flow=prefect_flow,
@@ -385,6 +388,11 @@ class PrefectRuntimeImplementation(
             apply=False,
             skip_upload=True,
             entrypoint=prefect_flow_entrypoint,
+            infra_overrides={
+                'env': {
+                    'PREFECT_DEFAULT_RESULT_STORAGE_BLOCK': prefect_default_storage_block.full_name
+                }
+            },
         )
 
         deployment_keys = prefect_deployment.dict().keys()
@@ -466,6 +474,13 @@ class PrefectRuntimeImplementation(
         """Creates and saves Prefect storage block."""
         base_path = self.settings('prefect_storage_basepath', 's3://prefect')
         block = self.define_storage_block(base_path, block_name)
+        await block.save(overwrite=True, client=self.prefect_client)
+        return block
+
+    async def create_result_block(self, block_name: str) -> PrefectBlock:
+        """Creates and saves Prefect result storage block."""
+        storage_path = self.settings('prefect_storage_basepath', 's3://prefect')
+        block = self.define_storage_block(f'{storage_path}/_persistent_results', block_name)
         await block.save(overwrite=True, client=self.prefect_client)
         return block
 

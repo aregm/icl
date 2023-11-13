@@ -70,11 +70,12 @@ async def test_flow_without___file__(address):
 
 
 @pytest.mark.asyncio
-async def test_flow_with_parameters(address):
+@pytest.mark.parametrize('flow_name', ['flow3', 'flow3_with_default_storage'])
+async def test_flow_with_parameters(address, flow_name):
     infrastructure = infractl.infrastructure(address=address)
     program = await infractl.deploy(
-        infractl.program('flows/flow3.py', name='flow3'),
-        name='flow3-with-parameters',
+        infractl.program('flows/flow3.py', name=flow_name),
+        name=f'{flow_name}-with-parameters',
         infrastructure=infrastructure,
     )
     program_run = await program.run(
