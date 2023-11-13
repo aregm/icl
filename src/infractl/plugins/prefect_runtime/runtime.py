@@ -436,40 +436,45 @@ class PrefectRuntimeImplementation(
             ] = f'http://s3.{self.infrastructure_implementation.address}'
         return storage_settings
 
-    def define_storage_block(self, base_path: str, name: str) -> PrefectBlock:
+    def sanitize_block_name(self, block_name: str) -> str:
+        """Removes unallowable characters in a prefect document block name."""
+        return block_name.replace('_', '-')
+
+    def define_storage_block(self, base_path: str, block_name: str) -> PrefectBlock:
         """Defines Prefect storage block.
 
         The following Prefect storage blocks are supported:
         * LocalFileSystem (scheme is "file")
         * RemoteFileSystem (scheme is not "file")
         """
+        block_name = self.sanitize_block_name(block_name)
         if base_path.startswith('file:'):
             block = filesystems.LocalFileSystem(
                 # Note the trailing slash, https://github.com/PrefectHQ/prefect/issues/8710
-                basepath=f'{strip_file_scheme(base_path)}/{name}/',
+                basepath=f'{strip_file_scheme(base_path)}/{block_name}/',
             )
-            return PrefectBlock(kind='local-file-system', name=name, block=block)
+            return PrefectBlock(kind='local-file-system', name=block_name, block=block)
         else:
             block = filesystems.RemoteFileSystem(
                 # Note the trailing slash, https://github.com/PrefectHQ/prefect/issues/8710
-                basepath=f'{base_path}/{name}/',
+                basepath=f'{base_path}/{block_name}/',
                 settings=self.remote_storage_settings,
             )
-            return PrefectBlock(kind='remote-file-system', name=name, block=block)
+            return PrefectBlock(kind='remote-file-system', name=block_name, block=block)
 
-    async def create_code_block(self, flow_name: str) -> PrefectBlock:
+    async def create_code_block(self, block_name: str) -> PrefectBlock:
         """Creates and saves Prefect storage block."""
         base_path = self.settings('prefect_storage_basepath', 's3://prefect')
-        block = self.define_storage_block(base_path, flow_name)
+        block = self.define_storage_block(base_path, block_name)
         await block.save(overwrite=True, client=self.prefect_client)
         return block
 
-    async def create_files_block(self, flow_name: str):
+    async def create_files_block(self, block_name: str):
         """Creates a Prefect storage block, upload files and script for infractl.prefect.engine."""
         identity = stable_identity()
         storage_path = self.settings('prefect_storage_basepath', 's3://prefect')
         base_path = f'{storage_path}/_files/{identity}'
-        block = self.define_storage_block(base_path, f'{identity}-{flow_name}-files')
+        block = self.define_storage_block(base_path, f'{identity}-{block_name}-files')
         await block.save(overwrite=True, client=self.prefect_client)
         await self.upload_files(block)
 
@@ -499,14 +504,15 @@ class PrefectRuntimeImplementation(
 
     async def create_infrastructure_block(
         self,
-        flow_name: str,
+        block_name: str,
         customizations: Optional[List[Dict[str, Any]]] = None,
         manifest_filter: Optional[ManifestFilter] = None,
     ) -> PrefectBlock:
         """Creates Prefect infrastructure block."""
+        block_name = self.sanitize_block_name(block_name)
         block = self.kubernetes_job(customizations=customizations, manifest_filter=manifest_filter)
-        await block.save(flow_name, overwrite=True, client=self.prefect_client)
-        return PrefectBlock(kind='kubernetes-job', name=flow_name)
+        await block.save(block_name, overwrite=True, client=self.prefect_client)
+        return PrefectBlock(kind='kubernetes-job', name=block_name)
 
     def kubernetes_job(
         self,

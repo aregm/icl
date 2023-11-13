@@ -26,3 +26,9 @@ def flow3(first: str = 'Default Value', second: int = 0):
     # test timeout
     time.sleep(3)
     return first, second
+
+
+@flow(persist_result=True, result_storage=define_storage())
+def flow3_with_underscore_in_name():
+    # see #28 for details
+    return "Some computed value"

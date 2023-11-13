@@ -73,7 +73,8 @@ async def test_flow_without___file__(address):
 async def test_flow_with_parameters(address):
     infrastructure = infractl.infrastructure(address=address)
     program = await infractl.deploy(
-        infractl.program('flows/flow3.py'),
+        infractl.program('flows/flow3.py', name='flow3'),
+        name='flow3-with-parameters',
         infrastructure=infrastructure,
     )
     program_run = await program.run(
@@ -102,17 +103,35 @@ async def test_flow_timeout(address):
     infrastructure = infractl.infrastructure(address=address)
     # Deploy and run a flow in a local infractl cluster
     program = await infractl.deploy(
-        infractl.program('flows/flow3.py', name='flow3-with-timeout'), infrastructure=infrastructure
+        infractl.program('flows/flow3.py', name='flow3'),
+        name='flow3-with-timeout',
+        infrastructure=infrastructure,
     )
     with pytest.raises(asyncio.exceptions.TimeoutError):
         await program.run(timeout=1)
 
 
 @pytest.mark.asyncio
+async def test_flow_with_complex_name(address):
+    infrastructure = infractl.infrastructure(address=address)
+    # Deploy and run a flow in a local infractl cluster
+    program = await infractl.deploy(
+        infractl.program('flows/flow3.py', name='flow3_with_underscore_in_name'),
+        name='flow3_with_underscore_in_name',
+        infrastructure=infrastructure,
+    )
+    program_run = await program.run()
+    assert program_run.is_completed()
+    assert await program_run.result() == "Some computed value"
+
+
+@pytest.mark.asyncio
 async def test_flow_async(address):
     infrastructure = infractl.infrastructure(address=address)
     program = await infractl.deploy(
-        infractl.program('flows/flow3.py'), name='flow3-async', infrastructure=infrastructure
+        infractl.program('flows/flow3.py', name='flow3'),
+        name='flow3-async',
+        infrastructure=infrastructure,
     )
     program_run = await program.run(detach=True)
     assert program_run.is_scheduled()
@@ -142,7 +161,7 @@ async def test_flow_async(address):
 async def test_flow_async_and_wait(address):
     infrastructure = infractl.infrastructure(address=address)
     program = await infractl.deploy(
-        infractl.program('flows/flow3.py'),
+        infractl.program('flows/flow3.py', name='flow3'),
         name='flow3-async-and-wait',
         infrastructure=infrastructure,
     )
