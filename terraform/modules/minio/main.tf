@@ -3,7 +3,7 @@ resource "helm_release" "operator" {
   name = "operator"
   namespace = "minio"
   create_namespace = true
-  chart = "https://github.com/minio/operator/raw/v4.5.1/helm-releases/operator-4.5.1.tgz"
+  chart = "https://github.com/minio/operator/raw/v5.0.10/helm-releases/operator-5.0.10.tgz"
   values = [
     <<-EOT
       console:
@@ -68,13 +68,15 @@ resource "helm_release" "minio_ha" {
   name = "minio"
   namespace = "minio"
   create_namespace = true
-  chart = "https://github.com/minio/operator/raw/v4.5.1/helm-releases/tenant-4.5.1.tgz"
+  chart = "https://github.com/minio/operator/raw/v5.0.10/helm-releases/tenant-5.0.10.tgz"
   values = [
     <<-EOT
       secrets:
         name: minio-env-configuration
       tenant:
         name: minio
+        configuration:
+          name: minio-env-configuration
         pools:
           - name: pool-0
             servers: ${var.minio_servers}
@@ -104,13 +106,15 @@ resource "helm_release" "minio" {
   name = "minio"
   namespace = "minio"
   create_namespace = true
-  chart = "https://github.com/minio/operator/raw/v4.5.1/helm-releases/tenant-4.5.1.tgz"
+  chart = "https://github.com/minio/operator/raw/v5.0.10/helm-releases/tenant-5.0.10.tgz"
   values = [
     <<-EOT
       secrets:
         name: minio-env-configuration
       tenant:
         name: minio
+        configuration:
+          name: minio-env-configuration
         pools:
           - name: pool-0
             servers: 1
