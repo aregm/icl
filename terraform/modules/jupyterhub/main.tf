@@ -145,6 +145,9 @@ resource "helm_release" "jupyterhub" {
             storageClassName: "${var.default_storage_class}"
         networkPolicy:
           enabled: false
+        extraConfig:
+          myConfig.py: |
+            c.KubeSpawner.http_timeout = int(180)
       singleuser:
         # https://zero-to-jupyterhub.readthedocs.io/en/latest/jupyterhub/customizing/user-environment.html#use-jupyterlab-by-default
         defaultUrl: /lab
