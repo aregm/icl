@@ -15,7 +15,7 @@ import sys
 import tarfile
 import tempfile
 import urllib.parse
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 import dynaconf
 import prefect.blocks.core as blocks
@@ -26,6 +26,7 @@ from prefect.server.api import server
 
 import infractl
 import infractl.base
+import infractl.identity
 import infractl.plugins.prefect_runtime.utils as prefect_utils
 from infractl.logging import get_logger
 from infractl.plugins import icl_infrastructure, prefect_runtime
@@ -68,10 +69,6 @@ DEFAULT_ITEMS_TO_IGNORE = [
 ]
 
 
-ManifestFilter = Callable[[infrastructure.KubernetesManifest], infrastructure.KubernetesManifest]
-"""Accepts Kubernetes manifest as a dictionary and returns an updated manifest."""
-
-
 class PrefectRuntimeError(Exception):
     """Prefect runtime error."""
 
@@ -89,16 +86,6 @@ def strip_file_scheme(uri: str) -> str:
         # workaround to remove leading slash on Windows
         return path[1:]
     return path
-
-
-def stable_identity() -> str:
-    """Generates stable identity for the current user.
-
-    Uses environment variables `JUPYTERHUB_USER`, `USER` and sanitizes the value to make it
-    compatible with Prefect names.
-    """
-    identity = os.environ.get('JUPYTERHUB_USER') or os.environ.get('USER') or 'unknown'
-    return prefect_runtime.sanitize(identity)
 
 
 def upload_files(files: List[infractl.base.RuntimeFile], target_path: pathlib.Path):
@@ -283,13 +270,16 @@ class PrefectRuntimeImplementation(
 
     async def deploy(
         self,
-        program: prefect_runtime.PrefectProgram,
+        program: infractl.base.Program,
         customizations: Optional[List[Dict[str, Any]]] = None,
-        manifest_filter: Optional[ManifestFilter] = None,
+        manifest_filter: Optional[infractl.base.ManifestFilter] = None,
         name: Optional[str] = None,
         **kwargs,
     ):
         """Deploys a program."""
+
+        program = prefect_runtime.load_program(path=program.path, name=program.name)
+
         with settings.temporary_settings(updates={settings.PREFECT_API_URL: self.prefect_api_url}):
             if isinstance(program, prefect_runtime.PythonProgram):
                 return await self.deploy_python_program(
@@ -312,7 +302,7 @@ class PrefectRuntimeImplementation(
         self,
         program: prefect_runtime.PythonProgram,
         customizations: Optional[List[Dict[str, Any]]] = None,
-        manifest_filter: Optional[ManifestFilter] = None,
+        manifest_filter: Optional[infractl.base.ManifestFilter] = None,
         name: Optional[str] = None,
         **kwargs,
     ) -> infractl.base.DeployedProgram:
@@ -343,7 +333,7 @@ class PrefectRuntimeImplementation(
         self,
         program: prefect_runtime.PrefectProgram,
         customizations: Optional[List[Dict[str, Any]]] = None,
-        manifest_filter: Optional[ManifestFilter] = None,
+        manifest_filter: Optional[infractl.base.ManifestFilter] = None,
         name: Optional[str] = None,
         **kwargs,
     ) -> infractl.base.DeployedProgram:
@@ -486,7 +476,7 @@ class PrefectRuntimeImplementation(
 
     async def create_files_block(self, block_name: str):
         """Creates a Prefect storage block, upload files and script for infractl.prefect.engine."""
-        identity = stable_identity()
+        identity = infractl.identity.generate()
         storage_path = self.settings('prefect_storage_basepath', 's3://prefect')
         base_path = f'{storage_path}/_files/{identity}'
         block = self.define_storage_block(base_path, f'{identity}-{block_name}-files')
@@ -521,7 +511,7 @@ class PrefectRuntimeImplementation(
         self,
         block_name: str,
         customizations: Optional[List[Dict[str, Any]]] = None,
-        manifest_filter: Optional[ManifestFilter] = None,
+        manifest_filter: Optional[infractl.base.ManifestFilter] = None,
     ) -> PrefectBlock:
         """Creates Prefect infrastructure block."""
         block_name = self.sanitize_block_name(block_name)
@@ -532,7 +522,7 @@ class PrefectRuntimeImplementation(
     def kubernetes_job(
         self,
         customizations: Optional[List[Dict[str, Any]]] = None,
-        manifest_filter: Optional[ManifestFilter] = None,
+        manifest_filter: Optional[infractl.base.ManifestFilter] = None,
     ) -> infrastructure.KubernetesJob:
         """Creates Prefect KubernetesJob block."""
         job_args = {
@@ -581,9 +571,8 @@ class PrefectRuntimeImplementation(
         return infrastructure.KubernetesJob(job=manifest, **job_args)
 
     def manifest_filter(
-        self,
-        manifest: infrastructure.KubernetesManifest,
-    ) -> infrastructure.KubernetesManifest:
+        self, manifest: infractl.base.KubernetesManifest
+    ) -> infractl.base.KubernetesManifest:
         """Filters Kubernetes Job manifest.
 
         Adds shared volume, if enabled.

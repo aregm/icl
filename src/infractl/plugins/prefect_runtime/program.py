@@ -16,9 +16,9 @@ from prefect.client.schemas.filters import LogFilter
 from prefect.utilities import importtools
 
 import infractl.base
+import infractl.identity
 import infractl.plugins.prefect_runtime.utils as prefect_utils
 from infractl.logging import get_logger
-from infractl.plugins import prefect_runtime
 
 logger = get_logger()
 
@@ -211,7 +211,7 @@ class PythonProgram(PrefectProgram):
         from infractl.prefect import wrapper
 
         program = load_program(path=wrapper.wrap)
-        program.flow.name = prefect_runtime.sanitize(name or pathlib.Path(path).stem)
+        program.flow.name = infractl.identity.sanitize(name or pathlib.Path(path).stem)
         super().__init__(path=program.path, flow=program.flow)
 
         program_path = pathlib.Path(path)
@@ -220,20 +220,16 @@ class PythonProgram(PrefectProgram):
         self.files = [infractl.base.RuntimeFile(src=str(program_path))]
 
 
-def load_program(
-    path: Union[str, prefect.Flow], name: Optional[str] = None, **kwargs
-) -> PrefectProgram:
+def load_program(path: Union[str, prefect.Flow], name: Optional[str] = None) -> PrefectProgram:
     """Returns Prefect program."""
     with warnings.catch_warnings():
         # Ignore UserWarning since Prefect complains about loading the same flow definition more
         # than once.
         warnings.simplefilter('ignore', category=UserWarning)
-        return _load_program(path, name=name, **kwargs)
+        return _load_program(path, name=name)
 
 
-def _load_program(
-    path: Union[str, prefect.Flow], name: Optional[str] = None, **kwargs
-) -> PrefectProgram:
+def _load_program(path: Union[str, prefect.Flow], name: Optional[str] = None) -> PrefectProgram:
     """Returns Prefect program."""
 
     flow: Optional[prefect.Flow] = None
@@ -262,4 +258,4 @@ def _load_program(
         if not path:
             raise ValueError('Could not determine flow file location (__file__ not set)')
 
-    return PrefectProgram(path=path, flow=flow, name=flow.name, **kwargs)
+    return PrefectProgram(path=path, flow=flow, name=flow.name)

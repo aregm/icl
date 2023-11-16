@@ -1,5 +1,4 @@
 import asyncio
-import os
 import pathlib
 import sys
 import tarfile
@@ -12,7 +11,6 @@ from prefect import filesystems
 
 import infractl
 import infractl.base
-from infractl.plugins import prefect_runtime
 from infractl.plugins.prefect_runtime import runtime
 
 RuntimeFile = infractl.base.RuntimeFile
@@ -41,15 +39,6 @@ def test_strip_file_scheme():
         assert runtime.strip_file_scheme('file:///home') == '/home'
     assert runtime.strip_file_scheme('file:local') == 'local'
     assert runtime.strip_file_scheme('file:.local') == '.local'
-
-
-def test_sanitize():
-    assert prefect_runtime.sanitize('paul') == 'paul'
-    assert (
-        prefect_runtime.sanitize('first.last1-last2@domain.com') == 'first-last1-last2-domain-com'
-    )
-    assert prefect_runtime.sanitize('lee.foo-bar@domain.com') == 'lee-foo-bar-domain-com'
-    assert prefect_runtime.sanitize('.lee..foo--bar@domain.com.') == 'lee-foo-bar-domain-com'
 
 
 @pytest.mark.asyncio

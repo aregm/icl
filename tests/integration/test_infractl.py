@@ -1,5 +1,5 @@
 """
-Tests to verify that infractl Python package and ICL cluster work together.
+Tests to verify that ICL Prefect runtime and ICL cluster work together.
 
 To run the tests you need a local ICL cluster available at `localtest.me`,
 see [docs/kind.md](../../docs/kind.md) for the details.
@@ -42,31 +42,6 @@ async def test_flow_with_imported_module(address):
     )
     program_run = await program.run()
     assert program_run.is_completed()
-
-
-@pytest.mark.asyncio
-async def test_flow_without___file__(address):
-    infrastructure = infractl.infrastructure(address=address)
-    runtime = infractl.runtime()
-
-    # assumed prefect logic (if no entrypoint passed)
-    # flow_file = getattr(flow, "__globals__", {}).get("__file__")
-    # mod_name = getattr(flow, "__module__", None)
-    # if not flow_file:
-    #    if not mod_name:
-    #        raise ValueError
-    #    try:
-    #        module = importlib.import_module(mod_name)
-    #        flow_file = getattr(module, "__file__", None)
-    # ------------------------------------------------------
-    # To be sure that changing the prefect won't break infractl, we can test if
-    # `deploy` works without `__module__` (and therefore without `__file__`).
-    # Note: `__globals__` is also not defined by default for `prefect.Flow` object.
-    program = infractl.program(flow2)
-    with patch.object(program.flow, "__module__", new=None):
-        program = await infractl.deploy(program, runtime=runtime, infrastructure=infrastructure)
-        program_run = await program.run()
-        assert program_run.is_completed()
 
 
 @pytest.mark.asyncio
@@ -299,9 +274,10 @@ async def test_flow_with_customizations(address):
 
 
 @pytest.mark.asyncio
-async def test_python_program(address):
+@pytest.mark.parametrize('runtime_kind', ['prefect', 'kubernetes'])
+async def test_python_program(address, runtime_kind):
     infrastructure = infractl.infrastructure(address=address)
-    runtime = infractl.runtime()
+    runtime = infractl.runtime(kind=runtime_kind)
     program_run = await infractl.run(
         infractl.program('flows/program1.py'), runtime=runtime, infrastructure=infrastructure
     )

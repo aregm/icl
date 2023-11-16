@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Callable, Dict
 
 from infractl.base.infrastructure import (
     Infrastructure,
@@ -23,6 +23,10 @@ if TYPE_CHECKING:
     import dynaconf  # pylint: disable=ungrouped-imports
 
 SETTINGS: dynaconf.Dynaconf
+
+KubernetesManifest = Dict[str, Any]
+
+ManifestFilter = Callable[[KubernetesManifest], KubernetesManifest]
 
 
 def _settings() -> dynaconf.Dynaconf:

@@ -9,7 +9,8 @@ from typing import Callable, List, Optional, Union
 import click
 from kubernetes import client, stream
 
-from infractl.hub import config, kube, root
+import infractl.kubernetes as kube
+from infractl.hub import config, root
 
 JUPYTERHUB_NAMESPACE = 'jupyterhub'
 ICL_HUB_NAMESPACE = 'icl-hub'
