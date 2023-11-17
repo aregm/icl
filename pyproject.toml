@@ -19,7 +19,6 @@ classifiers = [
 
 ]
 dependencies = [
-    "boto3",
     "click",
     "docker",
     "dynaconf",
@@ -43,6 +42,9 @@ dependencies = [
 infractl = "infractl.cli.main:main"
 
 [project.optional-dependencies]
+aws = [
+    "boto3",
+]
 build = [
     "build",
     "twine",

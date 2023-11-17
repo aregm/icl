@@ -9,7 +9,7 @@ import logging
 
 import click
 
-from infractl.deploy.aws import vpc
+from infractl.plugins.aws_infrastructure import vpc
 
 logger = logging.getLogger(__name__)
 
