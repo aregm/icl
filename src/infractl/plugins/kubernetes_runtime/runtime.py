@@ -6,12 +6,14 @@ import base64
 import pathlib
 import random
 import string
+import tempfile
 from typing import Any, Dict, List, Optional, Union
 
 import s3fs
 from kubernetes import client, watch
 
 import infractl.base
+import infractl.fs
 from infractl import identity, kubernetes
 
 KubernetesManifest = infractl.base.KubernetesManifest
@@ -45,6 +47,8 @@ class KubernetesRuntimeImplementation(
         random_part = ''.join(random.choices(string.ascii_letters + string.digits, k=5))
         name = name or identity.generate(suffix=f'{program_path.stem}-{random_part}')
         remote_path = f'{self.settings.s3_base_path}/{name}'
+        code_path = f'{remote_path}/code'
+        data_path = f'{remote_path}/data'
 
         fs_spec = {
             'key': 'x1miniouser',
@@ -55,7 +59,13 @@ class KubernetesRuntimeImplementation(
             },
         }
         remote_fs = s3fs.S3FileSystem(**fs_spec)
-        remote_fs.put(str(program_path), f'{remote_path}/')
+        remote_fs.put(str(program_path), f'{code_path}/')
+
+        if self.runtime.files:
+            with tempfile.TemporaryDirectory() as dirname:
+                target_path = pathlib.Path(dirname)
+                infractl.fs.prepare_to_upload(self.runtime.files, target_path)
+                remote_fs.put(lpath=f'{dirname}/', rpath=f'{data_path}/', recursive=True)
 
         secret = _get_secret(name, _get_s3cmd_config())
         kubernetes.api().recreate_secret(namespace=self.settings.namespace, body=secret)
@@ -69,11 +79,15 @@ class KubernetesRuntimeImplementation(
             client.V1VolumeMount(name='s3cfg', read_only=True, mount_path='/secrets')
         ]
         job.spec.template.spec.containers[0].working_dir = self.settings.working_dir
+        s3cmd_get = 's3cmd --config=/secrets/.s3cfg get --recursive --force'
         command_lines = [
             'pip install s3cmd',
-            f's3cmd --config=/secrets/.s3cfg get --recursive s3://{remote_path}/ .',
+            f'{s3cmd_get} s3://{code_path}/ .',
+            '__ICL_DATA_DIR=$(mktemp -d)',
+            f'{s3cmd_get} s3://{data_path}/ $__ICL_DATA_DIR/',
+            'if [[ -f "$__ICL_DATA_DIR/cwd.tar" ]]; then tar xvf "$__ICL_DATA_DIR/cwd.tar"; fi',
             'pwd',
-            'ls -l',
+            'ls -l . $__ICL_DATA_DIR',
             f'python {program_path.name}',
         ]
         job.spec.template.spec.containers[0].command = [
@@ -123,25 +137,27 @@ class KubernetesRunner(infractl.base.Runnable):
             label_selector=f'job-name={self.name}',
         ):
             if event['object'].status.phase == 'Succeeded':
-                return KubernetesProgramRun(completed=True)
+                return KubernetesProgramRun(name=self.name, completed=True)
             elif event['object'].status.phase == 'Failed':
-                return KubernetesProgramRun(completed=False)
+                return KubernetesProgramRun(name=self.name, completed=False)
             elif event['object'].status.phase == 'Running':
                 continue
             # deleted while watching for it
             if event['type'] == 'DELETED':
-                return KubernetesProgramRun(completed=False, message='Cancelled')
+                return KubernetesProgramRun(name=self.name, completed=False, message='Cancelled')
         # TODO: stop job if it is still running
-        return KubernetesProgramRun(completed=False, message='Timed out')
+        return KubernetesProgramRun(name=self.name, completed=False, message='Timed out')
 
 
 class KubernetesProgramRun(infractl.base.ProgramRun):
     """Kubernetes program run."""
 
+    name: str
     completed: bool
     message: Optional[str]
 
-    def __init__(self, completed: bool = True, message: Optional[str] = None):
+    def __init__(self, name: str, completed: bool = True, message: Optional[str] = None):
+        self.name = name
         self.completed = completed
         self.message = message
 
@@ -177,6 +193,14 @@ class KubernetesProgramRun(infractl.base.ProgramRun):
 
     async def wait(self, poll_interval=5) -> None:
         raise NotImplementedError()
+
+    def __repr__(self) -> str:
+        """Returns a string representation.
+
+        Note that JupyterLab uses __repr__ instead of __str__.
+        """
+        status = 'Completed' if self.completed else 'Failed'
+        return f'{self.name} ({status})'
 
 
 def _get_secret(name: str, data: str) -> client.V1Secret:
@@ -224,7 +248,7 @@ def _get_job(name: str) -> client.V1Job:
                     restart_policy='Never',
                 )
             ),
-            backoff_limit=1,
+            backoff_limit=0,
             completion_mode='NonIndexed',
             completions=1,
             parallelism=1,

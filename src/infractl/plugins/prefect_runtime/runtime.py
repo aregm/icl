@@ -11,10 +11,7 @@ import copy
 import functools
 import os
 import pathlib
-import sys
-import tarfile
 import tempfile
-import urllib.parse
 from typing import Any, Dict, List, Optional, Union
 
 import dynaconf
@@ -26,6 +23,7 @@ from prefect.server.api import server
 
 import infractl
 import infractl.base
+import infractl.fs
 import infractl.identity
 import infractl.plugins.prefect_runtime.utils as prefect_utils
 from infractl.logging import get_logger
@@ -71,41 +69,6 @@ DEFAULT_ITEMS_TO_IGNORE = [
 
 class PrefectRuntimeError(Exception):
     """Prefect runtime error."""
-
-
-def strip_file_scheme(uri: str) -> str:
-    """Strips "file" schema from the URI.
-
-    Examples:
-        file:///C:/Windows -> C:/Windows
-        file:///home -> /home
-        file:local -> local
-    """
-    path = urllib.parse.unquote(urllib.parse.urlparse(uri).path)
-    if sys.platform == 'win32' and path.startswith('/'):
-        # workaround to remove leading slash on Windows
-        return path[1:]
-    return path
-
-
-def upload_files(files: List[infractl.base.RuntimeFile], target_path: pathlib.Path):
-    """Uploads files to the specified directory."""
-    # The specified directory has the following structure:
-    # cwd.tar  - tarball to extract to the current directory in runtime.
-    with tarfile.open(name=target_path / 'cwd.tar', mode='w') as cwd:
-        for file in files:
-            if file.src.endswith('/'):
-                src = pathlib.Path(file.src)
-                dst = ''
-                if file.dst:
-                    # dst is expected to be a directory, adding a trailing / if missing
-                    dst = file.dst if file.dst.endswith('/') else f'{file.dst}/'
-                for path in src.rglob('*'):
-                    relative_path = path.relative_to(src)
-                    cwd.add(name=path, arcname=f'{dst}{relative_path}')
-            else:
-                dst = file.dst or file.src
-                cwd.add(name=file.src, arcname=pathlib.Path(dst).name)
 
 
 class PrefectBlock(pydantic.BaseModel):
@@ -449,7 +412,7 @@ class PrefectRuntimeImplementation(
         if base_path.startswith('file:'):
             block = filesystems.LocalFileSystem(
                 # Note the trailing slash, https://github.com/PrefectHQ/prefect/issues/8710
-                basepath=f'{strip_file_scheme(base_path)}/{block_name}/',
+                basepath=f'{infractl.fs.strip_file_scheme(base_path)}/{block_name}/',
             )
             return PrefectBlock(kind='local-file-system', name=block_name, block=block)
         else:
@@ -502,7 +465,7 @@ class PrefectRuntimeImplementation(
         with tempfile.TemporaryDirectory() as dirname:
             target_path = pathlib.Path(dirname)
             script_path = target_path / self._script
-            upload_files(self.runtime.files, target_path)
+            infractl.fs.prepare_to_upload(self.runtime.files, target_path)
             script_path.write_text('\n'.join(script_lines))
             await block.block.put_directory(local_path=dirname)
         self._files_block = block.full_name

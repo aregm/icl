@@ -324,3 +324,24 @@ async def test_python_function_with_parameters(address):
     )
     program_run = await program.run(parameters={'arg1': 'val1'})
     assert program_run.is_completed()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize('runtime_kind', ['prefect', 'kubernetes'])
+async def test_python_program_with_files(address, runtime_kind):
+    infrastructure = infractl.infrastructure(address=address)
+    runtime = infractl.runtime(
+        kind=runtime_kind,
+        files=[
+            # file from local current directory to runtime working directory
+            'data/test_file.txt',
+            # file from local current directory to runtime working directory with different name
+            {'src': 'data/test_file.txt', 'dst': 'test_file.txt.renamed'},
+            # 'data/' from local current directory to 'new_data/' in runtime working directory
+            {'src': 'data/', 'dst': 'new_data/'},
+        ],
+    )
+    program_run = await infractl.run(
+        infractl.program('flows/program2.py'), runtime=runtime, infrastructure=infrastructure
+    )
+    assert program_run.is_completed()
