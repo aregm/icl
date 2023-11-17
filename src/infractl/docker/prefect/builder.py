@@ -64,9 +64,15 @@ def kill_docker(timeout=30):
     import psutil
 
     logger = prefect.get_run_logger()
-    docker_init_pid = [
-        process.pid for process in psutil.process_iter() if process.name() == 'docker-init'
-    ]
+    docker_init_pid = []
+    for process in psutil.process_iter():
+        try:
+            if process.name() == 'docker-init':
+                docker_init_pid.append(process.pid)
+        except psutil.NoSuchProcess:
+            # process.name() raises NoSuchProcess exception if the process dies between getting its
+            # pid and name. We can ignore such case and continue.
+            continue
     if not docker_init_pid:
         logger.info('docker-init not found, nothing to do')
         return

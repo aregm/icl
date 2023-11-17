@@ -15,6 +15,7 @@ from kubernetes import client, watch
 import infractl.base
 import infractl.fs
 from infractl import identity, kubernetes
+from infractl.plugins.kubernetes_runtime import engine
 
 KubernetesManifest = infractl.base.KubernetesManifest
 
@@ -58,14 +59,28 @@ class KubernetesRuntimeImplementation(
                 'endpoint_url': 'http://s3.localtest.me',
             },
         }
+
+        # upload the program
         remote_fs = s3fs.S3FileSystem(**fs_spec)
         remote_fs.put(str(program_path), f'{code_path}/')
 
+        # upload runtime files
         if self.runtime.files:
             with tempfile.TemporaryDirectory() as dirname:
                 target_path = pathlib.Path(dirname)
                 infractl.fs.prepare_to_upload(self.runtime.files, target_path)
                 remote_fs.put(lpath=f'{dirname}/', rpath=f'{data_path}/', recursive=True)
+
+        # upload engine
+        remote_fs.put(lpath=engine.__file__, rpath=f'{data_path}/')
+
+        # upload dependencies
+        if self.runtime.dependencies.pip:
+            with tempfile.NamedTemporaryFile(delete=False) as requirements_file:
+                requirements_file.write('\n'.join(self.runtime.dependencies.pip).encode('utf-8'))
+                requirements_file.flush()
+                requirements_file.close()
+                remote_fs.put(lpath=requirements_file.name, rpath=f'{data_path}/requirements.txt')
 
         secret = _get_secret(name, _get_s3cmd_config())
         kubernetes.api().recreate_secret(namespace=self.settings.namespace, body=secret)
@@ -79,22 +94,37 @@ class KubernetesRuntimeImplementation(
             client.V1VolumeMount(name='s3cfg', read_only=True, mount_path='/secrets')
         ]
         job.spec.template.spec.containers[0].working_dir = self.settings.working_dir
+
         s3cmd_get = 's3cmd --config=/secrets/.s3cfg get --recursive --force'
+        engine_cmd = f'python $__ICL_DATA_DIR/engine.py {program_path.name}'
+        if program.name:
+            engine_cmd += f' --entrypoint {program.name}'
         command_lines = [
-            'pip install s3cmd',
-            f'{s3cmd_get} s3://{code_path}/ .',
             '__ICL_DATA_DIR=$(mktemp -d)',
+            'pip install s3cmd pydantic',
+            f'{s3cmd_get} s3://{code_path}/ .',
             f'{s3cmd_get} s3://{data_path}/ $__ICL_DATA_DIR/',
+            'if [[ -f "$__ICL_DATA_DIR/requirements.txt" ]]; then',
+            '  pip install -r "$__ICL_DATA_DIR/requirements.txt"',
+            'fi',
             'if [[ -f "$__ICL_DATA_DIR/cwd.tar" ]]; then tar xvf "$__ICL_DATA_DIR/cwd.tar"; fi',
             'pwd',
             'ls -l . $__ICL_DATA_DIR',
-            f'python {program_path.name}',
+            'export PYTHONPATH=$PWD',
+            engine_cmd,
         ]
         job.spec.template.spec.containers[0].command = [
             '/bin/bash',
             '-xc',
             '\n'.join(command_lines),
         ]
+
+        if self.runtime.environment:
+            job.spec.template.spec.containers[0].env = [
+                client.V1EnvVar(name=key, value=value)
+                for key, value in self.runtime.environment.items()
+            ]
+
         # TODO: use activeDeadlineSeconds for the timeout
 
         kubernetes.api().recreate_job(namespace=self.settings.namespace, body=job)

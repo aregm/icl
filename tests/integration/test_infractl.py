@@ -285,9 +285,10 @@ async def test_python_program(address, runtime_kind):
 
 
 @pytest.mark.asyncio
-async def test_python_program_with_parameters(address):
+@pytest.mark.parametrize('runtime_kind', ['prefect', 'kubernetes'])
+async def test_python_program_with_parameters(address, runtime_kind):
     infrastructure = infractl.infrastructure(address=address)
-    runtime = infractl.runtime()
+    runtime = infractl.runtime(kind=runtime_kind)
     program_run = await infractl.run(
         infractl.program('flows/program1.py'),
         runtime=runtime,
@@ -299,16 +300,20 @@ async def test_python_program_with_parameters(address):
 
 
 @pytest.mark.asyncio
-async def test_python_function(address):
+@pytest.mark.parametrize('runtime_kind', ['prefect', 'kubernetes'])
+async def test_python_function(address, runtime_kind):
     infrastructure = infractl.infrastructure(address=address)
-    runtime = infractl.runtime()
-    program = await infractl.deploy(
-        infractl.program('flows/program1.py', name='foo'),
+    runtime = infractl.runtime(
+        kind=runtime_kind,
+        dependencies={'pip': ['toml']},
+        environment={'PROGRAM1_ENV_VAR': 'SET'},
+    )
+    program_run = await infractl.run(
+        infractl.program('flows/program1.py', name='all_checks'),
         runtime=runtime,
         infrastructure=infrastructure,
         name='program-with-entrypoint',
     )
-    program_run = await program.run()
     assert program_run.is_completed()
 
 
