@@ -9,6 +9,7 @@ import string
 import tempfile
 from typing import Any, Dict, List, Optional, Union
 
+import fsspec
 import s3fs
 from kubernetes import client, watch
 
@@ -29,6 +30,17 @@ class KubernetesRuntimeSettings:
     working_dir = '/root'
 
 
+class RemoteStorage:
+    """Remote storage."""
+
+    fs: fsspec.AbstractFileSystem
+    base_path: str
+
+    def __init__(self, fs: fsspec.AbstractFileSystem, base_path: str):
+        self.fs = fs
+        self.base_path = base_path
+
+
 class KubernetesRuntimeImplementation(
     infractl.base.RuntimeImplementation, registration_name='kubernetes'
 ):
@@ -47,10 +59,9 @@ class KubernetesRuntimeImplementation(
         program_path = pathlib.Path(program.path)
         random_part = ''.join(random.choices(string.ascii_letters + string.digits, k=5))
         name = name or identity.generate(suffix=f'{program_path.stem}-{random_part}')
-        remote_path = f'{self.settings.s3_base_path}/{name}'
-        code_path = f'{remote_path}/code'
-        data_path = f'{remote_path}/data'
 
+        base_path = f'{self.settings.s3_base_path}/{name}'
+        # TODO: make configurable
         fs_spec = {
             'key': 'x1miniouser',
             'secret': 'x1miniopass',
@@ -59,9 +70,12 @@ class KubernetesRuntimeImplementation(
                 'endpoint_url': 'http://s3.localtest.me',
             },
         }
+        remote_fs = s3fs.S3FileSystem(**fs_spec)
+
+        code_path = f'{base_path}/code'
+        data_path = f'{base_path}/data'
 
         # upload the program
-        remote_fs = s3fs.S3FileSystem(**fs_spec)
         remote_fs.put(str(program_path), f'{code_path}/')
 
         # upload runtime files
@@ -85,7 +99,7 @@ class KubernetesRuntimeImplementation(
         secret = _get_secret(name, _get_s3cmd_config())
         kubernetes.api().recreate_secret(namespace=self.settings.namespace, body=secret)
 
-        job = _get_job(name)
+        job = _get_job(name, self.settings.namespace)
         job.spec.template.spec.containers[0].image = self.settings.image
         job.spec.template.spec.volumes = [
             client.V1Volume(name='s3cfg', secret=client.V1SecretVolumeSource(secret_name=name))
@@ -127,22 +141,31 @@ class KubernetesRuntimeImplementation(
 
         # TODO: use activeDeadlineSeconds for the timeout
 
-        kubernetes.api().recreate_job(namespace=self.settings.namespace, body=job)
         return infractl.base.DeployedProgram(
             program=program,
-            runner=KubernetesRunner(name, self.settings.namespace),
+            runner=KubernetesRunner(job, RemoteStorage(fs=remote_fs, base_path=base_path)),
         )
 
 
 class KubernetesRunner(infractl.base.Runnable):
     """Kubernetes runner."""
 
-    name: str
-    namespace: str
+    manifest: client.V1Job
+    storage: RemoteStorage
 
-    def __init__(self, name: str, namespace: str):
-        self.name = name
-        self.namespace = namespace
+    def __init__(self, manifest: client.V1Job, storage: RemoteStorage):
+        self.manifest = manifest
+        self.storage = storage
+
+    @property
+    def name(self):
+        """Return Job name."""
+        return self.manifest.metadata.name
+
+    @property
+    def namespace(self):
+        """Return Job namespace."""
+        return self.manifest.metadata.namespace
 
     async def run(
         self,
@@ -160,6 +183,21 @@ class KubernetesRunner(infractl.base.Runnable):
             detach: `False` (default) to wait for a program completion, `True` to start the program
                 and detach from it.
         """
+
+        # upload parameters
+        if parameters:
+            data_path = f'{self.storage.base_path}/data'
+            with tempfile.NamedTemporaryFile(delete=False) as requirements_file:
+                requirements_file.write(engine.dumps(parameters))
+                requirements_file.flush()
+                requirements_file.close()
+                self.storage.fs.put(
+                    lpath=requirements_file.name,
+                    rpath=f'{data_path}/parameters.json',
+                )
+
+        kubernetes.api().recreate_job(namespace=self.namespace, body=self.manifest)
+
         for event in watch.Watch().stream(
             func=kubernetes.api().core_v1().list_namespaced_pod,
             namespace=self.namespace,
@@ -260,12 +298,12 @@ def _get_s3cmd_config() -> str:
     )
 
 
-def _get_job(name: str) -> client.V1Job:
+def _get_job(name: str, namespace: str) -> client.V1Job:
     """Returns Kubernetes Job."""
     return client.V1Job(
         api_version='batch/v1',
         kind='Job',
-        metadata=client.V1ObjectMeta(name=name),
+        metadata=client.V1ObjectMeta(name=name, namespace=namespace),
         spec=client.V1JobSpec(
             template=client.V1JobTemplateSpec(
                 spec=client.V1PodSpec(

@@ -318,16 +318,17 @@ async def test_python_function(address, runtime_kind):
 
 
 @pytest.mark.asyncio
-async def test_python_function_with_parameters(address):
+@pytest.mark.parametrize('runtime_kind', ['prefect', 'kubernetes'])
+async def test_python_function_with_parameters(address, runtime_kind):
     infrastructure = infractl.infrastructure(address=address)
-    runtime = infractl.runtime()
-    program = await infractl.deploy(
+    runtime = infractl.runtime(kind=runtime_kind)
+    program_run = await infractl.run(
         infractl.program('flows/program1.py', name='foo'),
         runtime=runtime,
         infrastructure=infrastructure,
         name='function-with-parameters',
+        parameters={'arg1': 'val1'},
     )
-    program_run = await program.run(parameters={'arg1': 'val1'})
     assert program_run.is_completed()
 
 
