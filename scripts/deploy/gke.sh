@@ -258,6 +258,8 @@ if [[ " $1 " =~ " --console " ]]; then
   cmd="bash"
   if [[ -n "$_rest_args" ]]; then
     cmd="$_rest_args"
+  else
+    warn_about_proxy_and_variables
   fi
   control_node "$cmd"
   exit $?

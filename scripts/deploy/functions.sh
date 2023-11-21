@@ -12,6 +12,32 @@ function proxy_container_status() {
   docker container inspect --format '{{.State.Status}}' icl-proxy 2>/dev/null || echo ""
 }
 
+function warn_about_proxy_and_variables()
+{
+  proxy_variables_used=0
+  proxy_status="$(proxy_container_status)"
+  if [[ $proxy_status != "running" ]]; then
+
+    if [[ -v http_proxy ]]; then
+      proxy_variables_used=1
+    fi
+
+    if [[ -v https_proxy ]]; then
+      proxy_variables_used=1
+    fi
+
+    if [[ -v no_proxy ]]; then
+      proxy_variables_used=1
+    fi
+
+    if [[ $proxy_variables_used -eq 1 ]]; then
+      warn "HTTP proxy variables are used, but no transparent proxy started. Consider using --start-proxy."
+      warn "Otherwise, some software in this session may not detect proxy settings and may not work."
+    fi
+
+  fi
+}
+
 # Starts the control code in a ephemeral container.
 # Mounts ~/.aws and ~/.kube to the container, if exist.
 # The repository is mounted to ~/x1, which can be used to persist data, for example, in ~/x1/workspace
