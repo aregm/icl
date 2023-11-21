@@ -11,6 +11,7 @@ set -e
 : ${X1_CLUSTER_VERSION:="1.28"}
 : ${X1_EXTERNALDNS_ENABLED:="false"}
 : ${CONTROL_NODE_IMAGE:="pbchekin/ccn-gcp:0.0.2"}
+: ${ICL_GCP_MACHINE_TYPE:="e2-standard-4"}
 
 #: ${X1_GCP_REGION:="us-central1"}
 # disabled since we use monozone cluster
@@ -48,6 +49,7 @@ Environment variables:
   X1_GCP_ZONE                    GCP zone to use, default is us-central1-a
   ICL_INGRESS_DOMAIN             Domain for ingress, default is test.x1infra.com
   GOOGLE_APPLICATION_CREDENTIALS Location of a Google Cloud credential JSON file.
+  ICL_GCP_MACHINE_TYPE           Machine type for GKE to use
   TF_PG_CONN_STR                 If set, PostgreSQL backend will be used to store Terraform state 
   PGUSER                         PostgreSQL username for Terraform state
   PGPASSWORD                     PostgreSQL password for Terraform state
@@ -55,7 +57,7 @@ EOF
 }
 
 function show_parameters() {
-  for var in X1_GCP_ZONE ICL_INGRESS_DOMAIN WORKSPACE; do
+  for var in X1_GCP_ZONE ICL_INGRESS_DOMAIN WORKSPACE ICL_GCP_MACHINE_TYPE; do
     echo "$var: ${!var}"
   done
 }
@@ -63,7 +65,7 @@ function show_parameters() {
 # TODO: add cluster_version here
 function render_gcp_terraform_tfvars() {
   if [[ -v TERRAFORM_POSTGRESQL_URI  ]]; then
-    cat <<EOF >> "$WORKSPACE/terraform/gcp/terraform.tfvars"
+    cat <<EOF > "$WORKSPACE/terraform/gcp/terraform.tfvars"
     terraform {
       backend "pg" {}
     }
@@ -75,7 +77,7 @@ cluster_name = "$X1_CLUSTER_NAME"
 gcp_zone = "$X1_GCP_ZONE"
 gcp_project = "$X1_GCP_PROJECT_NAME"
 node_version = "$X1_CLUSTER_VERSION"
-
+machine_type = "$ICL_GCP_MACHINE_TYPE"
 EOF
 }
 

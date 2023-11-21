@@ -7,3 +7,8 @@ variable "node_version" {
   description ="Kubernetes version to use for GKE"
   type = string
 }
+
+variable "machine_type" {
+  description = "Machine type to use for GKE"
+  type = string
+}

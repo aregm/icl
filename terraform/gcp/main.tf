@@ -18,6 +18,7 @@ module "icl-cluster" {
   source = "./modules/icl-cluster"
   cluster_name = var.cluster_name
   node_version = var.node_version
+  machine_type = var.machine_type
 }
 
 module "firewall-rule-allow-tcp-8443" {
