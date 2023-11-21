@@ -26,6 +26,7 @@ import infractl.base
 import infractl.fs
 import infractl.identity
 import infractl.plugins.prefect_runtime.utils as prefect_utils
+from infractl import defaults
 from infractl.logging import get_logger
 from infractl.plugins import icl_infrastructure, prefect_runtime
 
@@ -494,7 +495,7 @@ class PrefectRuntimeImplementation(
         }
 
         # TODO: move the default image to discover
-        image = self.settings('prefect_image', 'pbchekin/icl-prefect:2.13.6-py3.9-icl0.0.3')
+        image = self.settings('prefect_image', defaults.PREFECT_IMAGE)
         if image:
             job_args['image'] = image
 

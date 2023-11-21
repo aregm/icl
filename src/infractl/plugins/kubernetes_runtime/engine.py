@@ -78,7 +78,12 @@ def create_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         '--entrypoint',
         required=False,
-        help='Download a directory from this storage block and execute a shell script',
+        help='Entrypoint for a Python program',
+    )
+    parser.add_argument(
+        '--flow',
+        required=False,
+        help='Prefect flow to execute',
     )
     return parser
 
@@ -100,6 +105,12 @@ def main():
     if args.entrypoint:
         module = importlib.import_module(module_name)
         target = getattr(module, args.entrypoint)
+        kwargs = parameters or {}
+        return target(**kwargs)
+
+    if args.flow:
+        module = importlib.import_module(module_name)
+        target = getattr(module, args.flow)
         kwargs = parameters or {}
         return target(**kwargs)
 

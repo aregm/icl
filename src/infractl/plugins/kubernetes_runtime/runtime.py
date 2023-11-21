@@ -15,8 +15,9 @@ from kubernetes import client, watch
 
 import infractl.base
 import infractl.fs
-from infractl import identity, kubernetes
+from infractl import defaults, identity, kubernetes
 from infractl.plugins.kubernetes_runtime import engine
+from infractl.plugins.kubernetes_runtime.program import load
 
 KubernetesManifest = infractl.base.KubernetesManifest
 
@@ -25,9 +26,39 @@ class KubernetesRuntimeSettings:
     """Kubernetes runtime settings."""
 
     namespace: str = 'default'
-    image: str = 'python:3.9-slim'
+
+    image: str = defaults.PREFECT_IMAGE
+
     s3_base_path: str = 'prefect/infractl/kubernetes'
+
     working_dir = '/root'
+
+    dependencies = ['s3cmd', 'pydantic']
+    """Required dependencies to install before downloading program."""
+
+    address = 'localtest.me'
+
+    @property
+    def s3_url(self):
+        """S3 endpoint."""
+        return f'http://s3.{self.address}'
+
+    @property
+    def prefect_api_url(self):
+        """Prefect endpoint."""
+        return f'http://prefect.{self.address}/api'
+
+    @property
+    def remote_fs_spec(self):
+        """Remote fs spec."""
+        return {
+            'key': 'x1miniouser',
+            'secret': 'x1miniopass',
+            'use_ssl': False,
+            'client_kwargs': {
+                'endpoint_url': self.s3_url,
+            },
+        }
 
 
 class RemoteStorage:
@@ -56,21 +87,14 @@ class KubernetesRuntimeImplementation(
     ) -> infractl.base.DeployedProgram:
         """Deploys a program."""
 
+        program = load(program)
+
         program_path = pathlib.Path(program.path)
         random_part = ''.join(random.choices(string.ascii_letters + string.digits, k=5))
         name = name or identity.generate(suffix=f'{program_path.stem}-{random_part}')
 
         base_path = f'{self.settings.s3_base_path}/{name}'
-        # TODO: make configurable
-        fs_spec = {
-            'key': 'x1miniouser',
-            'secret': 'x1miniopass',
-            'use_ssl': False,
-            'client_kwargs': {
-                'endpoint_url': 'http://s3.localtest.me',
-            },
-        }
-        remote_fs = s3fs.S3FileSystem(**fs_spec)
+        remote_fs = s3fs.S3FileSystem(**self.settings.remote_fs_spec)
 
         code_path = f'{base_path}/code'
         data_path = f'{base_path}/data'
@@ -113,7 +137,14 @@ class KubernetesRuntimeImplementation(
         engine_cmd = f'python $__ICL_DATA_DIR/engine.py {program_path.name}'
         if program.name:
             engine_cmd += f' --entrypoint {program.name}'
-        command_lines = [
+        elif program.flow:
+            engine_cmd += f' --flow {program.flow}'
+
+        command_lines = []
+        if self.settings.dependencies:
+            command_lines = [f'pip install {" ".join(self.settings.dependencies)}']
+
+        command_lines += [
             '__ICL_DATA_DIR=$(mktemp -d)',
             'pip install s3cmd pydantic',
             f'{s3cmd_get} s3://{code_path}/ .',
@@ -133,10 +164,14 @@ class KubernetesRuntimeImplementation(
             '\n'.join(command_lines),
         ]
 
-        if self.runtime.environment:
+        env = self.runtime.environment.copy()
+
+        if program.flow:
+            env['PREFECT_API_URL'] = self.settings.prefect_api_url
+
+        if env:
             job.spec.template.spec.containers[0].env = [
-                client.V1EnvVar(name=key, value=value)
-                for key, value in self.runtime.environment.items()
+                client.V1EnvVar(name=key, value=value) for key, value in env.items()
             ]
 
         # TODO: use activeDeadlineSeconds for the timeout

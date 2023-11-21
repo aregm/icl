@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import time
 from typing import Optional
 
 from kubernetes import client, config
@@ -59,6 +60,7 @@ class KubeApi:
                     break
                 elif retries_left == 0:
                     raise error
+            time.sleep(1)
         return self.batch_v1().create_namespaced_job(namespace, body=body)
 
 

@@ -2,7 +2,6 @@ import pathlib
 
 import pytest
 
-import infractl
 from infractl.plugins.prefect_runtime.program import FlowError, PythonProgram, load_program
 
 FLOW1 = """

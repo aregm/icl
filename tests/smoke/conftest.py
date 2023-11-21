@@ -10,7 +10,9 @@ from minio import Minio
 from minio.error import InvalidResponseError
 from prefect.filesystems import RemoteFileSystem
 from prefect.infrastructure.kubernetes import KubernetesJob
-from utils import MINIO_API_PORT, MINIO_WAIT_TIMEOUT_S, PREFECT_IMAGE_NAME
+
+MINIO_API_PORT = 80
+MINIO_WAIT_TIMEOUT_S = 180
 
 
 def pytest_addoption(parser):
@@ -148,11 +150,12 @@ async def prefect_configure(s3_endpoint, minio_credentials, s3_bucket):
     await fs.save(storage_name, overwrite=True)
 
     infra = KubernetesJob(
-        image=PREFECT_IMAGE_NAME,
         # By default, Prefect sets pod_watch_timeout_seconds to 60, which is not enough for the case
         # when a custom image is set, and it is not present on the node. Giving more time for Prefect
         # to wait for the pod should help with some test flakiness that we observed in some cases.
         pod_watch_timeout_seconds=240,
+        # s3fs is required for Prefect RemoteFileSystem
+        env={'EXTRA_PIP_PACKAGES': 's3fs'},
     )
     infra_name = "smoke-check"
     await infra.save(infra_name, overwrite=True)
