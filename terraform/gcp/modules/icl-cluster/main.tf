@@ -3,7 +3,8 @@ resource "google_container_cluster" "cluster" {
   # count per zone
   initial_node_count = 1
   node_config {
-    machine_type = "e2-standard-4"
+    machine_type = var.machine_type
+    image_type = "UBUNTU_CONTAINERD"
   }
   deletion_protection = false
   node_version = var.node_version
