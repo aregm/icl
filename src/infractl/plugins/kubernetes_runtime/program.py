@@ -34,6 +34,16 @@ def load(program: base.Program) -> Program:
 def _load(program: base.Program) -> Program:
     """Loads program."""
 
+    if is_flow(program.path):
+        module_name = getattr(program.path, '__module__', None)
+        if not module_name:
+            raise ValueError('Could not determine flow file location (__module__ not set)')
+        module = importlib.import_module(module_name)
+        path = getattr(module, '__file__', None)
+        if not path:
+            raise ValueError('Could not determine flow file location (__file__ not set)')
+        return Program(path, flow=program.path.__name__)
+
     if not isinstance(program.path, str):
         raise NotImplementedError(f'{program.path.__class__.__name__} is not supported')
 

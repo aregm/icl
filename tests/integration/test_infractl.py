@@ -12,7 +12,6 @@ When using HTTP/HTTPS proxy make sure `localtest.me` is added to "no proxy" list
 import asyncio
 import time
 from io import StringIO
-from unittest.mock import patch
 
 import pytest
 from flows.flow2 import flow2
@@ -33,9 +32,10 @@ async def test_flow_with_file_name(address, runtime_kind):
 
 
 @pytest.mark.asyncio
-async def test_flow_with_imported_module(address):
+@pytest.mark.parametrize('runtime_kind', ['prefect', 'kubernetes'])
+async def test_flow_with_imported_module(address, runtime_kind):
     infrastructure = infractl.infrastructure(address=address)
-    runtime = infractl.runtime()
+    runtime = infractl.runtime(kind=runtime_kind)
     program = await infractl.deploy(
         infractl.program(flow2),
         runtime=runtime,
