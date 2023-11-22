@@ -2,14 +2,16 @@ name: Build Rocky 9 image (docker)
 on:
   workflow_dispatch:
   push:
-    #    branches: main
+    branches: main
   pull_request:
     branches: main
 
 jobs:
   build:
     name: Build Rocky 9 image
-    runs-on: self-hosted
+    runs-on:
+      - self-hosted
+      - libvirt-vagrant
 
     steps:
       - uses: actions/checkout@v3
