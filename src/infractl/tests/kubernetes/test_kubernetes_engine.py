@@ -26,3 +26,6 @@ def test_dumps_loads():
 
     data = engine.loads(engine.dumps(Foo(foo='bar')))
     assert data == Foo(foo='bar')
+
+    data = engine.loads(engine.dumps(42))
+    assert data == 42

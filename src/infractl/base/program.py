@@ -11,47 +11,51 @@ class ProgramRun:
 
     @abc.abstractmethod
     async def wait(self, poll_interval=5) -> None:
-        pass
+        """Wait for this program."""
 
     @abc.abstractmethod
     def is_scheduled(self) -> bool:
-        pass
+        """Returns True if the program is scheduled."""
 
     @abc.abstractmethod
     def is_pending(self) -> bool:
-        pass
+        """Returns True if the program is pending."""
 
     @abc.abstractmethod
     def is_running(self) -> bool:
-        pass
+        """Returns True if the program is running."""
 
     @abc.abstractmethod
     def is_completed(self) -> bool:
-        pass
+        """Returns True if the program is completed."""
 
     @abc.abstractmethod
     def is_failed(self) -> bool:
-        pass
+        """Returns True if the program is failed."""
 
     @abc.abstractmethod
     def is_crashed(self) -> bool:
-        pass
+        """Returns True if the program is crashed."""
 
     @abc.abstractmethod
     def is_cancelling(self) -> bool:
-        pass
+        """Returns True if the program is cancelling."""
 
     @abc.abstractmethod
     def is_cancelled(self) -> bool:
-        pass
+        """Returns True if the program is cancelled."""
 
     @abc.abstractmethod
     def is_final(self) -> bool:
-        pass
+        """Returns True if the program status id final."""
 
     @abc.abstractmethod
     def is_paused(self) -> bool:
-        pass
+        """Returns True if the program is paused."""
+
+    @abc.abstractmethod
+    async def result(self) -> Any:
+        """Returns program result."""
 
 
 class Program:

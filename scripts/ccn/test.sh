@@ -56,6 +56,8 @@ function smoke_check() {
 }
 
 function integration_tests() {
+  # make sure ICL uses infrastructure address rather than PREFECT_API_URL
+  unset PREFECT_API_URL
   cd "$PROJECT_DIR/tests/integration"
   pytest -n 4 -v . --address "$ICL_INGRESS_DOMAIN"
 }

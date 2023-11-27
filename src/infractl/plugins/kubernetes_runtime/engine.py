@@ -88,6 +88,15 @@ def create_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def save_result(result: Any):
+    """Saves result as JSON."""
+    if result is None:
+        return
+    result_path = pathlib.Path(__file__).resolve().parent / 'result.json'
+    with result_path.open(mode='wb') as result_file:
+        result_file.write(dumps(result))
+
+
 def main():
     """Entry point."""
     args = create_parser().parse_args()
@@ -106,13 +115,13 @@ def main():
         module = importlib.import_module(module_name)
         target = getattr(module, args.entrypoint)
         kwargs = parameters or {}
-        return target(**kwargs)
+        save_result(target(**kwargs))
 
     if args.flow:
         module = importlib.import_module(module_name)
         target = getattr(module, args.flow)
         kwargs = parameters or {}
-        return target(**kwargs)
+        save_result(target(**kwargs))
 
     sys.argv = [args.program]
     if parameters:
