@@ -10,10 +10,6 @@ class ProgramRun:
     """Class for representing the results and state of ICL program runs."""
 
     @abc.abstractmethod
-    async def wait(self, poll_interval=5) -> None:
-        """Wait for this program."""
-
-    @abc.abstractmethod
     def is_scheduled(self) -> bool:
         """Returns True if the program is scheduled."""
 
@@ -47,15 +43,23 @@ class ProgramRun:
 
     @abc.abstractmethod
     def is_final(self) -> bool:
-        """Returns True if the program status id final."""
+        """Returns True if the program status is final (completed, cancelled, failed, crashed)."""
 
     @abc.abstractmethod
     def is_paused(self) -> bool:
         """Returns True if the program is paused."""
 
     @abc.abstractmethod
+    async def wait(self, poll_interval=5) -> None:
+        """Wait for this program."""
+
+    @abc.abstractmethod
     async def result(self) -> Any:
         """Returns program result."""
+
+    @abc.abstractmethod
+    async def logs(self) -> List[str]:
+        """Returns program logs."""
 
 
 class Program:

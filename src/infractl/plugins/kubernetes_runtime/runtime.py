@@ -1,9 +1,17 @@
-"""ICL Kubernetes runtime implementation."""
+"""ICL Kubernetes runtime implementation.
+
+TODO:
+* deployment timeout
+* run timeout
+* streaming logs
+* cancel (required for integration test)
+"""
 
 from __future__ import annotations
 
 import base64
 import enum
+import functools
 import pathlib
 import random
 import string
@@ -21,6 +29,10 @@ from infractl.plugins.kubernetes_runtime import engine
 from infractl.plugins.kubernetes_runtime.program import load
 
 KubernetesManifest = infractl.base.KubernetesManifest
+
+
+class KubernetesRuntimeError(Exception):
+    """Kubernetes runtime error."""
 
 
 class KubernetesRuntimeSettings:
@@ -260,47 +272,21 @@ class KubernetesRunner(infractl.base.Runnable):
         kubernetes.api().recreate_job(namespace=self.namespace, body=self.manifest)
         self.state = ProgramState.SCHEDULED
 
-        for event in watch.Watch().stream(
-            func=kubernetes.api().core_v1().list_namespaced_pod,
-            namespace=self.namespace,
-            timeout_seconds=timeout,
-            label_selector=f'job-name={self.name}',
-        ):
-            if event['object'].status.phase == 'Succeeded':
-                self.state = ProgramState.COMPLETED
-                return KubernetesProgramRun(self)
-            elif event['object'].status.phase == 'Failed':
-                self.state = ProgramState.FAILED
-                return KubernetesProgramRun(self)
-            elif event['object'].status.phase == 'Running':
-                self.state = ProgramState.RUNNING
-            # deleted while watching for it
-            if event['type'] == 'DELETED':
-                self.state = ProgramState.FAILED
-                return KubernetesProgramRun(self)
-
-        # timed out
-        # TODO: timed out, stop job if it is still running
-
-    def result(self) -> Any:
-        """Returns program result."""
-        result_remote_path = f'{self.data_path}/result.json'
-        if not self.storage.fs.exists(result_remote_path):
-            return None
-        with tempfile.TemporaryDirectory() as dirname:
-            result_path = pathlib.Path(dirname) / 'results.json'
-            self.storage.fs.get(rpath=result_remote_path, lpath=str(result_path))
-            with result_path.open('rb') as result_file:
-                return engine.loads(result_file.read())
+        program_run = KubernetesProgramRun(self, timeout=timeout)
+        if not detach:
+            await program_run.wait()
+        return program_run
 
 
 class KubernetesProgramRun(infractl.base.ProgramRun):
     """Kubernetes program run."""
 
     runner: KubernetesRunner
+    timeout: Optional[float] = None
 
-    def __init__(self, runner: KubernetesRunner):
+    def __init__(self, runner: KubernetesRunner, timeout: Optional[float] = None):
         self.runner = runner
+        self.timeout = timeout
 
     def is_scheduled(self) -> bool:
         return self.runner.state == ProgramState.SCHEDULED
@@ -332,11 +318,69 @@ class KubernetesProgramRun(infractl.base.ProgramRun):
     def is_paused(self) -> bool:
         return False
 
+    @functools.cached_property
+    def pod_name(self) -> str:
+        """Returns program pod name"""
+        pod_list: client.V1PodList = (
+            kubernetes.api()
+            .core_v1()
+            .list_namespaced_pod(
+                namespace=self.runner.namespace,
+                label_selector=f'job-name={self.runner.name}',
+            )
+        )
+        if len(pod_list.items) > 1:
+            raise KubernetesRuntimeError(f'Multiple pods for job {self.runner.name}')
+        if len(pod_list.items) < 1:
+            raise KubernetesRuntimeError(f'Pod not found for job {self.runner.name}')
+        return pod_list.items[0].metadata.name
+
     async def wait(self, poll_interval=5) -> None:
-        raise NotImplementedError()
+        for event in watch.Watch().stream(
+            func=kubernetes.api().core_v1().list_namespaced_pod,
+            namespace=self.runner.namespace,
+            timeout_seconds=3600,
+            label_selector=f'job-name={self.runner.name}',
+        ):
+            if event['object'].status.phase == 'Succeeded':
+                self.runner.state = ProgramState.COMPLETED
+                return
+            elif event['object'].status.phase == 'Failed':
+                self.runner.state = ProgramState.FAILED
+                return
+            elif event['object'].status.phase == 'Running':
+                self.runner.state = ProgramState.RUNNING
+            # deleted while watching for it
+            if event['type'] == 'DELETED':
+                self.runner.state = ProgramState.FAILED
+                return
+
+        # timed out
+        # TODO: timed out, stop job if it is still running
 
     async def result(self) -> Any:
-        return self.runner.result()
+        """Returns program result."""
+        result_remote_path = f'{self.runner.data_path}/result.json'
+        if not self.runner.storage.fs.exists(result_remote_path):
+            return None
+        with tempfile.TemporaryDirectory() as dirname:
+            result_path = pathlib.Path(dirname) / 'results.json'
+            self.runner.storage.fs.get(rpath=result_remote_path, lpath=str(result_path))
+            with result_path.open('rb') as result_file:
+                return engine.loads(result_file.read())
+
+    async def logs(self) -> List[str]:
+        """Returns program logs."""
+        return (
+            kubernetes.api()
+            .core_v1()
+            .read_namespaced_pod_log(
+                name=self.pod_name,
+                namespace=self.runner.namespace,
+                container='program',
+            )
+            .splitlines()
+        )
 
     def __repr__(self) -> str:
         """Returns a string representation.
