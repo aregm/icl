@@ -9,6 +9,7 @@ from pytest import fixture, mark
 
 TEST_USERNAME = "test"
 JUPYTERHUB_NAMESPACE = "jupyterhub"
+IPYNB_TEST_FILE_PATH = "data/test_notebook.ipynb"
 
 
 def exec_into_pod(api, pod_name, namespace, command):
@@ -115,11 +116,6 @@ def test_create_jupyter_session(address):
         r.status_code == 400
     ), f'Request to {r.url}: status {r.status_code}, should be "400 (session already running)". Response: {r.text}'
 
-
-@mark.depends(on=['test_create_jupyter_session'])
-def test_notebook_in_jupyter_session(address):
-    config.load_kube_config()
-    core_v1 = client.CoreV1Api()
     jupyter_all_test_user_pods = core_v1.list_namespaced_pod(
         namespace=JUPYTERHUB_NAMESPACE, label_selector=f'hub.jupyter.org/username={TEST_USERNAME}'
     ).items
@@ -131,8 +127,8 @@ def test_notebook_in_jupyter_session(address):
         core_v1,
         jupyter_test_pod.metadata.name,
         JUPYTERHUB_NAMESPACE,
-        'data/test_notebook.ipynb',  # relative to tests/integration
-        '/tmp/test_notebook.ipynb',
+        IPYNB_TEST_FILE_PATH,  # relative to tests/integration
+        "/tmp/test_notebook.ipynb",
     )
 
     # In order to execute NB inside the python-3.9 conda environment, we install nbconvert to this "user" environment.
