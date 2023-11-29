@@ -216,6 +216,8 @@ def list_users() -> List[str]:
 def _enable_ssh_script() -> str:
     """Returns Bash script to enable ssh in JupyterHub session."""
     return """
+        sudo chown jovyan:jovyan /home/jovyan
+        sudo chmod 00700 /home/jovyan
         if [[ -f /run/sshd.pid && -d /proc/$(cat /run/sshd.pid) ]]; then
             echo sshd is running
         else
