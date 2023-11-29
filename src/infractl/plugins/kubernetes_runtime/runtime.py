@@ -3,7 +3,6 @@
 TODO:
 * deployment timeout
 * run timeout
-* streaming logs
 * cancel (required for integration test)
 """
 
@@ -15,6 +14,7 @@ import functools
 import pathlib
 import random
 import string
+import sys
 import tempfile
 from typing import Any, Dict, List, Optional, Union
 
@@ -335,7 +335,7 @@ class KubernetesProgramRun(infractl.base.ProgramRun):
             raise KubernetesRuntimeError(f'Pod not found for job {self.runner.name}')
         return pod_list.items[0].metadata.name
 
-    async def wait(self, poll_interval=5) -> None:
+    async def wait(self, wait_for: Optional[ProgramState] = None) -> None:
         for event in watch.Watch().stream(
             func=kubernetes.api().core_v1().list_namespaced_pod,
             namespace=self.runner.namespace,
@@ -350,6 +350,8 @@ class KubernetesProgramRun(infractl.base.ProgramRun):
                 return
             elif event['object'].status.phase == 'Running':
                 self.runner.state = ProgramState.RUNNING
+                if self.runner.state == wait_for:
+                    return
             # deleted while watching for it
             if event['type'] == 'DELETED':
                 self.runner.state = ProgramState.FAILED
@@ -381,6 +383,25 @@ class KubernetesProgramRun(infractl.base.ProgramRun):
             )
             .splitlines()
         )
+
+    async def stream_logs(self, file=None) -> None:
+        """Stream logs until the terminal state is reached.
+
+        Args:
+            file:  a file-like object (stream); defaults to the current sys.stdout.
+        """
+        await self.wait(wait_for=ProgramState.RUNNING)
+        if not self.is_running():
+            return
+        file = file or sys.stdout
+        for line in watch.Watch().stream(
+            kubernetes.api().core_v1().read_namespaced_pod_log,
+            name=self.pod_name,
+            namespace=self.runner.namespace,
+            container='program',
+        ):
+            print(line, file=file)
+        await self.wait()
 
     def __repr__(self) -> str:
         """Returns a string representation.

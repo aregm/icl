@@ -50,7 +50,7 @@ class ProgramRun:
         """Returns True if the program is paused."""
 
     @abc.abstractmethod
-    async def wait(self, poll_interval=5) -> None:
+    async def wait(self) -> None:
         """Wait for this program."""
 
     @abc.abstractmethod
@@ -60,6 +60,14 @@ class ProgramRun:
     @abc.abstractmethod
     async def logs(self) -> List[str]:
         """Returns program logs."""
+
+    @abc.abstractmethod
+    async def stream_logs(self, file=None) -> None:
+        """Stream logs until the terminal state is reached.
+
+        Args:
+            file: a file-like object (stream); defaults to the current sys.stdout.
+        """
 
 
 class Program:

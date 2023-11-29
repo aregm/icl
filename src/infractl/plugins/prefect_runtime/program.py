@@ -135,10 +135,8 @@ class PrefectProgramRun(infractl.base.ProgramRun):
             )
         return logs
 
-    async def stream_logs(self, poll_interval=5, file=None) -> None:
-        """
-        Stream logs until the terminal (COMPLETED, CANCELLED, FAILED, CRASHED) state is reached.
-        """
+    async def stream_logs(self, file=None, poll_interval=5) -> None:
+        """Stream logs until the terminal state is reached."""
         timestamp = None
         flow_run = self.get_flow_run()
         flow_run_id = flow_run.id

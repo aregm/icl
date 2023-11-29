@@ -197,14 +197,15 @@ async def test_get_logs_from_program_run(address, runtime_kind):
 
 
 @pytest.mark.asyncio
-async def test_stream_logs_from_program_run(address):
-    infrastructure = infractl.infrastructure(address=address)
-    program = await infractl.deploy(
+@pytest.mark.parametrize('runtime_kind', ['prefect', 'kubernetes'])
+async def test_stream_logs_from_program_run(address, runtime_kind):
+    program_run = await infractl.run(
         infractl.program('flows/flow7.py'),
         name='flow7-test-stream-logs',
-        infrastructure=infrastructure,
+        runtime=infractl.runtime(kind=runtime_kind),
+        infrastructure=infractl.infrastructure(address=address),
+        detach=True,
     )
-    program_run = await program.run(detach=True)
 
     # emulate sys.stdout
     file = StringIO()
@@ -222,6 +223,8 @@ async def test_stream_logs_from_program_run(address):
         pos = logs.find(substring, pos + len(substring))
         # should be only once
         assert pos == -1
+
+    assert program_run.is_completed()
 
 
 @pytest.mark.asyncio
