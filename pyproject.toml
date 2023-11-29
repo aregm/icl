@@ -45,6 +45,9 @@ infractl = "infractl.cli.main:main"
 aws = [
     "boto3",
 ]
+hub = [
+    "fastapi",
+]
 build = [
     "build",
     "twine",
