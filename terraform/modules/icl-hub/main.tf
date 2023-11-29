@@ -44,7 +44,7 @@ resource "kubernetes_deployment" "icl-hub" {
       spec {
         container {
           name = "icl-hub"
-          image = "pbchekin/icl-hub:0.0.1"
+          image = "pbchekin/icl-hub:0.0.3"
           command = [
             "python", "-m", "infractl.hub.main", "server", "start"
           ]
