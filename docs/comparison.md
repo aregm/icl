@@ -30,6 +30,8 @@ Cons:
 
 ### Azure Resource Manager
 
+### Microsoft Radius
+
 ### Google Deployment Manager
 
 ### Spacelift
