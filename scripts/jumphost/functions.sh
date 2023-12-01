@@ -85,9 +85,12 @@ function render_corefile() {
     errors
     hosts {
         ${INGRESS_IP} ${ICL_INGRESS_DOMAIN}
+        ${INGRESS_IP} hub.${ICL_INGRESS_DOMAIN}
+        ${INGRESS_IP} jupyter.${ICL_INGRESS_DOMAIN}
         ${INGRESS_IP} prefect.${ICL_INGRESS_DOMAIN}
-        ${INGRESS_IP} s3.${ICL_INGRESS_DOMAIN}
         ${INGRESS_IP} ray.${ICL_INGRESS_DOMAIN}
+        ${INGRESS_IP} registry.${ICL_INGRESS_DOMAIN}
+        ${INGRESS_IP} s3.${ICL_INGRESS_DOMAIN}
         fallthrough
     }
     forward . /etc/resolv.conf
