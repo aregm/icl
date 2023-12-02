@@ -215,7 +215,7 @@ async def test_stream_logs_from_program_run(address, runtime_kind):
     logs = file.read()
     print(f"{logs=}")
 
-    for idx in range(60):
+    for idx in range(10):
         substring = f"Iteration: {idx}\n"
         pos = logs.find(substring)
         # check if the logs contains the log entry

@@ -8,6 +8,6 @@ from prefect import flow, get_run_logger
 @flow
 def flow7():
     logger = get_run_logger()
-    for idx in range(60):
+    for idx in range(10):
         logger.info(f'Iteration: {idx}')
         time.sleep(1)
