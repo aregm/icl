@@ -1,6 +1,6 @@
 variable "release" {
   description = "Version of kubernetes-dashboard Helm chart"
-  default = "5.7.0"
+  default = "6.0.8"
   type = string
 }
 

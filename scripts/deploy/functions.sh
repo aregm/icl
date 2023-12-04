@@ -12,6 +12,13 @@ function proxy_container_status() {
   docker container inspect --format '{{.State.Status}}' icl-proxy 2>/dev/null || echo ""
 }
 
+function get_admin_token()
+{
+  echo "Kubernetes Dashboard: https://dashboard.${ICL_INGRESS_DOMAIN}"
+  echo "Cluster token for admin-user:"
+  control_node kubectl -n kubernetes-dashboard create token admin-user
+}
+
 function warn_about_proxy_and_variables()
 {
   proxy_variables_used=0

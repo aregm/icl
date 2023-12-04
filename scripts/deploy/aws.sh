@@ -167,6 +167,11 @@ if [[ " $@ " =~ " --start-proxy " ]]; then
   exit 0
 fi
 
+if [[ " $1 " =~ " --get-admin-token " ]]; then
+  get_admin_token
+  exit $?
+fi
+
 if [[ " $@ " =~ " --stop-proxy " ]]; then
   stop_proxy
   exit 0
@@ -177,3 +182,4 @@ render_workspace
 deploy_eks
 update_config
 deploy_x1
+get_admin_token
