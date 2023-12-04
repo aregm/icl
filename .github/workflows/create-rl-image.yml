@@ -1,0 +1,43 @@
+name: Build Rocky 9 image (docker)
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build Rocky 9 image
+    runs-on:
+      - self-hosted
+      - packer
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Run build
+        run: |
+          sh -vx
+          docker rm --force packer-rl9 || true
+
+          gid=$(getent group kvm | awk -F : '{ print $3 }')
+
+          docker build docker/packer-rl9 \
+            --build-arg http_proxy \
+            --build-arg https_proxy \
+            --build-arg no_proxy \
+            --build-arg KVM_GID=$gid \
+            --tag infractl/packer-rl9
+
+          docker run \
+            --env http_proxy \
+            --env https_proxy \
+            --env no_proxy \
+            --env PACKER_GITHUB_API_TOKEN=${{ secrets.GITHUB_TOKEN }} \
+            --device /dev/kvm --device /dev/fuse \
+            --cap-add CAP_SYS_ADMIN --security-opt apparmor:unconfined \
+            --name packer-rl9 infractl/packer-rl9 sh -c 'git clone https://github.com/canonical/packer-maas && cd packer-maas/rocky9 && PACKER_LOG=1 make'
+          docker cp packer-rl9:/home/ghrunner/packer-maas/rocky9/rocky9.tar.gz rl9.tar.gz
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: rl9
+          path: rl9.tar.gz
+
