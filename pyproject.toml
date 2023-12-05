@@ -28,10 +28,6 @@ dependencies = [
     "python-docker",
     "s3fs>=2023.9.2",
     "prefect==2.14.3",
-    "kubernetes",
-    # FIXME: Temporary workaround for Prefect 2.13.0, see https://github.com/PrefectHQ/prefect/issues/10567
-    "anyio>=3.4.0,<4.0.0",
-    "asyncio",
 ]
 
 [project.urls]
