@@ -15,5 +15,11 @@ def infrastructure(*args, kind: str = 'ICL', **kwargs) -> infractl.base.Infrastr
         from infractl.plugins import icl_infrastructure  # noqa
 
         return infractl.base.Infrastructure(*args, kind=kind, **kwargs)
+    elif kind == 'ssh':
+        # import required plugin
+        # pylint: disable=import-outside-toplevel, unused-import
+        from infractl.plugins import ssh  # noqa
+
+        return infractl.base.Infrastructure(*args, kind=kind, **kwargs)
 
     raise NotImplementedError(f'Infrastructure {kind} is not implemented')

@@ -1,6 +1,5 @@
 import asyncio
 import pathlib
-import sys
 import tarfile
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -306,7 +305,8 @@ async def test_infractl_program_run_timeout(tmp_path: pathlib.Path, set_cwd):
     run_deployment_mock.assert_awaited_once()
     run_deployment_mock.await_args.kwargs["timeout"] == timeout
 
-    # test throwing an exception if a flow run does not have time to complete for the specified timeout
+    # test throwing an exception if a flow run does not have time to
+    # complete for the specified timeout
     flow_run = Mock()
     flow_run.state.is_final = Mock(return_value=False)
 

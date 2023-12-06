@@ -18,6 +18,10 @@ def runtime(*args, kind: str = 'prefect', **kwargs) -> infractl.base.Runtime:
         # pylint: disable=import-outside-toplevel, unused-import, redefined-outer-name
         import infractl.plugins.kubernetes_runtime.runtime  # noqa
 
+    elif kind == 'ssh':
+        # pylint: disable=import-outside-toplevel, unused-import, redefined-outer-name
+        import infractl.plugins.ssh.runtime  # noqa
+
     else:
         raise NotImplementedError(f'Runtime {kind} is not implemented')
     return infractl.base.Runtime(*args, kind=kind, **kwargs)

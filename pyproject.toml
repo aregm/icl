@@ -44,6 +44,11 @@ aws = [
 hub = [
     "fastapi",
 ]
+ssh = [
+    "paramiko",
+    "pypac",
+    "PySocks",
+]
 build = [
     "build",
     "twine",
@@ -100,8 +105,9 @@ exclude_dirs = ["src/infractl/tests", "scripts/tests", "tests", "build"]
 skips = [
     "B404", # consider possible security implications associated with the subprocess module.
     "B603", # subprocess call - check for execution of untrusted input.
-    "B104", # possible binding to all interfaces
-    "B311", # standard pseudo-random generators are not suitable for security/cryptographic purposes
+    "B104", # possible binding to all interfaces.
+    "B311", # standard pseudo-random generators are not suitable for security/cryptographic purposes.
+    "B601", # possible shell injection via Paramiko call, check inputs are properly sanitized.
 ]
 
 [tool.pylint.main]

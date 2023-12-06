@@ -10,6 +10,7 @@ When using HTTP/HTTPS proxy make sure `localtest.me` is added to "no proxy" list
 """
 
 import asyncio
+import os
 import time
 from io import StringIO
 
@@ -295,6 +296,26 @@ async def test_python_program(address, runtime_kind):
     program_run = await infractl.run(
         infractl.program('flows/program1.py'), runtime=runtime, infrastructure=infrastructure
     )
+    assert program_run.is_completed()
+
+
+@pytest.mark.skipif(
+    os.environ.get("ICL_SSH_ADDRESS", None) is None,
+    reason="TODO: the test should work",
+)
+@pytest.mark.asyncio
+@pytest.mark.parametrize('kind', ['ssh'])
+async def test_python_program_ssh(address, kind):
+    # TODO: provide access to this data in another way
+    address = os.environ["ICL_SSH_ADDRESS"]
+    username = os.environ["ICL_SSH_USERNAME"]
+    password = os.environ["ICL_SSH_PASSWORD"]
+    infrastructure = infractl.infrastructure(
+        address=address, username=username, password=password, kind=kind
+    )
+    runtime = infractl.runtime(kind=kind)
+    program = infractl.program('flows/program1.py')
+    program_run = await infractl.run(program, runtime=runtime, infrastructure=infrastructure)
     assert program_run.is_completed()
 
 
