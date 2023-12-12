@@ -90,6 +90,8 @@ function x1_terraform_args() {
     -var default_storage_class="standard-rwo"
     -var ray_load_balancer_enabled=false
     -var externaldns_enabled="${X1_EXTERNALDNS_ENABLED}"
+    -var use_node_ip_for_user_ports=true
+    -var use_external_node_ip_for_user_ports=true
   )
   if [[ -v X1_TERRAFORM_DISABLE_LOCKING ]]; then
     terraform_extra_args+=( -lock=false )

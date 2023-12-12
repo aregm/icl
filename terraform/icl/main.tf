@@ -188,4 +188,6 @@ module "icl-hub" {
   source = "../modules/icl-hub"
   namespace_labels = var.namespace_labels
   ingress_domain = var.ingress_domain
+  use_node_ip_for_user_ports = var.use_node_ip_for_user_ports
+  use_external_node_ip_for_user_ports = var.use_external_node_ip_for_user_ports
 }

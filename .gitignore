@@ -20,6 +20,7 @@ terraform/**/terraform.tfstate*
 logs/
 misc/
 build/
+venv/
 
 # Ignore files created by Prefect in unit tests
 .prefectignore

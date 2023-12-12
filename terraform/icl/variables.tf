@@ -280,3 +280,15 @@ variable "intel_gpu_enabled" {
   type = bool
   default = false
 }
+
+variable "use_node_ip_for_user_ports" {
+  description = "Use k8s Node's InternalIP address when exposing user ports"
+  type = bool 
+  default = false
+}
+
+variable "use_external_node_ip_for_user_ports" {
+  description = "Use k8s Node's ExternalIP address when exposing user ports (use with use_node_ip_for_user_ports)"
+  type = bool
+  default = false
+}

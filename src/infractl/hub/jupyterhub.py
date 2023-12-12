@@ -161,13 +161,20 @@ def get_hub_pod(namespace: str) -> client.V1Pod:
     return response.items[0]
 
 
-def get_node_ip(name: str) -> str:
+def get_node_ip(name: str, external: bool = False) -> str:
     """Returns node IP address."""
+    external_ip = None
+    internal_ip = None
+
     response = kube.api().core_v1().read_node_status(name)
     for address in response.status.addresses:
+        if address.type == 'ExternalIP':
+            external_ip = address.address
         if address.type == 'InternalIP':
-            return address.address
-    return name
+            internal_ip = address.address
+    if external_ip and external:
+        return external_ip
+    return internal_ip or name
 
 
 def get_user_id(username: str) -> str:
@@ -378,9 +385,15 @@ def enable_ssh(username: str, key: Optional[str] = None) -> str:
             if error.status != 404:
                 raise error
 
-    ssh_proxy = config.get().get('ingress_domain')
-    print('ingress_domain', ssh_proxy)
-    ssh_host = ssh_proxy or get_node_ip(pod.spec.node_name)
+    use_node_ip_for_user_ports = config.get().get('use_node_ip_for_user_ports')
+    use_external_node_ip_for_user_ports = config.get().get('use_external_node_ip_for_user_ports')
+    ingress_domain = config.get().get('ingress_domain')
+    print('ingress_domain', ingress_domain)
+    ssh_host = (
+        get_node_ip(pod.spec.node_name, external=use_external_node_ip_for_user_ports)
+        if use_node_ip_for_user_ports
+        else ingress_domain
+    )
     ssh_args = f'jovyan@{ssh_host} -p {response.spec.ports[0].node_port}'
     if jumphost:
         return f'ssh -J {jumphost} {ssh_args}'

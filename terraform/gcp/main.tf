@@ -27,3 +27,10 @@ module "firewall-rule-allow-tcp-8443" {
   cluster_name = var.cluster_name
   network = module.icl-cluster.network
 }
+
+module "firewall-rule-allow-user-ports" {
+  depends_on = [ module.icl-cluster ]
+  source = "./modules/firewall-rule-allow-user-ports"
+  cluster_name = var.cluster_name
+  network = module.icl-cluster.network
+}
