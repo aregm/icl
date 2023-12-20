@@ -8,7 +8,9 @@ set -e
 : ${X1_CLUSTER_NAME:="x1-$USER"}
 : ${AWS_DEFAULT_REGION:="us-east-1"}
 : ${X1_CLUSTER_VERSION:="1.28"}
+: ${X1_EXTERNALDNS_ENABLED:="false"}
 : ${CONTROL_NODE_IMAGE:="pbchekin/icl-ccn-aws:0.0.1"}
+: ${ICL_INGRESS_DOMAIN:="test.x1infra.com"}
 
 # https://stackoverflow.com/questions/59895/getting-the-source-directory-of-a-bash-script-from-within
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
@@ -44,7 +46,7 @@ EOF
 }
 
 function show_parameters() {
-  for var in AWS_DEFAULT_REGION WORKSPACE; do
+  for var in ICL_INGRESS_DOMAIN AWS_DEFAULT_REGION WORKSPACE; do
     echo "$var: ${!var}"
   done
 }
@@ -59,10 +61,11 @@ EOF
 function x1_terraform_args() {
   terraform_extra_args=(
     -var prometheus_enabled=false
-    -var ingress_domain="test.x1infra.com"
+    -var ingress_domain="${ICL_INGRESS_DOMAIN}"
     -var ingress_nginx_service_enabled=true
     -var local_path_enabled=false # use EBS CSI for EKS instead
     -var default_storage_class="gp2"
+    -var externaldns_enabled="${X1_EXTERNALDNS_ENABLED}"
     -var ray_load_balancer_enabled=true # dedicated AWS CLB for Ray client endpoint on port 80
   )
   echo "${terraform_extra_args[*]}"
@@ -112,9 +115,17 @@ if [[ " $@ " =~ " --help " ]]; then
   exit 0
 fi
 
-if [[ " $@ " =~ " --console " ]]; then
-  control_node "bash"
-  exit 0
+if [[ " $1 " =~ " --console " ]]; then
+  shift
+  _rest_args="$@"
+  cmd="bash"
+  if [[ -n "$_rest_args" ]]; then
+    cmd="$_rest_args"
+  else
+    warn_about_proxy_and_variables
+  fi
+  control_node "$cmd"
+  exit $?
 fi
 
 if [[ " $@ " =~ " --check " ]]; then
