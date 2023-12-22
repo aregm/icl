@@ -67,6 +67,8 @@ function x1_terraform_args() {
     -var default_storage_class="gp2"
     -var externaldns_enabled="${X1_EXTERNALDNS_ENABLED}"
     -var ray_load_balancer_enabled=true # dedicated AWS CLB for Ray client endpoint on port 80
+    -var use_node_ip_for_user_ports=true
+    -var use_external_node_ip_for_user_ports=true
   )
   echo "${terraform_extra_args[*]}"
 }

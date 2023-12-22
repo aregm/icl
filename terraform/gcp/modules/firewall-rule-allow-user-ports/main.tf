@@ -3,7 +3,7 @@ resource "google_compute_firewall" "allow-user-ports" {
   network = var.network
   allow {
     protocol = "tcp"
-    ports = ["32000-34000"]
+    ports = ["32001-33999"]
   }
   source_ranges = [ "0.0.0.0/0" ]
 }
