@@ -107,8 +107,14 @@ def build(build_args: Dict[str, Any], registry: str):
     try:
         wait_docker()
 
+        cmd = ['docker', 'build', '--tag', full_tag, 'context']
+        buildargs = build_args.get('buildargs')
+        if buildargs:
+            for name, value in buildargs.items():
+                cmd.append('--build-arg')
+                cmd.append(f'{name}={value}')
         with subprocess.Popen(
-            ['docker', 'build', '--tag', full_tag, 'context'],
+            cmd,
             stderr=subprocess.STDOUT,
             stdout=subprocess.PIPE,
         ) as process:
@@ -118,8 +124,9 @@ def build(build_args: Dict[str, Any], registry: str):
             if process.returncode != 0:
                 raise BuildError('Build failed')
 
+        cmd = ['docker', 'push', full_tag]
         with subprocess.Popen(
-            ['docker', 'push', full_tag],
+            cmd,
             stderr=subprocess.STDOUT,
             stdout=subprocess.PIPE,
         ) as process:

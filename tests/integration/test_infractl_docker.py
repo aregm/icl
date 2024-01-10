@@ -11,7 +11,10 @@ from infractl import docker
 DOCKERFILE = """
 FROM scratch
 
-COPY test_file .
+# This argument needs to be set by the builder, otherwise the test will fail 
+ARG TEST_FILE=no_such_file
+
+COPY $TEST_FILE .
 """
 
 
@@ -34,6 +37,9 @@ def test_local_builder(tmp_path: pathlib.Path, address):
     image = builder.build(
         path=str(tmp_path),
         tag=tag,
+        buildargs={
+            'TEST_FILE': 'test_file',
+        },
     )
 
     assert image.full_name == tag
@@ -57,6 +63,9 @@ def test_remote_builder(tmp_path: pathlib.Path, address):
     image = builder.build(
         path=str(tmp_path),
         tag=tag,
+        buildargs={
+            'TEST_FILE': 'test_file',
+        },
     )
 
     assert image.full_name == tag
