@@ -70,21 +70,40 @@ locals {
       storageClass = var.default_storage_class
     }
 
-    extraVolumes = !var.shared_volume_enabled ? [] : [
-      {
-        name = "data"
-        persistentVolumeClaim = {
-          claimName = module.shared-volume.0.claim_name
+    extraVolumes = concat(
+      !var.shared_volume_enabled ? [] : [
+        {
+          name = "data"
+          persistentVolumeClaim = {
+            claimName = module.shared-volume.0.claim_name
+          }
         }
-      }
-    ]
+      ],
+      var.jupyterhub_shared_memory_size == "" ? [] : [
+        {
+          name = "shared-mem"
+          emptyDir = {
+            medium = "Memory"
+            sizeLimit = "1Gi"
+          }
+        }
+      ],
+    )
 
-    extraVolumeMounts = !var.shared_volume_enabled ? [] : [
-      {
-        mountPath = "/data"
-        name = "data"
-      }
-    ]
+    extraVolumeMounts = concat(
+      !var.shared_volume_enabled ? [] : [
+        {
+          mountPath = "/data"
+          name = "data"
+        }
+      ],
+      var.jupyterhub_shared_memory_size == "" ? [] : [
+        {
+          mountPath = "/dev/shm"
+          name = "shared-mem"
+        }
+      ]
+    )
   }
 
   # https://z2jh.jupyter.org/en/latest/resources/reference.html#singleuser-extrafiles

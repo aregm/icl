@@ -221,6 +221,12 @@ variable "jupyterhub_cluster_admin_enabled" {
   default = false
 }
 
+variable "jupyterhub_shared_memory_size" {
+  description = "Custom size of /dev/shm, empty for default"
+  type = string
+  default = ""
+}
+
 variable "olm_enabled" {
   description = "Enable Operator Lifecycle Manager, see https://operatorhub.io/how-to-install-an-operator"
   type = bool

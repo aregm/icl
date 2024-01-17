@@ -36,6 +36,12 @@ variable "jupyterhub_gpu_profile_image" {
   default = ""
 }
 
+variable "jupyterhub_shared_memory_size" {
+  description = "Custom size of /dev/shm, empty for default"
+  type = string
+  default = ""
+}
+
 variable "prefect_api_url" {
   description = "Prefect API URL"
   type = string
