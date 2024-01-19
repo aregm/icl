@@ -9,6 +9,9 @@ Vagrant.configure(2) do |config|
   end
 
   libvirt_default_prefix = ENV.fetch("X1_LIBVIRT_DEFAULT_PREFIX", ENV.fetch('USER', "nouser"))
+  libvirt_memory = ENV.fetch("VM_MEMORY")
+  libvirt_cpus = ENV.fetch("VM_CPU").to_i
+  libvirt_machine_virtual_size = ENV.fetch("VM_DISK").to_i
 
   config.vm.box = "rockylinux/9"
 
@@ -21,10 +24,9 @@ Vagrant.configure(2) do |config|
   config.vm.define "jumphost" do |jumphost|
     jumphost.vm.hostname = "jumphost"
     jumphost.vm.provider "libvirt" do |libvirt|
-      libvirt.memory = "16384"
-      libvirt.cpus = 8
-      # Rocky Linux box is 8GB, expanding to 50GB.
-      libvirt.machine_virtual_size = 50
+      libvirt.memory = libvirt_memory
+      libvirt.cpus = libvirt_cpus
+      libvirt.machine_virtual_size = libvirt_machine_virtual_size
     end
 
     # Expanding /dev/vda5, this works only for the specific box!
