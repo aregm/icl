@@ -14,12 +14,13 @@ vm_exec() {
     vagrant ssh jumphost -c "$cmd"
 }
 
-vm_cleanup() {
-    cd "$WORKFLOW_DIR"
+vm_copy_logs() {
     echo "Copying logs ..."
+    cd "$WORKFLOW_DIR"
     vagrant scp jumphost:x1/logs "$WORKSPACE_DIR" || true
+}
 
-    echo "Cleaning up Vagrant VMs ..."
+vm_cleanup() {
     vm_clean_before
 }
 
@@ -41,6 +42,7 @@ set_vagrant_env() {
 }
 
 vm_clean_before() {
+    echo "Cleaning up Vagrant VMs ..."
     cd "$WORKFLOW_DIR"
 
     ps -ef

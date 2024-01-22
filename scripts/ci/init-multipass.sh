@@ -31,6 +31,12 @@ vm_exec() {
     multipass exec "vm-$WORKFLOW_PREFIX_ID" -- "$@"
 }
 
+vm_copy_logs() {
+    echo "Copying logs ..."
+    cd "$WORKFLOW_DIR"
+    multipass transfer "vm-$WORKFLOW_PREFIX_ID":x1/logs "$WORKSPACE_DIR" || true
+}
+
 vm_clean_before() {
     multipass delete -p "vm-$WORKFLOW_PREFIX_ID" || true
 }

@@ -52,4 +52,5 @@ generate_key
 . "$WORKFLOW_DIR"/init.sh
 
 vm_clean_before
+trap vm_copy_logs EXIT
 
