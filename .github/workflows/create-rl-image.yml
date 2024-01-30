@@ -10,7 +10,7 @@ jobs:
       - packer
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Run build
         run: |
@@ -36,7 +36,7 @@ jobs:
             --name packer-rl9 infractl/packer-rl9 sh -c 'git clone https://github.com/canonical/packer-maas && cd packer-maas/rocky9 && PACKER_LOG=1 make'
           docker cp packer-rl9:/home/ghrunner/packer-maas/rocky9/rocky9.tar.gz rl9.tar.gz
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: rl9
           path: rl9.tar.gz
