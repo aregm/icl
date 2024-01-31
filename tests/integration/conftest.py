@@ -99,3 +99,93 @@ def jupyterhub_session_pod_name(jupyterhub_namespace, address):
     assert len(jupyter_all_test_user_pods) == 1
 
     return jupyter_all_test_user_pods[0].metadata.name
+
+
+def exec_in_pod(api, pod_name, namespace, command):
+    return stream.stream(
+        api.connect_get_namespaced_pod_exec,
+        pod_name,
+        namespace,
+        command=command,
+        stderr=True,
+        stdin=False,
+        stdout=True,
+        tty=False,
+    )
+
+
+# https://github.com/kubernetes-client/python/issues/476#issuecomment-375056804
+def copy_file_to_pod(api, pod_name, namespace, source_file, destination_file):
+    exec_command = ['/bin/sh']
+    resp = stream.stream(
+        api.connect_get_namespaced_pod_exec,
+        pod_name,
+        namespace,
+        command=exec_command,
+        stderr=True,
+        stdin=True,
+        stdout=True,
+        tty=False,
+        _preload_content=False,
+    )
+    buffer = b''
+    with open(source_file, "rb") as file:
+        buffer += file.read()
+
+    commands = [
+        bytes(f"cat <<'EOF' >{destination_file}\n", 'utf-8'),
+        buffer,
+        bytes("EOF\n", 'utf-8'),
+    ]
+
+    while resp.is_open():
+        resp.update(timeout=1)
+        if commands:
+            cmd = commands.pop(0)
+            resp.write_stdin(cmd)
+        else:
+            break
+    assert len(commands) == 0
+    resp.close()
+
+    # TODO: "cat <<EOF" the test notebook file into the container
+    # TODO: run the notebook and evaluate results
+
+
+@pytest.fixture(scope="session")
+def jupyterhub_enable_ssh(jupyterhub_namespace, jupyterhub_session_pod_name):
+    """Enables ssh in the JupyterHub session."""
+    config.load_kube_config()
+    core_v1 = client.CoreV1Api()
+
+    username, password = "jovyan", "insecure"
+
+    _ = exec_in_pod(
+        core_v1,
+        jupyterhub_session_pod_name,
+        jupyterhub_namespace,
+        [
+            '/bin/bash',
+            '-c',
+            'echo "jovyan:insecure" | sudo chpasswd',
+        ],
+    )
+
+    output = exec_in_pod(
+        core_v1,
+        jupyterhub_session_pod_name,
+        jupyterhub_namespace,
+        [
+            '/bin/bash',
+            # Specify -l (login) option to execute ~/.profile and set conda environment
+            '-lc',
+            'infractl ssh enable',
+        ],
+    )
+
+    # output is "Use the following command to log in to your session: ssh jovyan@localtest.me -p 32001"
+    assert 'log in to your session' in output
+
+    # TODO: parse it from `output`?
+    port = 32001
+    yield username, password, port

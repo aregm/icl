@@ -1,12 +1,14 @@
 """SSH runtime."""
 
-import os
 from typing import Any, Dict, List, Optional, Union
 
 import infractl.base
 import infractl.plugins.ssh as ssh_plugin
+from infractl.logging import get_logger
 from infractl.plugins.ssh.program import SshProgramRun
 from infractl.plugins.ssh.utils import zyme_run_command
+
+logger = get_logger()
 
 
 class SshProgramRunner(infractl.base.Runnable):
@@ -27,23 +29,19 @@ class SshProgramRunner(infractl.base.Runnable):
         detach: bool = False,
     ) -> SshProgramRun:
         """Runs program synchronously."""
-        # TODO: if a username is needed to determine a remote path,
-        # then this data should be available in this context
-        username = os.environ['ICL_SSH_USERNAME']
-
         # TODO: copying files should be at the time of deployment,
         # and not at the time of run.
         ret_code = zyme_run_command(
             ['python', self.program.path],
             self.ssh_client,
-            remotepath=f'/localdisk/{username}/ssh_icl_test/python_script.py',
+            remotepath='~/ssh_icl_script.py',
             overwrite=True,
             # it's not needed for python scripts
             newline_conversion=False,
         )
 
-        # TODO: add message
-        # for failing cases
+        # TODO: add message for failing cases
+        logger.info('ret_code: "%s"', ret_code)
         return SshProgramRun(ret_code == 0)
 
 

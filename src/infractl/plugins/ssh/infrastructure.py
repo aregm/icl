@@ -31,5 +31,6 @@ class SshInfrastructureImplementation(
         return ZymeClient(
             hostname=self.infrastructure.address,
             username=self.infrastructure.username,
-            password=self.infrastructure.password,  # private_key=self.private_key
+            password=self.infrastructure.password,
+            port=self.infrastructure.port,
         )

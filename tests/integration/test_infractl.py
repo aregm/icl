@@ -299,19 +299,12 @@ async def test_python_program(address, runtime_kind):
     assert program_run.is_completed()
 
 
-@pytest.mark.skipif(
-    os.environ.get("ICL_SSH_ADDRESS", None) is None,
-    reason="TODO: the test should work",
-)
 @pytest.mark.asyncio
 @pytest.mark.parametrize('kind', ['ssh'])
-async def test_python_program_ssh(address, kind):
-    # TODO: provide access to this data in another way
-    address = os.environ["ICL_SSH_ADDRESS"]
-    username = os.environ["ICL_SSH_USERNAME"]
-    password = os.environ["ICL_SSH_PASSWORD"]
+async def test_python_program_ssh(address, kind, jupyterhub_enable_ssh):
+    username, password, port = jupyterhub_enable_ssh
     infrastructure = infractl.infrastructure(
-        address=address, username=username, password=password, kind=kind
+        address=address, username=username, password=password, port=port, kind=kind
     )
     runtime = infractl.runtime(kind=kind)
     program = infractl.program('flows/program1.py')

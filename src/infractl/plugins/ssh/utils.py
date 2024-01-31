@@ -1,10 +1,13 @@
 """Utils for SSH infra."""
 
+from __future__ import annotations
+
 import errno
 import os
 import subprocess
 import sys
 import time
+from typing import Optional
 
 import paramiko
 import socks
@@ -18,7 +21,7 @@ logger = get_logger()
 class ZymeClient:
     """Paramiko wrapper, inspired by enzyme."""
 
-    def __init__(self, hostname, username, password, use_proxy=False, add2known_hosts=True):
+    def __init__(self, hostname, username, password, port, use_proxy=False, add2known_hosts=True):
         """
         Create SSH client.
 
@@ -27,23 +30,24 @@ class ZymeClient:
         hostname: str
         username: str
             using for authentication
-        pkey_file: str
-            private key in OpenSSH format
+        password: str
+            using for authentication
+        port: int
         use_proxy: bool, default True
             creates socksocket with SOCKS5 protocol to use by paramiko connect
         add2known_hosts: bool, default True
             automatically adding the hostname and new host key to the local
             known_hosts file
-
         """
         self.hostname = hostname
         self.username = username
         self.password = password
+        self.port = port
         self.use_proxy = use_proxy
         self.add2known_hosts = add2known_hosts
         self.connected = False
 
-    def __enter__(self):
+    def __enter__(self) -> ZymeClient:
         """
         Connect to host.
 
@@ -58,7 +62,7 @@ class ZymeClient:
             self.sock = make_proxy_socket.proxy_socket()
 
             try:
-                self.sock.connect((self.hostname.encode('utf-8'), 22))
+                self.sock.connect((self.hostname.encode('utf-8'), self.port))
             except socks.SOCKS5Error as err:
                 raise ConnectionError(f'{err}; check hostname') from err
 
@@ -74,7 +78,7 @@ class ZymeClient:
                 hostname=self.hostname,
                 username=self.username,
                 password=self.password,
-                port=22,
+                port=self.port,
                 sock=self.sock,
             )
         except IOError as exc:
@@ -110,7 +114,7 @@ class ZymeClient:
 
     def exec_command(
         self,
-        command,
+        command: str,
         get_output=True,
         stdout_log_file='stdout_log.txt',
         stderr_log_file='stderr_log.txt',
@@ -121,18 +125,17 @@ class ZymeClient:
 
         Parameters
         ----------
-        command:          str
-        get_output:       bool, default True
-            display information from stdout and stderr streams on remote host
-            localy
-        stdout_log_file:  str, default 'stdout_log.txt'
-        stderr_log_file:  str, default 'stderr_log.txt'
-        chunksize:        int, default 1024
+        command: str
+        get_output: bool, default True
+            Display information from stdout and stderr streams on remote host localy.
+        stdout_log_file: str, default 'stdout_log.txt'
+        stderr_log_file: str, default 'stderr_log.txt'
+        chunksize: int, default 1024
 
         Returns
         -------
         retcode: int
-            result of the executed command
+            Result of the executed command.
 
         """
         self.verify_connected()
@@ -144,7 +147,7 @@ class ZymeClient:
         while True:
 
             while stdout.channel.recv_ready():
-                outdata = stdout.channel.recv(chunksize)
+                outdata = stdout.channel.recv(chunksize).decode('utf-8')
                 if get_output:
                     sys.stdout.write(outdata)
                 if stdout_log_file:
@@ -152,7 +155,7 @@ class ZymeClient:
                         out.write(outdata)
 
             while stderr.channel.recv_stderr_ready():
-                errdata = stderr.channel.recv_stderr(chunksize)
+                errdata = stderr.channel.recv_stderr(chunksize).decode('utf-8')
                 if get_output:
                     sys.stderr.write(errdata)
                 if stderr_log_file:
@@ -177,7 +180,9 @@ class ZymeClient:
         self.verify_connected()
         dir_path, _ = os.path.split(remotepath)
         _, stdout, stderr = self.client.exec_command(f'mkdir -p "{dir_path}"')
-        res = stdout.read().rstrip('\n') + stderr.read().rstrip('\n')
+        res = stdout.read().decode('utf-8').rstrip('\n') + stderr.read().decode('utf-8').rstrip(
+            '\n'
+        )
 
         if res:
             raise OSError(
@@ -213,7 +218,9 @@ class ZymeClient:
 
         return self._put_string(file_content_generator, remotepath, overwrite, 'w')
 
-    def put_string(self, file_content, remotepath, overwrite=False, mode='w'):
+    def put_string(
+        self, file_content: str, remotepath: str, overwrite: bool = False, mode: str = 'w'
+    ) -> paramiko.sftp_attr.SFTPAttributes:
         """
         Copy a file_content string to the SFTP server as remotepath by using
         connected SSH client.
@@ -222,8 +229,8 @@ class ZymeClient:
         ----------
         file_content: str
         remotepath: str
-        mode: str, default 'w'
-            mode for open function
+        mode: str, default: 'w'
+            Mode for open function.
 
         Returns
         -------
@@ -236,7 +243,9 @@ class ZymeClient:
 
         return self._put_string(string_generator, remotepath, overwrite, mode)
 
-    def _put_string(self, data_generator, remotepath, overwrite, mode):
+    def _put_string(
+        self, data_generator, remotepath, overwrite, mode
+    ) -> paramiko.sftp_attr.SFTPAttributes:
         with self._get_sftp_client() as sftp_client:
             exist_remotepath = True
             try:
@@ -258,19 +267,19 @@ class ZymeClient:
 
             return sftp_client.stat(remotepath)
 
-    def expand_home_path(self, remotepath):
+    def expand_home_path(self, remotepath: str) -> str:
         if remotepath.startswith('~'):
             remotepath = remotepath.replace('~', self.home)
         return remotepath
 
-    def ensure_remotepath(self, remotepath):
+    def ensure_remotepath(self, remotepath: Optional[str]) -> str:
         if remotepath is None:
             remotepath = '~/run_script.sh'
 
         return self.expand_home_path(remotepath)
 
 
-def check_script(file_path):
+def check_script(file_path: str) -> bool:
     """
     File having string shebang is treated as a script, otherwise
     it is treated as binary.
@@ -281,15 +290,13 @@ def check_script(file_path):
 
     Returns
     -------
-    : bool
-        True if script
-
+    bool
     """
     with open(file_path, encoding='utf-8') as f:
         return f.readline().startswith('#!')
 
 
-def convert_newline_symbol(local_file):
+def convert_newline_symbol(local_file: str) -> str:
     """
     Converts DOS/Windows newline (CRLF) to UNIX newline (LF)
     in local_file content.
@@ -301,7 +308,6 @@ def convert_newline_symbol(local_file):
     Returns
     -------
     unix_like_string: str
-
     """
     with open(local_file, 'rU', encoding='utf-8') as f:
         return f.read()
@@ -326,7 +332,7 @@ def identify_script_position(args):
     return mpi_script_pos
 
 
-def prepare_run_args(run_args: list, remotepath):
+def prepare_run_args(run_args: list, remotepath: str):
     run_args = list(run_args)
     script_pos = identify_script_position(run_args)
     script = run_args[script_pos]
@@ -336,20 +342,20 @@ def prepare_run_args(run_args: list, remotepath):
 
 
 def zyme_run_command(
-    run_args,
-    zyme_client,
-    remotepath=None,
-    newline_conversion=True,
-    overwrite=False,
-    no_remove=False,
-):
+    run_args: list,
+    zyme_client: ZymeClient,
+    remotepath: str = None,
+    newline_conversion: bool = True,
+    overwrite: bool = False,
+    no_remove: bool = False,
+) -> int:
     """
     Run script on remote host.
 
     Parameters
     ----------
     script_args: list
-        first element of list is script path;
+        First element of list is script path;
         other - args that will be passed into script
     zyme_client: ZymeClient
     remotepath: str, default None
@@ -366,18 +372,19 @@ def zyme_run_command(
     """
     try:
         with zyme_client as connected_client:
+            remotepath = connected_client.expand_home_path(remotepath)
             if newline_conversion:
                 unix_string = convert_newline_symbol(run_args[1])
                 connected_client.put_string(unix_string, remotepath, overwrite=overwrite)
             else:
                 connected_client.put_file(run_args[1], remotepath, overwrite=overwrite)
 
-            # TODO: either the conda must be available through PATH env var
-            # or the option must be available through settings
-            conda_path = os.environ['ICL_REMOTE_CONDA_PATH']
-            command = f'{conda_path} run -n base python {remotepath}'
-            _, stdout, stderr = connected_client.client.exec_command(command)
-            logger.info('output from command: "%s":\n%s', command, stdout.read().decode('utf-8'))
+            # TODO: this command shoudn't be hardcoded, it can be obtained from `run_args`
+            command = f"/bin/bash -lc 'python {remotepath}'"
+            ret_code = connected_client.exec_command(command)
+            logger.info('return code from command: "%s":\n%s', command, ret_code)
+
+            # TODO: remove commented code if not needed
             # pylint: disable=pointless-string-statement
             '''
             remotepath = connected_client.ensure_remotepath(remotepath)
@@ -407,7 +414,7 @@ def zyme_run_command(
             if not no_remove:
                 connected_client.exec_command(f'rm -f "{remotepath}"')
 
-        return len(stderr.read())
+        return ret_code
 
     except ConnectionError as err:
         logger.info('Error: %s', err)

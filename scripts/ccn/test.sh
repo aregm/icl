@@ -32,7 +32,7 @@ export PYTHONPATH="$PROJECT_DIR/src:$PROJECT_DIR/tests/smoke:$PROJECT_DIR/tests/
 
 function dependencies() {
   cd "$PROJECT_DIR"
-  pip install .[integration_tests]
+  pip install .[integration_tests,ssh]
 }
 
 function dump_logs() {(
