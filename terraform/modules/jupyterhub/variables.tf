@@ -71,3 +71,9 @@ variable "jupyterhub_profiles" {
   type = list(any)
   default = []
 }
+
+variable "jupyterhub_extra_resource_limits" {
+  description = "Extra resource limits for JupyterHub, e.g., GPU resources"
+  type = map(string)
+  default = {}
+}

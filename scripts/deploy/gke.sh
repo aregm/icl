@@ -62,6 +62,46 @@ function show_parameters() {
   done
 }
 
+<<<<<<< HEAD
+=======
+# Queries for the specific GPU included in the provided ICL_GCP_MACHINE_TYPE and ICL_GCP_ZONE
+function set_gpu_type() {
+    GPU_MODEL=$(control_node "gcloud compute machine-types describe $ICL_GCP_MACHINE_TYPE --zone $ICL_GCP_ZONE --format=json | jq -r '.accelerators[].guestAcceleratorType' | tr '[:upper:]' '[:lower:]' | tr -d '\r'")
+    # Check if GPU_MODEL contains the substrings amd, intel, or nvidia
+    if [[ $GPU_MODEL == *"nvidia"* ]]; then
+        GPU_ENABLED=true
+        GPU_TYPE="nvidia"
+        EXTRA_RESOURCE_LIMITS='{\"nvidia.com/gpu\"=\"1\"}'
+    elif [[ $GPU_MODEL == *"intel"* ]]; then
+        echo "GPU Type contains 'intel'"
+        GPU_ENABLED=true
+        GPU_TYPE="intel"
+        EXTRA_RESOURCE_LIMITS='{\"gpu.intel.com/i915\"=\"1\"}'
+    elif [[ $GPU_MODEL == *"amd"* ]]; then
+        echo "GPU Type contains 'amd'"
+        GPU_ENABLED=true
+        GPU_TYPE="amd"
+        EXTRA_RESOURCE_LIMITS='{\"amd.com/gpu\"=\"1\"}'
+    else
+        echo "GPU_TYPE does not contain 'amd', 'intel', or 'nvidia'"
+        GPU_ENABLED=false
+        GPU_TYPE="none"
+        EXTRA_RESOURCE_LIMITS='{}'
+    fi
+
+    check_gpu_settings
+}
+
+function check_gpu_settings() {
+    if [[ "${JUPYTERHUB_GPU_PROFILE_ENABLED}" == "true" ]]; then
+        if [[ -z "${GPU_TYPE}" || -z "${JUPYTERHUB_EXTRA_RESOURCE_LIMITS}" ]]; then
+            echo "Warning: JupyterHub GPU profile is enabled, but GPU_TYPE or JUPYTERHUB_EXTRA_RESOURCE_LIMITS are not set."
+            exit 2
+        fi
+    fi
+}
+
+>>>>>>> 2eb3624 (Cleanup)
 # TODO: add cluster_version here
 function render_gcp_terraform_tfvars() {
   if [[ -v TERRAFORM_POSTGRESQL_URI  ]]; then
@@ -78,6 +118,15 @@ gcp_zone = "$X1_GCP_ZONE"
 gcp_project = "$X1_GCP_PROJECT_NAME"
 node_version = "$X1_CLUSTER_VERSION"
 machine_type = "$ICL_GCP_MACHINE_TYPE"
+<<<<<<< HEAD
+=======
+gpu_driver_version = "$GKE_GPU_DRIVER_VERSION"
+jupyterhub_gpu_profile_enabled="$JUPYTERHUB_GPU_PROFILE_ENABLED"
+gpu_type="$GPU_TYPE"
+gpu_model = "$GPU_MODEL"
+jupyterhub_extra_resource_limits="$JUPYTERHUB_EXTRA_RESOURCE_LIMITS"
+jupyterhub_gpu_profile_image="$JUPYTER_GPU_PROFILE_IMAGE"
+>>>>>>> 2eb3624 (Cleanup)
 EOF
 }
 
@@ -89,7 +138,17 @@ function x1_terraform_args() {
     -var local_path_enabled=false # use standard-rwo for GKE instead
     -var default_storage_class="standard-rwo"
     -var ray_load_balancer_enabled=false
+<<<<<<< HEAD
     -var externaldns_enabled="${X1_EXTERNALDNS_ENABLED}"
+=======
+    -var externaldns_enabled="${ICL_EXTERNALDNS_ENABLED}"
+    -var jupyterhub_gpu_profile_enabled="${JUPYTERHUB_GPU_PROFILE_PROFILE_ENABLED}"
+    -var gpu_enabled="${GPU_ENABLED}"
+    -var gpu_type="${GPU_TYPE}"
+    -var jupyterhub_extra_resource_limits="${JUPYTERHUB_JUPYTERHUB_EXTRA_RESOURCE_LIMITS}"
+    -var jupyterhub_gpu_profile_image="${JUPYTER_GPU_PROFILE_IMAGE}"
+    -var jupyterhub_gpu_profile_image="${JUPYTER_GPU_PROFILE_IMAGE}"
+>>>>>>> 2eb3624 (Cleanup)
     -var use_node_ip_for_user_ports=true
     -var use_external_node_ip_for_user_ports=true
   )
@@ -210,6 +269,7 @@ if [[ " $@ " =~ " --config " ]]; then
 fi
 
 if [[ " $@ " =~ " --deploy-x1 " ]]; then
+  set_gpu_type
   deploy_x1
   exit 0
 fi
@@ -220,6 +280,7 @@ if [[ " $@ " =~ " --delete " ]]; then
 fi
 
 if [[ " $@ " =~ " --delete-x1 " ]]; then
+  set_gpu_type
   delete_x1
   exit 0
 fi
