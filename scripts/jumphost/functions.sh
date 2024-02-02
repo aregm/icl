@@ -1,6 +1,6 @@
 # Functions used by other scripts
 
-: ${CONTROL_NODE_IMAGE:=pbchekin/icl-ccn-kubespray:0.0.2}
+: ${CONTROL_NODE_IMAGE:=pbchekin/icl-ccn-kubespray:0.0.3}
 : ${COREDNS_IMAGE:=registry.k8s.io/coredns/coredns:v1.8.6}
 : ${NGINX_IMAGE:=nginx:stable}
 : ${ARTIFACTS_DIR:=$HOME/generated}
