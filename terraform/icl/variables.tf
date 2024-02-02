@@ -227,6 +227,12 @@ variable "jupyterhub_shared_memory_size" {
   default = ""
 }
 
+variable "jupyterhub_profiles" {
+  description = "Additional JupyterHub profiles"
+  type = list(any)
+  default = []
+}
+
 variable "olm_enabled" {
   description = "Enable Operator Lifecycle Manager, see https://operatorhub.io/how-to-install-an-operator"
   type = bool

@@ -65,3 +65,9 @@ variable "jupyterhub_cluster_admin_enabled" {
   type = bool
   default = false
 }
+
+variable "jupyterhub_profiles" {
+  description = "Additional JupyterHub profiles"
+  type = list(any)
+  default = []
+}

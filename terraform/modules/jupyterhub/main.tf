@@ -61,6 +61,7 @@ locals {
     ],
     var.jupyterhub_gpu_profile_enabled ? [local.jupyterhub_gpu_profile] : [],
     var.jupyterhub_gpu_profile_enabled ? [local.jupyterhub_gpu_admin_profile] : [],
+    var.jupyterhub_profiles,
   )
 
   jupyterhub_storage = {

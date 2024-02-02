@@ -118,6 +118,7 @@ module "jupyterhub" {
   jupyterhub_shared_memory_size = var.jupyterhub_shared_memory_size
   jupyterhub_gpu_profile_image = var.jupyterhub_gpu_profile_image
   jupyterhub_cluster_admin_enabled = var.jupyterhub_cluster_admin_enabled
+  jupyterhub_profiles = var.jupyterhub_profiles
   ingress_domain = var.ingress_domain
   shared_volume_enabled = var.shared_volume_enabled
 }
