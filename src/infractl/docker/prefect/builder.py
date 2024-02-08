@@ -81,11 +81,16 @@ def kill_docker(timeout=30):
     os.kill(docker_init_pid[0], signal.SIGTERM)
     docker_processes = []
     for _ in range(timeout):
-        docker_processes = [
-            process.name()
-            for process in psutil.process_iter()
-            if process.name() in ('docker-init', 'dockerd', 'containerd')
-        ]
+        docker_processes = []
+        for process in psutil.process_iter():
+            try:
+                process_name = process.name()
+            except psutil.NoSuchProcess:
+                # process.name() raises NoSuchProcess exception if the process dies between getting
+                # its pid and name. We can ignore such case and continue.
+                continue
+            if process_name in ('docker-init', 'dockerd', 'containerd'):
+                docker_processes.append(process_name)
         if not docker_processes:
             logger.info('Docker has been terminated, exiting')
             return
