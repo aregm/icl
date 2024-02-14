@@ -1,5 +1,5 @@
 resource "google_container_cluster" "cluster" {
-  name     = var.cluster_name
+  name = var.cluster_name
   min_master_version = var.node_version
   initial_node_count = 1
   remove_default_node_pool = true
