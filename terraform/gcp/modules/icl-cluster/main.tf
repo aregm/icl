@@ -1,9 +1,4 @@
 resource "google_container_cluster" "cluster" {
-<<<<<<< HEAD
-  name = var.cluster_name
-  # count per zone
-  initial_node_count = 1
-=======
   name     = var.cluster_name
   min_master_version = var.node_version
   initial_node_count = 1
@@ -23,7 +18,6 @@ resource "google_container_node_pool" "gpu_pool" {
   cluster    = google_container_cluster.cluster.name
   node_count = 1
 
->>>>>>> 2eb3624 (Cleanup)
   node_config {
     machine_type = var.machine_type
     image_type = "UBUNTU_CONTAINERD"

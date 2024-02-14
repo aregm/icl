@@ -62,8 +62,6 @@ function show_parameters() {
   done
 }
 
-<<<<<<< HEAD
-=======
 # Queries for the specific GPU included in the provided ICL_GCP_MACHINE_TYPE and ICL_GCP_ZONE
 function set_gpu_type() {
     GPU_MODEL=$(control_node "gcloud compute machine-types describe $ICL_GCP_MACHINE_TYPE --zone $ICL_GCP_ZONE --format=json | jq -r '.accelerators[].guestAcceleratorType' | tr '[:upper:]' '[:lower:]' | tr -d '\r'")
@@ -101,7 +99,6 @@ function check_gpu_settings() {
     fi
 }
 
->>>>>>> 2eb3624 (Cleanup)
 # TODO: add cluster_version here
 function render_gcp_terraform_tfvars() {
   if [[ -v TERRAFORM_POSTGRESQL_URI  ]]; then
@@ -118,15 +115,12 @@ gcp_zone = "$X1_GCP_ZONE"
 gcp_project = "$X1_GCP_PROJECT_NAME"
 node_version = "$X1_CLUSTER_VERSION"
 machine_type = "$ICL_GCP_MACHINE_TYPE"
-<<<<<<< HEAD
-=======
 gpu_driver_version = "$GKE_GPU_DRIVER_VERSION"
 jupyterhub_gpu_profile_enabled="$JUPYTERHUB_GPU_PROFILE_ENABLED"
 gpu_type="$GPU_TYPE"
 gpu_model = "$GPU_MODEL"
 jupyterhub_extra_resource_limits="$JUPYTERHUB_EXTRA_RESOURCE_LIMITS"
 jupyterhub_gpu_profile_image="$JUPYTER_GPU_PROFILE_IMAGE"
->>>>>>> 2eb3624 (Cleanup)
 EOF
 }
 
@@ -138,9 +132,6 @@ function x1_terraform_args() {
     -var local_path_enabled=false # use standard-rwo for GKE instead
     -var default_storage_class="standard-rwo"
     -var ray_load_balancer_enabled=false
-<<<<<<< HEAD
-    -var externaldns_enabled="${X1_EXTERNALDNS_ENABLED}"
-=======
     -var externaldns_enabled="${ICL_EXTERNALDNS_ENABLED}"
     -var jupyterhub_gpu_profile_enabled="${JUPYTERHUB_GPU_PROFILE_PROFILE_ENABLED}"
     -var gpu_enabled="${GPU_ENABLED}"
@@ -148,7 +139,6 @@ function x1_terraform_args() {
     -var jupyterhub_extra_resource_limits="${JUPYTERHUB_JUPYTERHUB_EXTRA_RESOURCE_LIMITS}"
     -var jupyterhub_gpu_profile_image="${JUPYTER_GPU_PROFILE_IMAGE}"
     -var jupyterhub_gpu_profile_image="${JUPYTER_GPU_PROFILE_IMAGE}"
->>>>>>> 2eb3624 (Cleanup)
     -var use_node_ip_for_user_ports=true
     -var use_external_node_ip_for_user_ports=true
   )
