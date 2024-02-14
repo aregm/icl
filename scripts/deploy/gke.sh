@@ -132,7 +132,7 @@ function x1_terraform_args() {
     -var local_path_enabled=false # use standard-rwo for GKE instead
     -var default_storage_class="standard-rwo"
     -var ray_load_balancer_enabled=false
-    -var externaldns_enabled="${ICL_EXTERNALDNS_ENABLED}"
+    -var externaldns_enabled="${X1_EXTERNALDNS_ENABLED}"
     -var jupyterhub_gpu_profile_enabled="${JUPYTERHUB_GPU_PROFILE_PROFILE_ENABLED}"
     -var gpu_enabled="${GPU_ENABLED}"
     -var gpu_type="${GPU_TYPE}"
