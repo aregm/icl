@@ -132,7 +132,7 @@ variable "prefect_api_url" {
 
 variable "ray_image" {
   description = "Full tag for Ray Docker image"
-  default = "pbchekin/icl-ray:2.9.2-py39"
+  default = "pbchekin/icl-ray:2.6.1-py39"
   type = string
 }
 
@@ -205,14 +205,14 @@ variable "jupyterhub_singleuser_volume_size" {
 variable "jupyterhub_singleuser_default_image" {
   description = "Default Docker image for JupyterHub default profile"
   # original image: jupyterhub/k8s-singleuser-sample:2.0.1-0.dev.git.6035.h643c0f0c
-  default = "pbchekin/icl-jupyterhub:0.0.18"
+  default = "exolyr/icl-jupyterhub-cuda-base:12.2.2"
   type = string
 }
 
 variable "jupyterhub_gpu_profile_image" {
-  description = "Docker image for JupyterHub GPU profile"
+  description = "Docker image for JupyterHub GPU profile (defaults to i915/intel)"
   type = string
-  default = "pbchekin/icl-jupyterhub-gpu:0.0.18"
+  default = "pbchekin/icl-jupyterhub-gpu:0.0.19"
 }
 
 variable "jupyterhub_cluster_admin_enabled" {
@@ -303,4 +303,22 @@ variable "use_external_node_ip_for_user_ports" {
   description = "Use k8s Node's ExternalIP address when exposing user ports (use with use_node_ip_for_user_ports)"
   type = bool
   default = false
+}
+
+variable "gpu_enabled" {
+  description = "Enable GPU support"
+  type = bool
+  default = false
+}
+
+variable "gpu_type" {
+  description = "Specifies the type of GPU (amd, intel, nvidia) to configure"
+  type = string
+  default = "none"
+}
+
+variable "jupyterhub_extra_resource_limits" {
+  description = "Extra resource limits for JupyterHub, e.g., GPU resources"
+  type        = map(string)
+  default     = {}
 }

@@ -60,16 +60,16 @@ variable "shared_volume_enabled" {
   default = false
 }
 
-variable "jupyterhub_cluster_admin_enabled" {
-  description = "Enable admin access to Kubernetes cluster from JupyterHub sessions"
-  type = bool
-  default = false
-}
-
 variable "jupyterhub_profiles" {
   description = "Additional JupyterHub profiles"
   type = list(any)
   default = []
+}
+
+variable "jupyterhub_cluster_admin_enabled" {
+  description = "Enable admin access to Kubernetes cluster from JupyterHub sessions"
+  type = bool
+  default = false
 }
 
 variable "jupyterhub_extra_resource_limits" {
