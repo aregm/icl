@@ -33,10 +33,15 @@ set_env() {
 }
 
 run_kind() {
+    RESULT=0
     vm_start
     vm_exec ./x1/scripts/deploy/kind.sh
-    vm_exec ./x1/scripts/deploy/kind.sh --console ./scripts/ccn/test.sh
+    if ! vm_exec ./x1/scripts/deploy/kind.sh --console ./scripts/ccn/test.sh; then
+        RESULT=1
+    fi
+    vm_copy_logs
     vm_cleanup
+    return $RESULT
 }
 
 generate_key() (
@@ -52,5 +57,4 @@ generate_key
 . "$WORKFLOW_DIR"/init.sh
 
 vm_clean_before
-trap vm_copy_logs EXIT
 

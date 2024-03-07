@@ -20,10 +20,6 @@ vm_copy_logs() {
     vagrant scp jumphost:x1/logs "$WORKSPACE_DIR" || true
 }
 
-vm_cleanup() {
-    vm_clean_before
-}
-
 ensure_vagrant_plugins() {
     if ! vagrant plugin list | grep -q vagrant-proxyconf; then
         vagrant plugin install vagrant-proxyconf
@@ -60,6 +56,10 @@ vm_clean_before() {
     virsh net-undefine "${X1_LIBVIRT_DEFAULT_PREFIX}-CLUSTER_1" || true
 
     echo "Cleanup finished"
+}
+
+vm_cleanup() {
+    vm_clean_before
 }
 
 ensure_vagrant_plugins
