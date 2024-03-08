@@ -205,14 +205,20 @@ variable "jupyterhub_singleuser_volume_size" {
 variable "jupyterhub_singleuser_default_image" {
   description = "Default Docker image for JupyterHub default profile"
   # original image: jupyterhub/k8s-singleuser-sample:2.0.1-0.dev.git.6035.h643c0f0c
-  default = "exolyr/icl-jupyterhub-cuda-base:12.2.2"
+  default = "pbchekin/icl-jupyterhub:0.0.21"
   type = string
 }
 
-variable "jupyterhub_gpu_profile_image" {
-  description = "Docker image for JupyterHub GPU profile (defaults to i915/intel)"
+variable "jupyterhub_intel_gpu_profile_image" {
+  description = "Docker image for JupyterHub Intel GPU profile"
   type = string
-  default = "pbchekin/icl-jupyterhub-gpu:0.0.19"
+  default = "pbchekin/icl-jupyterhub-gpu:0.0.21"
+}
+
+variable "jupyterhub_nvidia_gpu_profile_image" {
+  description = "Docker image for JupyterHub NVIDIA GPU profile"
+  type = string
+  default = "exolyr/icl-jupyterhub-cuda-base:12.2.2"
 }
 
 variable "jupyterhub_cluster_admin_enabled" {
@@ -283,12 +289,6 @@ variable "externaldns_enabled" {
 
 variable "nfd_enabled" {
   description = "Enable Node Feature Discovery"
-  type = bool
-  default = false
-}
-
-variable "intel_gpu_enabled" {
-  description = "Enable Intel GPU support"
   type = bool
   default = false
 }

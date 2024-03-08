@@ -6,8 +6,32 @@ resource "google_container_cluster" "cluster" {
   deletion_protection = false
 }
 
-resource "google_container_node_pool" "icl_pool" {
-  name       = "icl-pool"
+resource "google_container_node_pool" "pool" {
+  count = var.gpu_enabled ? 0 : 1
+  name       = "pool"
+  cluster    = google_container_cluster.cluster.name
+  node_count = 1
+
+  node_config {
+    image_type   = "cos_containerd"
+    machine_type = var.machine_type
+    oauth_scopes = [
+      "https://www.googleapis.com/auth/logging.write",
+      "https://www.googleapis.com/auth/monitoring",
+      "https://www.googleapis.com/auth/devstorage.read_only",
+      "https://www.googleapis.com/auth/trace.append",
+      "https://www.googleapis.com/auth/service.management.readonly",
+      "https://www.googleapis.com/auth/servicecontrol",
+    ]
+    metadata = {
+      disable-legacy-endpoints = "true"
+    }
+  }
+}
+
+resource "google_container_node_pool" "gpu_pool" {
+  count = var.gpu_enabled ? 1 : 0
+  name       = "gpu-pool"
   cluster    = google_container_cluster.cluster.name
   node_count = 1
 

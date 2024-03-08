@@ -14,7 +14,7 @@ variable "machine_type" {
 }
 
 variable "gpu_enabled" {
-  description = "Enable GPU support"
+  description = "Enables GPU support"
   type = bool
   default = false
 }
@@ -27,5 +27,5 @@ variable "gpu_model" {
 
 variable "gke_gpu_driver_version" {
   default = "DEFAULT"
-  description = "the NVIDIA driver version to install"
+  description = "The NVIDIA driver version to install"
 }

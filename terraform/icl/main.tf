@@ -116,8 +116,7 @@ module "jupyterhub" {
   jupyterhub_singleuser_default_image = var.jupyterhub_singleuser_default_image
   jupyterhub_gpu_profile_enabled = var.gpu_enabled
   jupyterhub_shared_memory_size = var.jupyterhub_shared_memory_size
-  jupyterhub_gpu_profile_image = var.jupyterhub_gpu_profile_image
-  jupyterhub_cluster_admin_enabled = var.jupyterhub_cluster_admin_enabled
+  jupyterhub_gpu_profile_image = var.gpu_type == "intel" ? var.jupyterhub_intel_gpu_profile_image : var.jupyterhub_nvidia_gpu_profile_image
   jupyterhub_profiles = var.jupyterhub_profiles
   ingress_domain = var.ingress_domain
   shared_volume_enabled = var.shared_volume_enabled
