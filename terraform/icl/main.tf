@@ -49,6 +49,12 @@ module "prometheus" {
   storage_class = var.default_storage_class
 }
 
+module "xpumanager" {
+  count = var.prometheus_enabled && var.intel_gpu_enabled ? 1 : 0
+  depends_on = [module.prometheus]
+  source = "../modules/xpumanager"
+}
+
 module "docker-registry" {
   count = var.docker_registry_enabled ? 1 : 0
   source = "../modules/docker-registry"
