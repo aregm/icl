@@ -13,14 +13,13 @@ set -e
 : ${ICL_CLUSTER_VERSION:="1.28"}
 : ${CONTROL_NODE_IMAGE:="pbchekin/ccn-gcp:0.0.2"}
 : ${ICL_GCP_MACHINE_TYPE:="e2-standard-4"}
-: ${GKE_GPU_DRIVER_VERSION:="DEFAULT"}
+: ${GKE_GPU_DRIVER_VERSION:="LATEST"}
 : ${GPU_MODEL:=""}
 
 # GLOBAL VARIABLES
 declare -g GPU_TYPE
 declare -g GPU_ENABLED
 declare -g JUPYTERHUB_EXTRA_RESOURCE_LIMITS
-declare -g JUPYTER_GPU_PROFILE_IMAGE
 
 #: ${ICL_GCP_REGION:="us-central1"}
 # disabled since we use monozone cluster
@@ -102,17 +101,14 @@ function set_gpu_type() {
         GPU_TYPE="nvidia"
         JUPYTERHUB_EXTRA_RESOURCE_LIMITS='{\"nvidia.com/gpu\"=\"1\"}'
     elif [[ $GPU_MODEL == *"intel"* ]]; then
-        echo "GPU Type contains 'intel'"
         GPU_ENABLED=true
         GPU_TYPE="intel"
         JUPYTERHUB_EXTRA_RESOURCE_LIMITS='{\"gpu.intel.com/i915\"=\"1\"}'
     elif [[ $GPU_MODEL == *"amd"* ]]; then
-        echo "GPU Type contains 'amd'"
         GPU_ENABLED=true
         GPU_TYPE="amd"
         JUPYTERHUB_EXTRA_RESOURCE_LIMITS='{\"amd.com/gpu\"=\"1\"}'
     else
-        echo "GPU_MODEL does not contain 'amd', 'intel', or 'nvidia'"
         GPU_ENABLED=false
         GPU_TYPE="none"
         JUPYTERHUB_EXTRA_RESOURCE_LIMITS='{}'

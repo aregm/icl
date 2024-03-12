@@ -218,7 +218,7 @@ variable "jupyterhub_intel_gpu_profile_image" {
 variable "jupyterhub_nvidia_gpu_profile_image" {
   description = "Docker image for JupyterHub NVIDIA GPU profile"
   type = string
-  default = "exolyr/icl-jupyterhub-cuda-base:12.2.2"
+  default = "exolyr/icl-jupyterhub-cuda:12.2.2-base-ubuntu22.04"
 }
 
 variable "jupyterhub_cluster_admin_enabled" {
