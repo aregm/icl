@@ -21,6 +21,7 @@ module "icl-cluster" {
   machine_type = var.machine_type
   gpu_enabled = var.gpu_enabled
   gpu_model = var.gpu_model
+  shared_gpu = var.shared_gpu
 }
 
 module "firewall-rule-allow-tcp-8443" {

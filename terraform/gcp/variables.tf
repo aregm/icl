@@ -44,3 +44,9 @@ variable "gke_gpu_driver_version" {
   description = "The NVIDIA driver version to install"
   default = "DEFAULT"
 }
+
+variable "shared_gpu" {
+  description = "Enable more than one container per GPU"
+  type = bool
+  default = true
+}

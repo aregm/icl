@@ -120,6 +120,7 @@ module "jupyterhub" {
   jupyterhub_profiles = var.jupyterhub_profiles
   ingress_domain = var.ingress_domain
   shared_volume_enabled = var.shared_volume_enabled
+  jupyterhub_extra_resource_limits = var.jupyterhub_extra_resource_limits
 }
 
 module "jupyterhub-vscode" {

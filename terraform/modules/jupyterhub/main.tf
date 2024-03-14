@@ -23,7 +23,9 @@ locals {
       # enable cluster admin
       service_account = var.jupyterhub_cluster_admin_enabled ? kubernetes_service_account.admin.0.metadata.0.name : null
       automount_service_account_token = var.jupyterhub_cluster_admin_enabled
-      extra_resource_limits = var.jupyterhub_extra_resource_limits
+      extra_resource_limits = {
+        (var.jupyterhub_extra_resource_limits) = "1"
+      }
     }
   }
 
@@ -37,7 +39,9 @@ locals {
       # enable cluster admin
       service_account = var.jupyterhub_cluster_admin_enabled ? kubernetes_service_account.admin.0.metadata.0.name : null
       automount_service_account_token = var.jupyterhub_cluster_admin_enabled
-      extra_resource_limits = var.jupyterhub_extra_resource_limits
+      extra_resource_limits = {
+        (var.jupyterhub_extra_resource_limits) = "1"
+      }
       extra_container_config = {
         securityContext = {
           allowPrivilegeEscalation = true

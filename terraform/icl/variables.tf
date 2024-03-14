@@ -198,7 +198,7 @@ variable "jupyterhub_pre_puller_enabled" {
 
 variable "jupyterhub_singleuser_volume_size" {
   description = "Size of a persistent volume for a single user session"
-  default = "2536Mi"
+  default = "25360Mi"
   type = string
 }
 
@@ -218,7 +218,7 @@ variable "jupyterhub_intel_gpu_profile_image" {
 variable "jupyterhub_nvidia_gpu_profile_image" {
   description = "Docker image for JupyterHub NVIDIA GPU profile"
   type = string
-  default = "exolyr/icl-jupyterhub-cuda:12.2.2-base-ubuntu22.04"
+  default = "exolyr/icl-jupyterhub-cuda:12.2.2-cudnn8-runtime-ubuntu22.04"
 }
 
 variable "jupyterhub_cluster_admin_enabled" {
@@ -319,6 +319,5 @@ variable "gpu_type" {
 
 variable "jupyterhub_extra_resource_limits" {
   description = "Extra resource limits for JupyterHub, e.g., GPU resources"
-  type        = map(string)
-  default     = {}
+  type = string
 }

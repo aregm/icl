@@ -74,6 +74,5 @@ variable "jupyterhub_cluster_admin_enabled" {
 
 variable "jupyterhub_extra_resource_limits" {
   description = "Extra resource limits for JupyterHub, e.g., GPU resources"
-  type = map(string)
-  default = {}
+  type = string
 }

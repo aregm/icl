@@ -13,7 +13,7 @@ set -e
 : ${ICL_CLUSTER_VERSION:="1.28"}
 : ${CONTROL_NODE_IMAGE:="pbchekin/ccn-gcp:0.0.2"}
 : ${ICL_GCP_MACHINE_TYPE:="e2-standard-4"}
-: ${GKE_GPU_DRIVER_VERSION:="LATEST"}
+: ${GKE_GPU_DRIVER_VERSION:="DEFAULT"}
 : ${GPU_MODEL:=""}
 
 # GLOBAL VARIABLES
@@ -99,19 +99,19 @@ function set_gpu_type() {
     if [[ $GPU_MODEL == *"nvidia"* ]]; then
         GPU_ENABLED=true
         GPU_TYPE="nvidia"
-        JUPYTERHUB_EXTRA_RESOURCE_LIMITS='{\"nvidia.com/gpu\"=\"1\"}'
+        JUPYTERHUB_EXTRA_RESOURCE_LIMITS='nvidia.com/gpu'
     elif [[ $GPU_MODEL == *"intel"* ]]; then
         GPU_ENABLED=true
         GPU_TYPE="intel"
-        JUPYTERHUB_EXTRA_RESOURCE_LIMITS='{\"gpu.intel.com/i915\"=\"1\"}'
+        JUPYTERHUB_EXTRA_RESOURCE_LIMITS='gpu.intel.com/i915'
     elif [[ $GPU_MODEL == *"amd"* ]]; then
         GPU_ENABLED=true
         GPU_TYPE="amd"
-        JUPYTERHUB_EXTRA_RESOURCE_LIMITS='{\"amd.com/gpu\"=\"1\"}'
+        JUPYTERHUB_EXTRA_RESOURCE_LIMITS='amd.com/gpu'
     else
         GPU_ENABLED=false
         GPU_TYPE="none"
-        JUPYTERHUB_EXTRA_RESOURCE_LIMITS='{}'
+        JUPYTERHUB_EXTRA_RESOURCE_LIMITS=''
     fi
 }
 
