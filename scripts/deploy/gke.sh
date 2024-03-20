@@ -212,7 +212,7 @@ function gcloud_login() {
 }
 
 function check_gpu_support() {
-  control_node "export PYTHONPATH=/work/x1/src && ( python -m infractl.deploy.gcp.main validate-gpu-settings $GPU_ENABLED $GPU_MODEL)"
+  control_node "export PYTHONPATH=/work/x1/src && ( python -m infractl.deploy.gcp.main validate-gpu-settings $GPU_MODEL)"
 }
 
 if [[ -z "${ICL_GCP_PROJECT_NAME}" ]];
@@ -241,6 +241,7 @@ if [[ " $@ " =~ " --render " ]]; then
 fi
 
 if [[ " $@ " =~ " --deploy-gke " ]]; then
+  check_gpu_support
   deploy_gke
   exit 0
 fi

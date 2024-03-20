@@ -320,4 +320,5 @@ variable "gpu_type" {
 variable "jupyterhub_extra_resource_limits" {
   description = "Extra resource limits for JupyterHub, e.g., GPU resources"
   type = string
+  default = ""
 }
