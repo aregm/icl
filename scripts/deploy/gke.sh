@@ -5,12 +5,12 @@
 set -e
 
 # Default values that can be overriden by corresponding environment variables
-: ${ICL_CLUSTER_NAME:="icl-$USER"}
-: ${ICL_GCP_ZONE:="us-central1-a"}
+: ${X1_CLUSTER_NAME:="icl-$USER"}
+: ${X1_GCP_ZONE:="us-central1-a"}
 : ${ICL_INGRESS_DOMAIN:="test.x1infra.com"}
-: ${ICL_CLUSTER_VERSION:="1.28"}
-: ${ICL_EXTERNALDNS_ENABLED:="false"}
-: ${ICL_CLUSTER_VERSION:="1.28"}
+: ${X1_CLUSTER_VERSION:="1.28"}
+: ${X1_EXTERNALDNS_ENABLED:="false"}
+: ${X1_CLUSTER_VERSION:="1.28"}
 : ${CONTROL_NODE_IMAGE:="pbchekin/ccn-gcp:0.0.2"}
 : ${ICL_GCP_MACHINE_TYPE:="e2-standard-4"}
 : ${GKE_GPU_DRIVER_VERSION:="DEFAULT"}
@@ -21,7 +21,7 @@ declare -g GPU_TYPE
 declare -g GPU_ENABLED
 declare -g JUPYTERHUB_EXTRA_RESOURCE_LIMITS
 
-#: ${ICL_GCP_REGION:="us-central1"}
+#: ${X1_GCP_REGION:="us-central1"}
 # disabled since we use monozone cluster
 
 # https://stackoverflow.com/questions/59895/getting-the-source-directory-of-a-bash-script-from-within
@@ -29,7 +29,7 @@ SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
 source "$SCRIPT_DIR/functions.sh"
 # workspace is relative to PROJECT_ROOT
-WORKSPACE="workspace/$ICL_CLUSTER_NAME"
+WORKSPACE="workspace/$X1_CLUSTER_NAME"
 
 function show_help() {
   cat <<EOF
@@ -52,9 +52,9 @@ Options:
   --stop-proxy        Stop a proxy container
 
 Environment variables:
-  ICL_CLUSTER_NAME                Cluster name, must be unique in the region, default is icl-$USER
-  ICL_GCP_PROJECT_NAME            GCP project name
-  ICL_GCP_ZONE                    GCP zone to use, default is us-central1-a
+  X1_CLUSTER_NAME                Cluster name, must be unique in the region, default is icl-$USER
+  X1_GCP_PROJECT_NAME            GCP project name
+  X1_GCP_ZONE                    GCP zone to use, default is us-central1-a
   ICL_INGRESS_DOMAIN              Domain for ingress, default is test.x1infra.com
   GOOGLE_APPLICATION_CREDENTIALS  Location of a Google Cloud credential JSON file.
   ICL_GCP_MACHINE_TYPE            Machine type for GKE to use
@@ -66,7 +66,7 @@ EOF
 }
 
 function show_parameters() {
-  for var in ICL_GCP_ZONE ICL_INGRESS_DOMAIN WORKSPACE; do
+  for var in X1_GCP_ZONE ICL_INGRESS_DOMAIN WORKSPACE; do
     echo "$var: ${!var}"
   done
 }
@@ -82,10 +82,10 @@ EOF
   fi
 
   cat <<EOF >> "$WORKSPACE/terraform/gcp/terraform.tfvars"
-cluster_name = "$ICL_CLUSTER_NAME"
-gcp_zone = "$ICL_GCP_ZONE"
-gcp_project = "$ICL_GCP_PROJECT_NAME"
-node_version = "$ICL_CLUSTER_VERSION"
+cluster_name = "$X1_CLUSTER_NAME"
+gcp_zone = "$X1_GCP_ZONE"
+gcp_project = "$X1_GCP_PROJECT_NAME"
+node_version = "$X1_CLUSTER_VERSION"
 machine_type = "$ICL_GCP_MACHINE_TYPE"
 gke_gpu_driver_version = "$GKE_GPU_DRIVER_VERSION"
 gpu_enabled="$GPU_ENABLED"
@@ -93,7 +93,7 @@ gpu_model = "$GPU_MODEL"
 EOF
 }
 
-# Queries for the specific GPU included in the provided ICL_GCP_MACHINE_TYPE and ICL_GCP_ZONE
+# Queries for the specific GPU included in the provided ICL_GCP_MACHINE_TYPE and X1_GCP_ZONE
 function set_gpu_type() {
     # Check if GPU_MODEL contains the substrings [amd, intel, nvidia] and assign variables
     if [[ $GPU_MODEL == *"nvidia"* ]]; then
@@ -123,7 +123,7 @@ function x1_terraform_args() {
     -var local_path_enabled=false # use standard-rwo for GKE instead
     -var default_storage_class="standard-rwo"
     -var ray_load_balancer_enabled=false
-    -var externaldns_enabled="${ICL_EXTERNALDNS_ENABLED}"
+    -var externaldns_enabled="${X1_EXTERNALDNS_ENABLED}"
     -var gpu_enabled="${GPU_ENABLED}"
     -var gpu_type="${GPU_TYPE}"
     -var jupyterhub_extra_resource_limits="${JUPYTERHUB_EXTRA_RESOURCE_LIMITS}"
@@ -136,15 +136,6 @@ function x1_terraform_args() {
   # TODO: add lock release here
   echo "${terraform_extra_args[*]}"
 }
-
-#function gke_terraform_args() {
-#  terraform_extra_args=(
-#  -var cluster_name="$ICL_CLUSTER_NAME"
-#  -var gcp_region="$ICL_GCP_REGION"
-#  -var gcp_project="$ICL_GCP_PROJECT_NAME"
-#  )
-#  echo "${terraform_extra_args[*]}"
-#}
 
 function check_gcp_auth()
 {
@@ -164,7 +155,7 @@ function delete_gke() {
 }
 
 function update_config() {
-  control_node "gcloud container clusters get-credentials $ICL_CLUSTER_NAME --zone=$ICL_GCP_ZONE"
+  control_node "gcloud container clusters get-credentials $X1_CLUSTER_NAME --zone=$X1_GCP_ZONE"
 }
 
 # Create workspace
@@ -208,16 +199,16 @@ function gcloud_login() {
       gcloud auth application-default login \
       && gcloud auth login
     fi
-    gcloud config set --quiet project $ICL_GCP_PROJECT_NAME"
+    gcloud config set --quiet project $X1_GCP_PROJECT_NAME"
 }
 
 function check_gpu_support() {
   control_node "export PYTHONPATH=/work/x1/src && ( python -m infractl.deploy.gcp.main validate-gpu-settings $GPU_MODEL)"
 }
 
-if [[ -z "${ICL_GCP_PROJECT_NAME}" ]];
+if [[ -z "${X1_GCP_PROJECT_NAME}" ]];
 then
-  echo "Please set ICL_GCP_PROJECT_NAME." >&2
+  echo "Please set X1_GCP_PROJECT_NAME." >&2
   exit 1
 fi
 
