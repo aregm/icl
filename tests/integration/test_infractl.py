@@ -302,9 +302,9 @@ async def test_python_program(address, runtime_kind):
 @pytest.mark.asyncio
 @pytest.mark.parametrize('kind', ['ssh'])
 async def test_python_program_ssh(address, kind, jupyterhub_enable_ssh):
-    username, password, port = jupyterhub_enable_ssh
+    username, password, host, port = jupyterhub_enable_ssh
     infrastructure = infractl.infrastructure(
-        address=address, username=username, password=password, port=port, kind=kind
+        address=host, username=username, password=password, port=port, kind=kind
     )
     runtime = infractl.runtime(kind=kind)
     program = infractl.program('flows/program1.py')

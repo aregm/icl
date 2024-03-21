@@ -14,6 +14,12 @@ locals {
         }
       }
     }
+    ingress = {
+      enabled: true
+      hosts = [
+        "prometheus.${var.ingress_domain}"
+      ]
+    }
   }
 
   grafana = {
@@ -25,6 +31,11 @@ locals {
       hosts = [
         "grafana.${var.ingress_domain}"
       ]
+    }
+    "grafana.ini" = {
+      "auth.anonymous" = {
+        enabled = true
+      }
     }
   }
 }

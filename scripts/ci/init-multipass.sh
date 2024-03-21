@@ -6,6 +6,7 @@ vm_start() {
 
     cd "$WORKFLOW_DIR"
     rsa_key=$(cat ~/.ssh/id_rsa.pub)
+
     cat <<EOF >cloud-init.yaml
 #cloud-config
 ssh_authorized_keys:
@@ -16,10 +17,15 @@ fqdn: jumphost
 runcmd:
   - apt update && apt upgrade -y
 EOF
+
     cat <<EOF >ansible.cfg
 [defaults]
 host_key_checking = False
 EOF
+
+    # Fix ERROR: Ansible could not initialize the preferred locale: unsupported locale setting
+    export LC_ALL="C.UTF-8"
+    locale
 
     multipass launch --name "vm-$WORKFLOW_PREFIX_ID" -m "$VM_MEMORY"M -c "$VM_CPU" -d "$VM_DISK"G --cloud-init=./cloud-init.yaml rocky
 
@@ -34,7 +40,7 @@ vm_exec() {
 vm_copy_logs() {
     echo "Copying logs ..."
     cd "$WORKFLOW_DIR"
-    multipass transfer "vm-$WORKFLOW_PREFIX_ID":x1/logs "$WORKSPACE_DIR" || true
+    multipass transfer --recursive --parents "vm-$WORKFLOW_PREFIX_ID":x1/logs "$WORKSPACE_DIR" || true
 }
 
 vm_clean_before() {
@@ -42,7 +48,7 @@ vm_clean_before() {
 }
 
 vm_cleanup() {
-    multipass delete -p "vm-$WORKFLOW_PREFIX_ID"
+    vm_clean_before
 }
 
 
