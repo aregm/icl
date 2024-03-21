@@ -6,8 +6,8 @@ Uses Terraform to create a new GKE cluster and deploy infractl workloads
 """
 
 import os
+import subprocess
 import sys
-from subprocess import CalledProcessError, run
 
 import click
 
@@ -64,31 +64,27 @@ def validate_gpu_settings(gpu_model):
             f"--zones={zone}",
         ]
         try:
-            result = run(command, check=True, capture_output=True, text=True)
+            result = subprocess.run(command, check=True, capture_output=True, text=True)
             if machine_type not in result.stdout:
                 print(f"Error: {machine_type} is not available in {zone}.")
                 print("Please try a different machine type or zone.")
                 sys.exit(100)
             else:
                 print("Machine is available")
-        except CalledProcessError:
-            # If the command failed, print an error message
-            print("Failed to check machine type availability.")
+        except subprocess.CalledProcessError:
             sys.exit(10)
 
         # Check GPU model availability
         command = ["gcloud", "compute", "accelerator-types", "list", "--verbosity=error"]
         try:
-            result = run(command, check=True, capture_output=True, text=True)
+            result = subprocess.run(command, check=True, capture_output=True, text=True)
             if gpu_model not in result.stdout:
                 print(f"Error: {gpu_model} is not available in {zone}.")
                 print("Please try a different gpu model or zone.")
                 sys.exit(200)
             else:
                 print("GPU is available")
-        except CalledProcessError:
-            # If the command failed, print an error message
-            print("Failed to check gpu model availability.")
+        except subprocess.CalledProcessError:
             sys.exit(11)
     else:
         print("The 'machine_type' variable is empty")
@@ -108,8 +104,8 @@ def validate_gpu_settings(gpu_model):
             sys.exit(100)
     else:
         print(
-            f"Error: Machine type \"{machine_type}\" \
-            (simplified to {simplified_machine_type}) is not recognized."
+            f"Error: Machine type \"{machine_type}\" "
+            f"(simplified to {simplified_machine_type}) is not recognized."
         )
         sys.exit(300)
 

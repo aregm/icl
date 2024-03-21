@@ -10,7 +10,6 @@ set -e
 : ${ICL_INGRESS_DOMAIN:="test.x1infra.com"}
 : ${X1_CLUSTER_VERSION:="1.28"}
 : ${X1_EXTERNALDNS_ENABLED:="false"}
-: ${X1_CLUSTER_VERSION:="1.28"}
 : ${CONTROL_NODE_IMAGE:="pbchekin/ccn-gcp:0.0.2"}
 : ${ICL_GCP_MACHINE_TYPE:="e2-standard-4"}
 : ${GKE_GPU_DRIVER_VERSION:="DEFAULT"}
@@ -55,13 +54,14 @@ Environment variables:
   X1_CLUSTER_NAME                Cluster name, must be unique in the region, default is icl-$USER
   X1_GCP_PROJECT_NAME            GCP project name
   X1_GCP_ZONE                    GCP zone to use, default is us-central1-a
-  ICL_INGRESS_DOMAIN              Domain for ingress, default is test.x1infra.com
-  GOOGLE_APPLICATION_CREDENTIALS  Location of a Google Cloud credential JSON file.
-  ICL_GCP_MACHINE_TYPE            Machine type for GKE to use
-  GPU_MODEL                       GPU being requested from GCP (e.g. nvidia-tesla-t4)
-  TF_PG_CONN_STR                  If set, PostgreSQL backend will be used to store Terraform state 
-  PGUSER                          PostgreSQL username for Terraform state
-  PGPASSWORD                      PostgreSQL password for Terraform state
+  ICL_INGRESS_DOMAIN             Domain for ingress, default is test.x1infra.com
+  GOOGLE_APPLICATION_CREDENTIALS Location of a Google Cloud credential JSON file.
+  ICL_GCP_MACHINE_TYPE           Machine type for GKE to use
+  GPU_MODEL                      GPU being requested from GCP (e.g. nvidia-tesla-t4)
+  TF_PG_CONN_STR                 If set, PostgreSQL backend will be used to store Terraform state 
+  PGUSER                         PostgreSQL username for Terraform state
+  PGPASSWORD                     PostgreSQL password for Terraform state
+  GKE_GPU_DRIVER_VERSION         NVIDIA driver setting for GKE. Accepts "DEFAULT" or "LATEST".
 EOF
 }
 
@@ -203,7 +203,7 @@ function gcloud_login() {
 }
 
 function check_gpu_support() {
-  control_node "export PYTHONPATH=/work/x1/src && ( python -m infractl.deploy.gcp.main validate-gpu-settings $GPU_MODEL)"
+  control_node "export PYTHONPATH=/work/x1/src && (python -m infractl.deploy.gcp.main validate-gpu-settings $GPU_MODEL)"
 }
 
 if [[ -z "${X1_GCP_PROJECT_NAME}" ]];
