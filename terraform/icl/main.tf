@@ -50,7 +50,7 @@ module "prometheus" {
 }
 
 module "xpumanager" {
-  count = var.prometheus_enabled && var.intel_gpu_enabled ? 1 : 0
+  count = var.prometheus_enabled && var.gpu_type == "intel" ? 1 : 0
   depends_on = [module.prometheus]
   source = "../modules/xpumanager"
 }
