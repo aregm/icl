@@ -88,7 +88,7 @@ gcp_project = "$X1_GCP_PROJECT_NAME"
 node_version = "$X1_CLUSTER_VERSION"
 machine_type = "$ICL_GCP_MACHINE_TYPE"
 gke_gpu_driver_version = "$GKE_GPU_DRIVER_VERSION"
-gpu_enabled="$GPU_ENABLED"
+gpu_enabled = "$GPU_ENABLED"
 gpu_model = "$GPU_MODEL"
 EOF
 }
