@@ -8,8 +8,8 @@ resource "google_container_cluster" "cluster" {
 
 resource "google_container_node_pool" "pool" {
   count = var.gpu_enabled ? 0 : 1
-  name       = "pool"
-  cluster    = google_container_cluster.cluster.name
+  name = "pool"
+  cluster = google_container_cluster.cluster.name
   node_count = 1
 
   node_config {
