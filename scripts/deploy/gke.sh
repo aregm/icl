@@ -88,7 +88,7 @@ gcp_project = "$X1_GCP_PROJECT_NAME"
 node_version = "$X1_CLUSTER_VERSION"
 machine_type = "$ICL_GCP_MACHINE_TYPE"
 gke_gpu_driver_version = "$GKE_GPU_DRIVER_VERSION"
-gpu_enabled = "$GPU_ENABLED"
+gpu_enabled="$GPU_ENABLED"
 gpu_model = "$GPU_MODEL"
 EOF
 }
@@ -232,7 +232,10 @@ if [[ " $@ " =~ " --render " ]]; then
 fi
 
 if [[ " $@ " =~ " --deploy-gke " ]]; then
-  check_gpu_support
+  if [[ "${GPU_ENABLED}" ]];
+  then
+    check_gpu_support
+  fi
   deploy_gke
   exit 0
 fi
@@ -314,7 +317,10 @@ fi
 
 show_parameters
 set_gpu_type
-check_gpu_support
+if [[ "${GPU_ENABLED}" ]];
+then
+  check_gpu_support
+fi
 render_workspace
 deploy_gke
 update_config
