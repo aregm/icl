@@ -25,8 +25,8 @@ module "eks" {
     ingress_self_all = {
       description = "Node to node all ports/protocols"
       protocol = "-1"
-      from_port = 0
-      to_port = 0
+      from_port = 1
+      to_port = 65535
       type = "ingress"
       self = true
     }
@@ -67,9 +67,9 @@ module "eks" {
     }
   }
 
-  eks_managed_node_group_defaults = {
-    disk_size = 250
-  }
+  #eks_managed_node_group_defaults = {
+  #  disk_size = 250
+  #}
 
   eks_managed_node_groups = {
     main = {
@@ -82,6 +82,19 @@ module "eks" {
       enable_bootstrap_user_data = true
       instance_types = ["g4dn.xlarge"]
       capacity_type  = "ON_DEMAND"
+      block_device_mappings = {
+        xvda = {
+          device_name = "/dev/xvda"
+          ebs         = {
+            volume_size           = 50
+            volume_type           = "gp3"
+            iops                  = 3000
+            throughput            = 150
+            encrypted             = false
+            delete_on_termination = false
+          }
+        }
+      }
     }
   }
 
