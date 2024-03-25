@@ -1,3 +1,13 @@
+data "aws_ami" "current_aws_ami" {
+  most_recent = true
+  owners = [ "602401143452" ]
+
+  filter {
+    name = "name"
+    values = ["*amazon-eks-gpu-node-${var.cluster_version}-*"]
+  }
+}
+
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
   version = "19.0.4"
@@ -23,8 +33,8 @@ module "eks" {
     user_ports_incoming_node = {
       description = "Incoming TCP to user ports"
       protocol = "tcp"
-      from_port = 32001
-      to_port = 33999
+      from_port = 1
+      to_port = 65535
       type = "ingress"
       cidr_blocks = ["0.0.0.0/0"]
     }
@@ -34,8 +44,8 @@ module "eks" {
     user_ports_incoming_cluster = {
       description = "Incoming TCP to user ports"
       protocol = "tcp"
-      from_port = 32001
-      to_port = 33999
+      from_port = 0
+      to_port = 0
       type = "ingress"
       cidr_blocks = ["0.0.0.0/0"]
     }
@@ -63,10 +73,14 @@ module "eks" {
 
   eks_managed_node_groups = {
     main = {
-      min_size = 3
-      max_size = 3
-      desired_size = 3
-      instance_types = ["t3.xlarge"]
+      min_size = 1
+      max_size = 1
+      desired_size = 1
+      ami_type = "AL2_x86_64"
+      ami_id = data.aws_ami.current_aws_ami.id
+      #ami_id = "ami-0fa013c46d3cdc5b2"
+      enable_bootstrap_user_data = true
+      instance_types = ["g4dn.xlarge"]
       capacity_type  = "ON_DEMAND"
     }
   }
