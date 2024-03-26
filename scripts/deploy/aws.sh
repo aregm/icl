@@ -11,6 +11,7 @@ set -e
 : ${X1_EXTERNALDNS_ENABLED:="false"}
 : ${CONTROL_NODE_IMAGE:="pbchekin/icl-ccn-aws:0.0.1"}
 : ${ICL_INGRESS_DOMAIN:="test.x1infra.com"}
+: ${ICL_GPU_ENABLED:="false"}
 
 # https://stackoverflow.com/questions/59895/getting-the-source-directory-of-a-bash-script-from-within
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
@@ -69,6 +70,7 @@ function x1_terraform_args() {
     -var ray_load_balancer_enabled=true # dedicated AWS CLB for Ray client endpoint on port 80
     -var use_node_ip_for_user_ports=true
     -var use_external_node_ip_for_user_ports=true
+    -var nvidia_gpu_enabled="${ICL_GPU_ENABLED}"
   )
   if [[ -v X1_TERRAFORM_DISABLE_LOCKING ]]; then
     terraform_extra_args+=( -lock=false )

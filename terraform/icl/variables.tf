@@ -287,6 +287,12 @@ variable "nfd_enabled" {
   default = false
 }
 
+variable "nvidia_gpu_enabled" {
+  description = "Enable NVIDIA GPU support"
+  type = bool
+  default = false  
+}
+
 variable "intel_gpu_enabled" {
   description = "Enable Intel GPU support"
   type = bool
