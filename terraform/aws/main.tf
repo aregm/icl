@@ -1,10 +1,12 @@
 data "aws_ami" "current_aws_ami" {
   most_recent = true
-  owners = [ "602401143452" ]
+    #owners = [ "602401143452" ]
+    owners = [ "099720109477" ]
 
   filter {
     name = "name"
-    values = ["*amazon-eks-gpu-node-${var.cluster_version}-*"]
+    #values = ["*amazon-eks-gpu-node-${var.cluster_version}-*"]
+    values = ["*ubuntu-eks/k8s_${var.cluster_version}/images/hvm-ssd/ubuntu-focal-20.04-amd64-*"]
   }
 }
 
@@ -67,29 +69,30 @@ module "eks" {
     }
   }
 
-  #eks_managed_node_group_defaults = {
-  #  disk_size = 250
-  #}
+  eks_managed_node_group_defaults = {
+    disk_size = 100
+  }
 
   eks_managed_node_groups = {
     main = {
-      min_size = 1
-      max_size = 1
-      desired_size = 1
+      min_size = 2
+      max_size = 2
+      disk_size = 100
+      desired_size = 2
       ami_type = "AL2_x86_64"
       ami_id = data.aws_ami.current_aws_ami.id
-      #ami_id = "ami-0fa013c46d3cdc5b2"
+      #ami_id = "ami-003da7190fab29a6c"
       enable_bootstrap_user_data = true
       instance_types = ["g4dn.xlarge"]
       capacity_type  = "ON_DEMAND"
       block_device_mappings = {
-        xvda = {
-          device_name = "/dev/xvda"
+        root = {
+          device_name = data.aws_ami.lookup.root_device_name
           ebs         = {
-            volume_size           = 50
+            volume_size           = 100
             volume_type           = "gp3"
-            iops                  = 3000
-            throughput            = 150
+            #iops                  = 3000
+            #throughput            = 150
             encrypted             = false
             delete_on_termination = false
           }
