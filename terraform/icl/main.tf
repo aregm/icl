@@ -120,7 +120,7 @@ module "jupyterhub" {
   jupyterhub_pre_puller_enabled = var.jupyterhub_pre_puller_enabled
   jupyterhub_singleuser_volume_size = var.jupyterhub_singleuser_volume_size
   jupyterhub_singleuser_default_image = var.jupyterhub_singleuser_default_image
-  jupyterhub_gpu_profile_enabled = var.intel_gpu_enabled
+  jupyterhub_gpu_profile_enabled = var.intel_gpu_enabled || var.nvidia_gpu_enabled
   jupyterhub_shared_memory_size = var.jupyterhub_shared_memory_size
   jupyterhub_gpu_profile_image = var.jupyterhub_gpu_profile_image
   jupyterhub_cluster_admin_enabled = var.jupyterhub_cluster_admin_enabled
@@ -190,6 +190,11 @@ module "intel-gpu" {
   depends_on = [module.nfd]
   count = var.intel_gpu_enabled ? 1 : 0
   source = "../modules/intel-gpu"
+}
+
+module "nvidia-gpu" {
+  count = var.nvidia_gpu_enabled ? 1 : 0
+  source = "../modules/nvidia-gpu"
 }
 
 module "icl-hub" {
