@@ -45,6 +45,28 @@ function warn_about_proxy_and_variables()
   fi
 }
 
+# Queries for the specific GPU included in the provided ICL_GCP_MACHINE_TYPE and X1_GCP_ZONE
+function set_gpu_type() {
+    # Check if GPU_MODEL contains the substrings [amd, intel, nvidia] and assign variables
+    if [[ $GPU_MODEL == *"nvidia"* ]]; then
+        GPU_ENABLED=true
+        GPU_TYPE="nvidia"
+        JUPYTERHUB_EXTRA_RESOURCE_LIMITS='nvidia.com/gpu'
+    elif [[ $GPU_MODEL == *"intel"* ]]; then
+        GPU_ENABLED=true
+        GPU_TYPE="intel"
+        JUPYTERHUB_EXTRA_RESOURCE_LIMITS='gpu.intel.com/i915'
+    elif [[ $GPU_MODEL == *"amd"* ]]; then
+        GPU_ENABLED=true
+        GPU_TYPE="amd"
+        JUPYTERHUB_EXTRA_RESOURCE_LIMITS='amd.com/gpu'
+    else
+        GPU_ENABLED=false
+        GPU_TYPE="none"
+        JUPYTERHUB_EXTRA_RESOURCE_LIMITS=''
+    fi
+}
+
 # Starts the control code in a ephemeral container.
 # Mounts ~/.aws and ~/.kube to the container, if exist.
 # The repository is mounted to ~/x1, which can be used to persist data, for example, in ~/x1/workspace

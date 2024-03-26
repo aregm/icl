@@ -11,7 +11,7 @@ set -e
 : ${X1_EXTERNALDNS_ENABLED:="false"}
 : ${CONTROL_NODE_IMAGE:="pbchekin/icl-ccn-aws:0.0.1"}
 : ${ICL_INGRESS_DOMAIN:="test.x1infra.com"}
-: ${ICL_GPU_ENABLED:="false"}
+: ${GPU_TYPE:="none"}
 
 # https://stackoverflow.com/questions/59895/getting-the-source-directory-of-a-bash-script-from-within
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
@@ -70,7 +70,9 @@ function x1_terraform_args() {
     -var ray_load_balancer_enabled=true # dedicated AWS CLB for Ray client endpoint on port 80
     -var use_node_ip_for_user_ports=true
     -var use_external_node_ip_for_user_ports=true
-    -var nvidia_gpu_enabled="${ICL_GPU_ENABLED}"
+    -var jupyterhub_extra_resource_limits="${JUPYTERHUB_EXTRA_RESOURCE_LIMITS}"
+    -var gpu_enabled="${GPU_ENABLED}"
+    -var gpu_type="${GPU_TYPE}"
   )
   if [[ -v X1_TERRAFORM_DISABLE_LOCKING ]]; then
     terraform_extra_args+=( -lock=false )
@@ -141,6 +143,7 @@ if [[ " $@ " =~ " --check " ]]; then
 fi
 
 if [[ " $@ " =~ " --render " ]]; then
+  set_gpu_type
   render_workspace
   exit 0
 fi
@@ -156,6 +159,7 @@ if [[ " $@ " =~ " --config " ]]; then
 fi
 
 if [[ " $@ " =~ " --deploy-x1 " ]]; then
+  set_gpu_type
   deploy_x1
   exit 0
 fi

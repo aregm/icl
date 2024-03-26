@@ -5,13 +5,20 @@
 set -e
 
 # Default values that can be overriden by corresponding environment variables
-: ${X1_CLUSTER_NAME:="x1-$USER"}
+: ${X1_CLUSTER_NAME:="icl-$USER"}
 : ${X1_GCP_ZONE:="us-central1-a"}
 : ${ICL_INGRESS_DOMAIN:="test.x1infra.com"}
 : ${X1_CLUSTER_VERSION:="1.28"}
 : ${X1_EXTERNALDNS_ENABLED:="false"}
 : ${CONTROL_NODE_IMAGE:="pbchekin/ccn-gcp:0.0.2"}
 : ${ICL_GCP_MACHINE_TYPE:="e2-standard-4"}
+: ${GKE_GPU_DRIVER_VERSION:="DEFAULT"}
+: ${GPU_MODEL:=""}
+
+# GLOBAL VARIABLES
+declare -g GPU_TYPE
+declare -g GPU_ENABLED
+declare -g JUPYTERHUB_EXTRA_RESOURCE_LIMITS
 
 #: ${X1_GCP_REGION:="us-central1"}
 # disabled since we use monozone cluster
@@ -44,20 +51,22 @@ Options:
   --stop-proxy        Stop a proxy container
 
 Environment variables:
-  X1_CLUSTER_NAME                Cluster name, must be unique in the region, default is x1-$USER
+  X1_CLUSTER_NAME                Cluster name, must be unique in the region, default is icl-$USER
   X1_GCP_PROJECT_NAME            GCP project name
   X1_GCP_ZONE                    GCP zone to use, default is us-central1-a
   ICL_INGRESS_DOMAIN             Domain for ingress, default is test.x1infra.com
   GOOGLE_APPLICATION_CREDENTIALS Location of a Google Cloud credential JSON file.
   ICL_GCP_MACHINE_TYPE           Machine type for GKE to use
+  GPU_MODEL                      GPU being requested from GCP (e.g. nvidia-tesla-t4)
   TF_PG_CONN_STR                 If set, PostgreSQL backend will be used to store Terraform state 
   PGUSER                         PostgreSQL username for Terraform state
   PGPASSWORD                     PostgreSQL password for Terraform state
+  GKE_GPU_DRIVER_VERSION         NVIDIA driver setting for GKE. Accepts "DEFAULT" or "LATEST".
 EOF
 }
 
 function show_parameters() {
-  for var in X1_GCP_ZONE ICL_INGRESS_DOMAIN WORKSPACE ICL_GCP_MACHINE_TYPE; do
+  for var in X1_GCP_ZONE ICL_INGRESS_DOMAIN WORKSPACE; do
     echo "$var: ${!var}"
   done
 }
@@ -78,7 +87,32 @@ gcp_zone = "$X1_GCP_ZONE"
 gcp_project = "$X1_GCP_PROJECT_NAME"
 node_version = "$X1_CLUSTER_VERSION"
 machine_type = "$ICL_GCP_MACHINE_TYPE"
+gke_gpu_driver_version = "$GKE_GPU_DRIVER_VERSION"
+gpu_enabled="$GPU_ENABLED"
+gpu_model = "$GPU_MODEL"
 EOF
+}
+
+# Queries for the specific GPU included in the provided ICL_GCP_MACHINE_TYPE and X1_GCP_ZONE
+function set_gpu_type() {
+    # Check if GPU_MODEL contains the substrings [amd, intel, nvidia] and assign variables
+    if [[ $GPU_MODEL == *"nvidia"* ]]; then
+        GPU_ENABLED=true
+        GPU_TYPE="nvidia"
+        JUPYTERHUB_EXTRA_RESOURCE_LIMITS='nvidia.com/gpu'
+    elif [[ $GPU_MODEL == *"intel"* ]]; then
+        GPU_ENABLED=true
+        GPU_TYPE="intel"
+        JUPYTERHUB_EXTRA_RESOURCE_LIMITS='gpu.intel.com/i915'
+    elif [[ $GPU_MODEL == *"amd"* ]]; then
+        GPU_ENABLED=true
+        GPU_TYPE="amd"
+        JUPYTERHUB_EXTRA_RESOURCE_LIMITS='amd.com/gpu'
+    else
+        GPU_ENABLED=false
+        GPU_TYPE="none"
+        JUPYTERHUB_EXTRA_RESOURCE_LIMITS=''
+    fi
 }
 
 function x1_terraform_args() {
@@ -90,6 +124,9 @@ function x1_terraform_args() {
     -var default_storage_class="standard-rwo"
     -var ray_load_balancer_enabled=false
     -var externaldns_enabled="${X1_EXTERNALDNS_ENABLED}"
+    -var gpu_enabled="${GPU_ENABLED}"
+    -var gpu_type="${GPU_TYPE}"
+    -var jupyterhub_extra_resource_limits="${JUPYTERHUB_EXTRA_RESOURCE_LIMITS}"
     -var use_node_ip_for_user_ports=true
     -var use_external_node_ip_for_user_ports=true
   )
@@ -99,15 +136,6 @@ function x1_terraform_args() {
   # TODO: add lock release here
   echo "${terraform_extra_args[*]}"
 }
-
-#function gke_terraform_args() {
-#  terraform_extra_args=(
-#  -var cluster_name="$X1_CLUSTER_NAME"
-#  -var gcp_region="$X1_GCP_REGION"
-# -var gcp_project="$X1_GCP_PROJECT_NAME"
-#  )
-#  echo "${terraform_extra_args[*]}"
-#}
 
 function check_gcp_auth()
 {
@@ -161,8 +189,7 @@ function delete_cluster() {
   control_node "rm -rf /work/x1/$WORKSPACE"
 }
 
-function gcloud_login()
-{
+function gcloud_login() {
   echo "This will store configuration in ~/.config/gcloud" 2>&1
   install -d ${HOME}/.config/gcloud
   control_node "set -x;
@@ -173,6 +200,10 @@ function gcloud_login()
       && gcloud auth login
     fi
     gcloud config set --quiet project $X1_GCP_PROJECT_NAME"
+}
+
+function check_gpu_support() {
+  control_node "export PYTHONPATH=/work/x1/src && (python -m infractl.deploy.gcp.main validate-gpu-settings $GPU_MODEL)"
 }
 
 if [[ -z "${X1_GCP_PROJECT_NAME}" ]];
@@ -195,11 +226,16 @@ if [[ " $@ " =~ " --check " ]]; then
 fi
 
 if [[ " $@ " =~ " --render " ]]; then
+  set_gpu_type
   render_workspace
   exit 0
 fi
 
 if [[ " $@ " =~ " --deploy-gke " ]]; then
+  if [[ "${GPU_ENABLED}" ]];
+  then
+    check_gpu_support
+  fi
   deploy_gke
   exit 0
 fi
@@ -210,6 +246,7 @@ if [[ " $@ " =~ " --config " ]]; then
 fi
 
 if [[ " $@ " =~ " --deploy-x1 " ]]; then
+  set_gpu_type
   deploy_x1
   exit 0
 fi
@@ -220,6 +257,7 @@ if [[ " $@ " =~ " --delete " ]]; then
 fi
 
 if [[ " $@ " =~ " --delete-x1 " ]]; then
+  set_gpu_type
   delete_x1
   exit 0
 fi
@@ -272,7 +310,17 @@ if [[ " $1 " =~ " --console " ]]; then
   exit $?
 fi
 
+if [[ " $1 " =~ " --check-gpu-support " ]]; then
+  check_gpu_support
+  exit $?
+fi
+
 show_parameters
+set_gpu_type
+if [[ "${GPU_ENABLED}" ]];
+then
+  check_gpu_support
+fi
 render_workspace
 deploy_gke
 update_config
