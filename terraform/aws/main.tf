@@ -87,7 +87,7 @@ module "eks" {
       capacity_type  = "ON_DEMAND"
       block_device_mappings = {
         root = {
-          device_name = data.aws_ami.lookup.root_device_name
+          device_name = data.aws_ami.current_aws_ami.root_device_name
           ebs         = {
             volume_size           = 100
             volume_type           = "gp3"
