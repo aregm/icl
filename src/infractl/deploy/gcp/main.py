@@ -48,7 +48,7 @@ def validate_gpu_settings(gpu_model):
             "nvidia-tesla-k80",
         ],
     }
-    zone = os.environ["ICL_GCP_ZONE"]
+    zone = os.environ["X1_GCP_ZONE"]
     machine_type = os.environ["ICL_GCP_MACHINE_TYPE"]
 
     # Check machine type availability
