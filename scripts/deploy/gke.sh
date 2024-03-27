@@ -15,13 +15,13 @@ set -e
 : ${GKE_GPU_DRIVER_VERSION:="DEFAULT"}
 : ${GPU_MODEL:=""}
 
+#: ${X1_GCP_REGION:="us-central1"}
+# disabled since we use monozone cluster
+
 # GLOBAL VARIABLES
 declare -g GPU_TYPE
 declare -g GPU_ENABLED
 declare -g JUPYTERHUB_EXTRA_RESOURCE_LIMITS
-
-#: ${X1_GCP_REGION:="us-central1"}
-# disabled since we use monozone cluster
 
 # https://stackoverflow.com/questions/59895/getting-the-source-directory-of-a-bash-script-from-within
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
@@ -91,28 +91,6 @@ gke_gpu_driver_version = "$GKE_GPU_DRIVER_VERSION"
 gpu_enabled="$GPU_ENABLED"
 gpu_model = "$GPU_MODEL"
 EOF
-}
-
-# Queries for the specific GPU included in the provided ICL_GCP_MACHINE_TYPE and X1_GCP_ZONE
-function set_gpu_type() {
-    # Check if GPU_MODEL contains the substrings [amd, intel, nvidia] and assign variables
-    if [[ $GPU_MODEL == *"nvidia"* ]]; then
-        GPU_ENABLED=true
-        GPU_TYPE="nvidia"
-        JUPYTERHUB_EXTRA_RESOURCE_LIMITS='nvidia.com/gpu'
-    elif [[ $GPU_MODEL == *"intel"* ]]; then
-        GPU_ENABLED=true
-        GPU_TYPE="intel"
-        JUPYTERHUB_EXTRA_RESOURCE_LIMITS='gpu.intel.com/i915'
-    elif [[ $GPU_MODEL == *"amd"* ]]; then
-        GPU_ENABLED=true
-        GPU_TYPE="amd"
-        JUPYTERHUB_EXTRA_RESOURCE_LIMITS='amd.com/gpu'
-    else
-        GPU_ENABLED=false
-        GPU_TYPE="none"
-        JUPYTERHUB_EXTRA_RESOURCE_LIMITS=''
-    fi
 }
 
 function x1_terraform_args() {

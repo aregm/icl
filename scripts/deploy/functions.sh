@@ -179,7 +179,7 @@ function deploy_x1() {
   control_node "\
     cd terraform/icl \
     && terraform init -upgrade -migrate-state -input=false \
-    && terraform apply -input=false -auto-approve $(x1_terraform_args)
+    && terraform apply -parallelism=100 -input=false -auto-approve $(x1_terraform_args)
   "
 }
 
@@ -188,7 +188,7 @@ function delete_x1() {
   control_node "\
   cd terraform/icl \
   && terraform init -upgrade -migrate-state -input=false \
-  && terraform destroy -input=false -auto-approve $(x1_terraform_args) || true"
+  && terraform destroy -parallelism=100 -input=false -auto-approve $(x1_terraform_args) || true"
 }
 
 # Delete PersistentVolumes

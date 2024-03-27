@@ -198,7 +198,7 @@ variable "jupyterhub_pre_puller_enabled" {
 
 variable "jupyterhub_singleuser_volume_size" {
   description = "Size of a persistent volume for a single user session"
-  default = "2536Mi"
+  default = "16Gi"
   type = string
 }
 

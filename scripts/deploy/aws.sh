@@ -4,6 +4,11 @@
 
 set -e
 
+# GLOBAL VARIABLES
+declare -g GPU_ENABLED
+declare -g GPU_TYPE
+declare -g JUPYTERHUB_EXTRA_RESOURCE_LIMITS
+
 # Default values that can be overriden by corresponding environment variables
 : ${X1_CLUSTER_NAME:="x1-$USER"}
 : ${AWS_DEFAULT_REGION:="us-east-1"}
@@ -11,7 +16,7 @@ set -e
 : ${X1_EXTERNALDNS_ENABLED:="false"}
 : ${CONTROL_NODE_IMAGE:="pbchekin/icl-ccn-aws:0.0.1"}
 : ${ICL_INGRESS_DOMAIN:="test.x1infra.com"}
-: ${GPU_TYPE:="none"}
+: ${GPU_MODEL:=""}
 
 # https://stackoverflow.com/questions/59895/getting-the-source-directory-of-a-bash-script-from-within
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
@@ -199,6 +204,7 @@ if [[ " $@ " =~ " --stop-proxy " ]]; then
   exit 0
 fi
 
+set_gpu_type
 show_parameters
 render_workspace
 deploy_eks
