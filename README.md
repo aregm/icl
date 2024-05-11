@@ -73,4 +73,4 @@ ICL allows executing the same program or flow in your local or remote ICL cluste
 
 In addition to a local ICL cluster, there are scripts to create multi node ICL clusters in AWS, GCP.
 We also support deploying ICL into an existing Kubernetes or OpenShift clusters, provisioning bare-metal machines.
-Check our documentation at https://intel-ai.github.io/icl/.
+Check our documentation at https://aregm.github.io/icl/.
