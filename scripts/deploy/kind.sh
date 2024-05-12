@@ -12,7 +12,6 @@ fi
 # Default values that can be overriden by corresponding environment variables
 : ${KIND_VERSION:="v0.20.0"}
 : ${CLUSTER_NAME:="x1"}
-: ${REDSOCKS_SKIP:="0.0.0.0/8 10.0.0.0/8 100.64.0.0/10 127.0.0.0/8 169.254.0.0/16 172.16.0.0/12 192.168.0.0/16 198.18.0.0/15 224.0.0.0/4 240.0.0.0/4"}
 : ${X1_EXTERNALDNS_ENABLED:="false"}
 : ${CONTROL_NODE_IMAGE:=pbchekin/ccn:0.0.1}
 : ${KUBECONFIG:="$HOME/.kube/config"}
@@ -160,8 +159,6 @@ function with_proxy() {
     exit 1
   fi
 
-  cluster_node "export DEBIAN_FRONTEND=noninteractive; apt-get update -y; apt-get install -y --no-install-recommends redsocks"
-
   if [[ $proxy_url =~ (https?:\/\/)?([^:]+):([^:]+) ]]; then
     proxy_host="${BASH_REMATCH[2]}"
     proxy_port="${BASH_REMATCH[3]}"
@@ -170,37 +167,13 @@ function with_proxy() {
     fail "Unable to parse proxy URL $proxy_url"
   fi
 
-  redsocks_config="\
-base {
-    log_debug = off;
-    log_info = on;
-    log = \"syslog:daemon\";
-    daemon = on;
-    redirector = iptables;
+  docker cp "$PROJECT_ROOT/scripts/etc/kind/redsocks.sh" "$CLUSTER_NAME-control-plane:/redsocks.sh" > /dev/null
+  cluster_node "/bin/bash /redsocks.sh $proxy_host $proxy_port"
 }
 
-redsocks {
-    local_ip = 0.0.0.0;
-    local_port = 12345;
-    ip = $proxy_host;
-    port = $proxy_port;
-    type = http-connect;
-}
-"
-  cluster_node "echo '$redsocks_config' > /etc/redsocks.conf"
-  cluster_node "/etc/init.d/redsocks restart"
-
-  cluster_node "iptables -w 60 -t nat -N REDSOCKS"
-
-  for nw in $REDSOCKS_SKIP; do
-    cluster_node "iptables -w 60 -t nat -A REDSOCKS -d $nw -j RETURN"
-  done
-
-  cluster_node "iptables -w 60 -t nat -A REDSOCKS -p tcp --dport 80 -j REDIRECT --to-ports 12345"
-  cluster_node "iptables -w 60 -t nat -A REDSOCKS -p tcp --dport 443 -j REDIRECT --to-ports 12345"
-
-  cluster_node "iptables -w 60 -t nat -A PREROUTING -p tcp --dport 80 -j REDSOCKS"
-  cluster_node "iptables -w 60 -t nat -A PREROUTING -p tcp --dport 443 -j REDSOCKS"
+function with_no_proxy() {
+  docker cp "$PROJECT_ROOT/scripts/etc/kind/redsocks.sh" "$CLUSTER_NAME-control-plane:/redsocks.sh" > /dev/null
+  cluster_node "/bin/bash /redsocks.sh"
 }
 
 # Update CoreDNS configuration file to resolve external endpoints in cluster correctly
@@ -225,6 +198,8 @@ Options:
   --with-clearml      Deploy a cluster with ClearML
   --with-dask         Deploy a cluster with Dask
   --with-cert-manager Deploy a cluster with cert-manager
+  --with-proxy        Enable HTTP/HTTPS proxy for the existing cluster (uses https_proxy or http_proxy)
+  --with-no-proxy     Disable HTTP/HTTPS proxy for the existing cluster
   --delete            Delete cluster $CLUSTER_NAME
 EOF
   exit 0
@@ -268,6 +243,11 @@ fi
 
 if [[ " $@ " =~ " --with-proxy " ]]; then
   with_proxy
+  exit 0
+fi
+
+if [[ " $@ " =~ " --with-no-proxy " ]]; then
+  with_no_proxy
   exit 0
 fi
 
@@ -318,3 +298,5 @@ get_admin_token
 echo
 
 echo "To delete the cluster run '$0 --delete'"
+
+}
