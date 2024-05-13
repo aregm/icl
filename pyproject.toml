@@ -27,7 +27,7 @@ dependencies = [
     "pydantic<2.0.0",
     "python-docker",
     "s3fs>=2023.9.2",
-    "prefect==2.14.9",
+    "prefect==2.16.5",
 ]
 
 [project.urls]
