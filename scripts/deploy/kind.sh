@@ -298,5 +298,3 @@ get_admin_token
 echo
 
 echo "To delete the cluster run '$0 --delete'"
-
-}
