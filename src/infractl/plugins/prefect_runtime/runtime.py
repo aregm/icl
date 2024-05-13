@@ -65,6 +65,7 @@ DEFAULT_ITEMS_TO_IGNORE = [
     # Editors
     '.idea/',
     '.vscode/',
+    '.vscode-server/',
 ]
 
 
