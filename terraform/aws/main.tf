@@ -35,8 +35,8 @@ module "eks" {
     user_ports_incoming_node = {
       description = "Incoming TCP to user ports"
       protocol = "tcp"
-      from_port = 1
-      to_port = 65535
+      from_port = 32001
+      to_port = 33999
       type = "ingress"
       cidr_blocks = ["0.0.0.0/0"]
     }
@@ -46,8 +46,8 @@ module "eks" {
     user_ports_incoming_cluster = {
       description = "Incoming TCP to user ports"
       protocol = "tcp"
-      from_port = 0
-      to_port = 0
+      from_port = 32001
+      to_port = 33999
       type = "ingress"
       cidr_blocks = ["0.0.0.0/0"]
     }
