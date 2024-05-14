@@ -89,12 +89,12 @@ module "eks" {
         root = {
           device_name = data.aws_ami.current_aws_ami.root_device_name
           ebs         = {
-            volume_size           = 100
+            volume_size           = 250
             volume_type           = "gp3"
             #iops                  = 3000
             #throughput            = 150
             encrypted             = false
-            delete_on_termination = false
+            delete_on_termination = true
           }
         }
       }
