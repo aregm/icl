@@ -75,7 +75,6 @@ module "eks" {
     main = {
       min_size = 2
       max_size = 2
-      disk_size = 100
       desired_size = 2
       ami_type = "AL2_x86_64"
       ami_id = data.aws_ami.current_aws_ami.id
