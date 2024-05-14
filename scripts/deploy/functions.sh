@@ -45,6 +45,28 @@ function warn_about_proxy_and_variables()
   fi
 }
 
+# Queries for the specific GPU included in the provided ICL_GCP_MACHINE_TYPE and X1_GCP_ZONE
+function set_gpu_type() {
+    # Check if GPU_MODEL contains the substrings [amd, intel, nvidia] and assign variables
+    if [[ $GPU_MODEL == *"nvidia"* ]]; then
+        GPU_ENABLED=true
+        GPU_TYPE="nvidia"
+        JUPYTERHUB_EXTRA_RESOURCE_LIMITS='nvidia.com/gpu'
+    elif [[ $GPU_MODEL == *"intel"* ]]; then
+        GPU_ENABLED=true
+        GPU_TYPE="intel"
+        JUPYTERHUB_EXTRA_RESOURCE_LIMITS='gpu.intel.com/i915'
+    elif [[ $GPU_MODEL == *"amd"* ]]; then
+        GPU_ENABLED=true
+        GPU_TYPE="amd"
+        JUPYTERHUB_EXTRA_RESOURCE_LIMITS='amd.com/gpu'
+    else
+        GPU_ENABLED=false
+        GPU_TYPE="none"
+        JUPYTERHUB_EXTRA_RESOURCE_LIMITS=''
+    fi
+}
+
 # Starts the control code in a ephemeral container.
 # Mounts ~/.aws and ~/.kube to the container, if exist.
 # The repository is mounted to ~/x1, which can be used to persist data, for example, in ~/x1/workspace
@@ -157,7 +179,7 @@ function deploy_x1() {
   control_node "\
     cd terraform/icl \
     && terraform init -upgrade -migrate-state -input=false \
-    && terraform apply -input=false -auto-approve $(x1_terraform_args)
+    && terraform apply -parallelism=100 -input=false -auto-approve $(x1_terraform_args)
   "
 }
 
@@ -166,7 +188,7 @@ function delete_x1() {
   control_node "\
   cd terraform/icl \
   && terraform init -upgrade -migrate-state -input=false \
-  && terraform destroy -input=false -auto-approve $(x1_terraform_args) || true"
+  && terraform destroy -parallelism=100 -input=false -auto-approve $(x1_terraform_args) || true"
 }
 
 # Delete PersistentVolumes
@@ -199,26 +221,6 @@ function warn() {
 
 function fail() {
   echo -e "${RED}[FAIL]${ENDCOLOR} $1"
-}
-
-function check_args() {
-  # Flag to check if any invalid argument is found
-  invalid_arg=false
-
-  for arg in "$@"; do
-      if [[ $arg == "--console" ]]; then
-        break
-      fi
-      # Check if the argument is not in the allowed list
-      if [[ ! " ${allowed[@]} " =~ " $arg " ]]; then
-          echo "Invalid argument: $arg"
-          invalid_arg=true
-      fi
-  done
-  if [ $invalid_arg == true ]; then
-      show_help
-      exit 1
-  fi
 }
 
 function is_installed() {

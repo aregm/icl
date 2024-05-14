@@ -1,3 +1,15 @@
+data "aws_ami" "current_aws_ami" {
+  most_recent = true
+    #owners = [ "602401143452" ]
+    owners = [ "099720109477" ]
+
+  filter {
+    name = "name"
+    #values = ["*amazon-eks-gpu-node-${var.cluster_version}-*"]
+    values = ["*ubuntu-eks/k8s_${var.cluster_version}/images/hvm-ssd/ubuntu-focal-20.04-amd64-*"]
+  }
+}
+
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
   version = "19.0.4"
@@ -15,16 +27,16 @@ module "eks" {
     ingress_self_all = {
       description = "Node to node all ports/protocols"
       protocol = "-1"
-      from_port = 0
-      to_port = 0
+      from_port = 1
+      to_port = 65535
       type = "ingress"
       self = true
     }
     user_ports_incoming_node = {
       description = "Incoming TCP to user ports"
       protocol = "tcp"
-      from_port = 32001
-      to_port = 33999
+      from_port = 1
+      to_port = 65535
       type = "ingress"
       cidr_blocks = ["0.0.0.0/0"]
     }
@@ -34,8 +46,8 @@ module "eks" {
     user_ports_incoming_cluster = {
       description = "Incoming TCP to user ports"
       protocol = "tcp"
-      from_port = 32001
-      to_port = 33999
+      from_port = 0
+      to_port = 0
       type = "ingress"
       cidr_blocks = ["0.0.0.0/0"]
     }
@@ -57,21 +69,32 @@ module "eks" {
     }
   }
 
+  eks_managed_node_group_defaults = {
+    disk_size = 100
+  }
+
   eks_managed_node_groups = {
     main = {
-      min_size = 3
-      max_size = 3
-      desired_size = 3
-      instance_types = ["t3.xlarge"]
+      min_size = 2
+      max_size = 2
+      disk_size = 100
+      desired_size = 2
+      ami_type = "AL2_x86_64"
+      ami_id = data.aws_ami.current_aws_ami.id
+      #ami_id = "ami-003da7190fab29a6c"
+      enable_bootstrap_user_data = true
+      instance_types = ["g4dn.xlarge"]
       capacity_type  = "ON_DEMAND"
       block_device_mappings = {
-        xvda = {
-          device_name = "/dev/xvda"
+        root = {
+          device_name = data.aws_ami.current_aws_ami.root_device_name
           ebs         = {
-            volume_size           = 250
+            volume_size           = 100
             volume_type           = "gp3"
+            #iops                  = 3000
+            #throughput            = 150
             encrypted             = false
-            delete_on_termination = true
+            delete_on_termination = false
           }
         }
       }
