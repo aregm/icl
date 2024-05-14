@@ -31,7 +31,7 @@ dependencies = [
 ]
 
 [project.urls]
-"Homepage" = "https://intel-ai.github.io/icl"
+"Homepage" = "https://aregm.github.io/icl"
 "Source" = "https://github.com/intel-ai/icl"
 
 [project.scripts]
