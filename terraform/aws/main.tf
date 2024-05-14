@@ -79,7 +79,6 @@ module "eks" {
       desired_size = 2
       ami_type = "AL2_x86_64"
       ami_id = data.aws_ami.current_aws_ami.id
-      #ami_id = "ami-003da7190fab29a6c"
       enable_bootstrap_user_data = true
       instance_types = ["g4dn.xlarge"]
       capacity_type  = "ON_DEMAND"

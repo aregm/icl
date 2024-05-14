@@ -6,7 +6,7 @@ variable "namespace_labels" {
 
 variable "release" {
   description = "Version of KubeRay"
-  default = "0.6.0"
+  default = "1.1.0"
   type = string
 }
 
