@@ -1,11 +1,9 @@
 data "aws_ami" "current_aws_ami" {
   most_recent = true
-    #owners = [ "602401143452" ]
     owners = [ "099720109477" ]
 
   filter {
     name = "name"
-    #values = ["*amazon-eks-gpu-node-${var.cluster_version}-*"]
     values = ["*ubuntu-eks/k8s_${var.cluster_version}/images/hvm-ssd/ubuntu-focal-20.04-amd64-*"]
   }
 }
