@@ -27,6 +27,9 @@ on:
 permissions:
   contents: read
 
+env:
+  SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+
 jobs:
   snyk:
     permissions:
