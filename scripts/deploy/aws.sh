@@ -123,6 +123,8 @@ function render_workspace() {
 
 # This script is designed to work in the project root
 cd "$PROJECT_ROOT"
+allowed=(--help --console --check --render --deploy-eks --deploy-x1 --config --delete --delete-x1 --delete-eks --start-proxy --stop-proxy)
+check_args "$@"
 
 if [[ " $@ " =~ " --help " ]]; then
   show_help

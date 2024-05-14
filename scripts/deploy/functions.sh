@@ -223,6 +223,26 @@ function fail() {
   echo -e "${RED}[FAIL]${ENDCOLOR} $1"
 }
 
+function check_args() {
+  # Flag to check if any invalid argument is found
+  invalid_arg=false
+
+  for arg in "$@"; do
+      if [[ $arg == "--console" ]]; then
+        break
+      fi
+      # Check if the argument is not in the allowed list
+      if [[ ! " ${allowed[@]} " =~ " $arg " ]]; then
+          echo "Invalid argument: $arg"
+          invalid_arg=true
+      fi
+  done
+  if [ $invalid_arg == true ]; then
+      show_help
+      exit 1
+  fi
+}
+
 function is_installed() {
   local cmd="$1"
   if command -v "$cmd"  &> /dev/null; then
