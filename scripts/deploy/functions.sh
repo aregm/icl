@@ -2,6 +2,7 @@
 
 : ${SCRIPT_DIR:=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )}
 
+: ${ICL_USE_CCN:=true}
 : ${CONTROL_NODE_IMAGE:=pbchekin/icl-ccn:0.0.1}
 : ${PROXY_IMAGE:=pbchekin/icl-proxy:0.0.1}
 
@@ -49,6 +50,11 @@ function warn_about_proxy_and_variables()
 # Mounts ~/.aws and ~/.kube to the container, if exist.
 # The repository is mounted to ~/x1, which can be used to persist data, for example, in ~/x1/workspace
 function control_node() {
+  if [[ $ICL_USE_CCN == "false" ]]; then
+    bash -c "$*"
+    return
+  fi
+
   local docker_cmd=(
     --rm
     --volume $PROJECT_ROOT:/work/x1

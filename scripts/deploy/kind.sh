@@ -26,6 +26,7 @@ fi
 export ICL_INGRESS_DOMAIN="localtest.me"
 export ICL_RAY_ENDPOINT="localtest.me:10001"
 export KUBECONFIG
+export KUBE_CONFIG_PATH=$KUBECONFIG
 
 # https://stackoverflow.com/questions/59895/getting-the-source-directory-of-a-bash-script-from-within
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
@@ -186,7 +187,7 @@ function with_no_proxy() {
 function with_corefile() {
   CONTROl_PLANE_IP=$(docker inspect --format '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' "$CLUSTER_NAME-control-plane")
   pass "Cluster IP: $CONTROl_PLANE_IP"
-  control_node "python -m scripts.kubernetes.coredns $CONTROl_PLANE_IP $ICL_INGRESS_DOMAIN"
+  control_node python -m scripts.kubernetes.coredns $CONTROl_PLANE_IP $ICL_INGRESS_DOMAIN
 }
 
 if [[ " $@ " =~ " --help " ]]; then
