@@ -16,6 +16,9 @@ env:
   ICL_INGRESS_RAY_PORT: 8001
   ICL_INGRESS_SSH_PORT: 8022
   ICL_USE_CCN: false
+  KUBECTL_VERSION: v1.28.2
+  HELM_VERSION: v3.10.1
+  TERRAFORM_VERSION: 1.4.6
 
 jobs:
   deploy:
@@ -25,6 +28,22 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+
+      - name: Install dependencies
+        run: |
+          pip install kubernetes 'pydantic<2.0.0' click
+          mkdir -p ~/bin
+          cd ~/bin
+          # kubectl
+          curl -sSL -o kubectl https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/amd64/kubectl && chmod 0755 kubectl
+          # helm
+          curl -sSL https://get.helm.sh/helm-${HELM_VERSION}-linux-amd64.tar.gz -o - | tar --strip-components=1 -zxf - linux-amd64/helm
+          # terraform
+          curl -sSLO https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip && unzip terraform_${TERRAFORM_VERSION}_linux_amd64.zip
 
       - name: Delete the existing cluster
         run: |
