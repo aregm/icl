@@ -7,10 +7,16 @@ on:
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
+    runs-on:
+      - self-hosted
+      - docker
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Delete the old cluster, if exists
+        run: |
+          ./scripts/deploy/kind.sh --delete || true
 
       - name: Deploy a cluster with kind
         run: |
