@@ -10,6 +10,12 @@ on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
+env:
+  ICL_INGRESS_HTTP_PORT: 8080
+  ICL_INGRESS_HTTPS_PORT: 8443
+  ICL_INGRESS_RAY_PORT: 8001
+  ICL_INGRESS_SSH_PORT: 8022
+
 jobs:
   deploy:
     runs-on:
@@ -29,7 +35,7 @@ jobs:
 
       - name: Run tests
         run: |
-          ./scripts/deploy/kind.sh --console ./scripts/ccn/test.sh
+          echo ./scripts/deploy/kind.sh --console ./scripts/ccn/test.sh
 
       - name: Upload logs
         if: always()

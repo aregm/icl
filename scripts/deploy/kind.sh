@@ -16,6 +16,13 @@ fi
 : ${CONTROL_NODE_IMAGE:=pbchekin/ccn:0.0.1}
 : ${KUBECONFIG:="$HOME/.kube/config"}
 
+# Ingress ports are ports on the hosts that are used to forward traffic to the kind cluster.
+# If one on the ports below is not available on the host then you need to change the corresponding value.
+: ${ICL_INGRESS_HTTP_PORT:=80}
+: ${ICL_INGRESS_HTTPS_PORT:=443}
+: ${ICL_INGRESS_RAY_PORT:=10001}
+: ${ICL_INGRESS_SSH_PORT:=32001}
+
 export ICL_INGRESS_DOMAIN="localtest.me"
 export ICL_RAY_ENDPOINT="localtest.me:10001"
 export KUBECONFIG
@@ -82,22 +89,21 @@ nodes:
     # With multiple nodes, a more granular control is needed where nginx pod is running.
     extraPortMappings:
       - containerPort: 80
-        hostPort: 80
+        hostPort: $ICL_INGRESS_HTTP_PORT
         protocol: TCP
       - containerPort: 443
-        hostPort: 443
+        hostPort: $ICL_INGRESS_HTTPS_PORT
         protocol: TCP
       # Map Ray client port 10001 to the container port (see nodePort configuration for Ray).
-      # Since it is a default Ray port you may need to change it if you have Ray running on the host.
       - containerPort: 30009
-        hostPort: 10001
+        hostPort: $ICL_INGRESS_RAY_PORT
         protocol: TCP
       # Map clusterNodePort 32001 to the same port on host.
       # This port is used to forward SSH to JupyterHub session for the first user. If you are
       # planning to enable SSH for more than one user add more ports (32002 for the second user, and
       # so on).
       - containerPort: 32001
-        hostPort: 32001
+        hostPort: $ICL_INGRESS_SSH_PORT
         protocol: TCP
 "
   if [[ -v dockerhub_proxy ]]; then
