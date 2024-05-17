@@ -19,8 +19,8 @@ resource "helm_release" "ingress_nginx" {
         hostPort:
           enabled: true
           ports:
-            http: 80
-            https: 443
+            http: ${var.ingress_nginx_http_port}
+            https: ${var.ingress_nginx_https_port}
         admissionWebhooks:
           enabled: false
         config:

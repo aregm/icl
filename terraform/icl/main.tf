@@ -39,6 +39,8 @@ module "ingress-nginx" {
   count = var.ingress_nginx_enabled ? 1 : 0
   source = "../modules/ingress-nginx"
   ingress_nginx_service_enabled = var.ingress_nginx_service_enabled
+  ingress_nginx_http_port = var.ingress_nginx_http_port
+  ingress_nginx_https_port = var.ingress_nginx_https_port
 }
 
 module "prometheus" {
