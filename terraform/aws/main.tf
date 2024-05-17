@@ -1,4 +1,4 @@
-data "aws_ami" "current_aws_ami" {
+data "aws_ami" "gpu_aws_ami" {
   most_recent = true
     owners = [ "099720109477" ]
 
@@ -77,9 +77,9 @@ module "eks" {
       max_size = 2
       desired_size = 2
       ami_type = "AL2_x86_64"
-      ami_id = data.aws_ami.current_aws_ami.id
+      ami_id = var.gpu_type == "nvidia" ? data.aws_ami.gpu_aws_ami.id : null
       enable_bootstrap_user_data = true
-      instance_types = ["g4dn.xlarge"]
+      instance_types = ["${var.instance_type}"]
       capacity_type  = "ON_DEMAND"
       block_device_mappings = {
         root = {

@@ -8,6 +8,16 @@ variable "cluster_version" {
   type = string
 }
 
+variable "instance_type" {
+  description = "AWS EC2 instance type to use for the cluster"
+  type = string
+}
+
+variable "gpu_type" {
+  description = "GPU type to use for the cluster"
+  type = string
+}
+
 variable "vpc_id" {
   description = "VPC ID for EKS cluster"
   type = string

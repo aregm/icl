@@ -17,6 +17,7 @@ declare -g JUPYTERHUB_EXTRA_RESOURCE_LIMITS
 : ${CONTROL_NODE_IMAGE:="pbchekin/icl-ccn-aws:0.0.1"}
 : ${ICL_INGRESS_DOMAIN:="test.x1infra.com"}
 : ${GPU_MODEL:=""}
+: ${ICL_AWS_INSTANCE_TYPE:="t3.xlarge"}
 
 # https://stackoverflow.com/questions/59895/getting-the-source-directory-of-a-bash-script-from-within
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
@@ -87,7 +88,10 @@ function x1_terraform_args() {
 
 
 function deploy_eks() {
-  control_node "terraform -chdir=$WORKSPACE/terraform/aws/ apply -input=false -auto-approve"
+  terraform_extra_args=(
+    -var gpu_type="${GPU_TYPE}"
+  )
+  control_node "terraform -chdir=$WORKSPACE/terraform/aws/ apply -input=false -auto-approve ${terraform_extra_args[*]}"
 }
 
 function update_config() {
