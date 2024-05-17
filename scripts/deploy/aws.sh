@@ -90,6 +90,7 @@ function x1_terraform_args() {
 function deploy_eks() {
   terraform_extra_args=(
     -var gpu_type="${GPU_TYPE}"
+    -var instance_type="${ICL_AWS_INSTANCE_TYPE}"
   )
   control_node "terraform -chdir=$WORKSPACE/terraform/aws/ apply -input=false -auto-approve ${terraform_extra_args[*]}"
 }
