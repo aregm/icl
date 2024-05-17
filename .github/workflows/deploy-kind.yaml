@@ -47,6 +47,7 @@ jobs:
           ./scripts/deploy/kind.sh --console ./scripts/ccn/test.sh
 
       - name: Delete the existing cluster
+        if: always()
         run: |
           ./scripts/deploy/kind.sh --delete
 
