@@ -78,6 +78,30 @@ else
   fi
 fi
 
+function ccn_tag() {
+  cd "$PROJECT_ROOT"
+  git rev-parse --short HEAD
+}
+
+function create_ccn() {
+  local tag=$1
+  local dockerfile="/tmp/icl-dockerfile-$tag"
+  local workspace="workspace/kind/$CLUSTER_NAME"
+  mkdir -p "$PROJECT_ROOT/$workspace"
+  cp "$KUBECONFIG" "$PROJECT_ROOT/$workspace/config"
+  cat << DOCKERFILE > "$dockerfile"
+FROM $CONTROL_NODE_IMAGE
+COPY --chown=$(id -u):$(id -g) . /work/x1
+COPY --chown=$(id -u):$(id -g) $workspace/config /work/.kube/config
+DOCKERFILE
+  docker build --tag "icl-ccn:$tag" --file "$dockerfile" "$PROJECT_ROOT"
+}
+
+function delete_ccn() {
+  local tag=$1
+  docker rmi "icl-ccn:$tag" 2> /dev/null || true
+}
+
 # TODO: make ports 80 and 443 configurable on host
 function create_kind_cluster() {
   kind_config="\
@@ -190,6 +214,10 @@ function with_corefile() {
   control_node python -m scripts.kubernetes.coredns $CONTROl_PLANE_IP $ICL_INGRESS_DOMAIN
 }
 
+if [[ $ICL_BUILD_CCN == "true" ]]; then
+  ICL_LOCAL_CCN="icl-ccn:$(ccn_tag)"
+fi
+
 if [[ " $@ " =~ " --help " ]]; then
   cat <<EOF
 Usage: $(basename $0) [option]
@@ -245,6 +273,9 @@ fi
 
 if [[ " $@ " =~ " --delete " ]]; then
   kind delete cluster --name $CLUSTER_NAME
+  if [[ $ICL_BUILD_CCN == "true" ]]; then
+    delete_ccn $(ccn_tag)
+  fi
   exit 0
 fi
 
@@ -263,11 +294,25 @@ if [[ " $@ " =~ " --with-corefile " ]]; then
   exit 0
 fi
 
+if [[ " $@ " =~ " --create-ccn " ]]; then
+  create_ccn $(ccn_tag)
+  exit 0
+fi
+
+if [[ " $@ " =~ " --delete-ccn " ]]; then
+  delete_ccn $(ccn_tag)
+  exit 0
+fi
+
 if kind get clusters | grep -qE "^${CLUSTER_NAME}\$" &> /dev/null; then
   pass "Cluster $CLUSTER_NAME is up"
 else
   pass "Cluster $CLUSTER_NAME is not up, will attempt to create a new cluster"
   create_kind_cluster
+  if [[ $ICL_BUILD_CCN == "true" ]]; then
+    create_ccn $(ccn_tag)
+
+  fi
   if [[ " $@ " =~ " --with-images " ]]; then
     load_images
   fi
