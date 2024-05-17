@@ -35,7 +35,7 @@ jobs:
           mkdir .x1
           cat << EOF > .x1/environment
           ICL_INGRESS_DOMAIN=localtest.me:8080
-          ICL_RAY_ENDPOINT=localtest.me:8443
+          ICL_RAY_ENDPOINT=localtest.me:8001
           EOF
 
       - name: Deploy a cluster with kind
