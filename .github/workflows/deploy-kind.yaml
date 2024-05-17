@@ -36,7 +36,11 @@ jobs:
 
       - name: Run tests
         run: |
-          echo ./scripts/deploy/kind.sh --console ./scripts/ccn/test.sh
+          ./scripts/deploy/kind.sh --console ./scripts/ccn/test.sh
+
+      - name: Delete the existing cluster
+        run: |
+          ./scripts/deploy/kind.sh --delete
 
       - name: Upload logs
         if: always()
