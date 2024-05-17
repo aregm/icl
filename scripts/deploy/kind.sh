@@ -342,8 +342,7 @@ if [[ " $@ " =~ " --with-cert-manager " ]]; then
 fi
 
 with_corefile
-control_node "terraform -chdir=terraform/icl init -upgrade -input=false"
-control_node "terraform -chdir=terraform/icl apply -input=false -auto-approve ${terraform_extra_args[*]}"
+control_node "terraform -chdir=terraform/icl init -upgrade -input=false && terraform -chdir=terraform/icl apply -input=false -auto-approve ${terraform_extra_args[*]}"
 
 echo
 get_admin_token
