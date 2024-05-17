@@ -10,6 +10,13 @@ on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
+env:
+  ICL_INGRESS_HTTP_PORT: 8080
+  ICL_INGRESS_HTTPS_PORT: 8443
+  ICL_INGRESS_RAY_PORT: 8001
+  ICL_INGRESS_SSH_PORT: 8022
+  ICL_BUILD_CCN: true
+
 jobs:
   deploy:
     runs-on:
