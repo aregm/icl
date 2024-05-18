@@ -11,11 +11,9 @@ on:
   workflow_dispatch:
 
 env:
-  ICL_INGRESS_HTTP_PORT: 8080
-  ICL_INGRESS_HTTPS_PORT: 8443
-  ICL_INGRESS_RAY_PORT: 8001
-  ICL_INGRESS_SSH_PORT: 8022
   ICL_BUILD_CCN: true
+  ICL_INGRESS_HOST_PORTS: false
+  ICL_CCN_NETWORK: container:x1-control-plane
 
 jobs:
   deploy:
@@ -34,8 +32,7 @@ jobs:
         run: |
           mkdir .x1
           cat << EOF > .x1/environment
-          ICL_INGRESS_DOMAIN=localtest.me:8080
-          ICL_RAY_ENDPOINT=localtest.me:8001
+          ICL_RAY_ENDPOINT=localtest.me:30009
           EOF
 
       - name: Deploy a cluster with kind

@@ -9,6 +9,9 @@
 : ${ICL_BUILD_CCN:=false}
 : ${ICL_LOCAL_CCN:=}
 
+# Docker network to run ccn in.
+: ${ICL_CCN_NETWORK:=}
+
 PROJECT_ROOT="$( cd $SCRIPT_DIR && cd ../.. && pwd)"
 
 function proxy_container_status() {
@@ -152,8 +155,9 @@ function control_node() {
       docker_cmd+=( --env no_proxy )
     fi
 
-    # TODO: kind requires host network, aws/gcp does not
-    docker_cmd+=( --network host )
+    if [[ $ICL_CCN_NETWORK ]]; then
+      docker_cmd+=( --network $ICL_CCN_NETWORK )
+    fi
   fi
 
   docker_cmd+=( "${ICL_LOCAL_CCN:-$CONTROL_NODE_IMAGE}" )

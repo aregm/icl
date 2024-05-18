@@ -18,10 +18,13 @@ fi
 
 # Ingress ports are ports on the hosts that are used to forward traffic to the kind cluster.
 # If one on the ports below is not available on the host then you need to change the corresponding value.
+: ${ICL_INGRESS_HOST_PORTS:=true}
 : ${ICL_INGRESS_HTTP_PORT:=80}
 : ${ICL_INGRESS_HTTPS_PORT:=443}
 : ${ICL_INGRESS_RAY_PORT:=10001}
 : ${ICL_INGRESS_SSH_PORT:=32001}
+
+: ${ICL_CCN_NETWORK:=host}
 
 export ICL_INGRESS_DOMAIN="localtest.me"
 export ICL_RAY_ENDPOINT="localtest.me:10001"
@@ -111,12 +114,21 @@ function ensure_ccn() {
 
 # TODO: make ports 80 and 443 configurable on host
 function create_kind_cluster() {
-  kind_config="\
+  local workspace="workspace/kind/$CLUSTER_NAME"
+  local kind_config="$workspace/kind.yaml"
+  mkdir -p "$PROJECT_ROOT/$workspace"
+
+  cat << EOF > "$kind_config"
 kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
 nodes:
   - role: control-plane
     image: kindest/node:v1.28.0
+EOF
+
+
+  if [[ $ICL_INGRESS_HOST_PORTS == "true" ]]; then
+    cat << EOF >> "$kind_config"
     # This works only for one node, see https://kind.sigs.k8s.io/docs/user/ingress/#ingress-nginx
     # With multiple nodes, a more granular control is needed where nginx pod is running.
     extraPortMappings:
@@ -137,22 +149,23 @@ nodes:
       - containerPort: 32001
         hostPort: $ICL_INGRESS_SSH_PORT
         protocol: TCP
-"
+EOF
+  fi
+
   if [[ -v dockerhub_proxy ]]; then
     pass "DockerHub proxy: ${dockerhub_proxy}"
-    kind_config="\
-$kind_config
+    cat << EOF >> "$kind_config"
 containerdConfigPatches:
   - |-
-    [plugins.\"io.containerd.grpc.v1.cri\".registry]
-    [plugins.\"io.containerd.grpc.v1.cri\".registry.mirrors]
-    [plugins.\"io.containerd.grpc.v1.cri\".registry.mirrors.\"docker.io\"]
-    endpoint = [\"${dockerhub_proxy}\"]
-    [plugins.\"io.containerd.grpc.v1.cri\".registry.configs.\"${dockerhub_proxy}\".tls]
+    [plugins."io.containerd.grpc.v1.cri".registry]
+    [plugins."io.containerd.grpc.v1.cri".registry.mirrors]
+    [plugins."io.containerd.grpc.v1.cri".registry.mirrors."docker.io"]
+    endpoint = ["${dockerhub_proxy}"]
+    [plugins."io.containerd.grpc.v1.cri".registry.configs."${dockerhub_proxy}".tls]
       insecure_skip_verify = true
-"
+EOF
   fi
-  kind create cluster --name $CLUSTER_NAME --config=- <<< "$kind_config"
+  kind create cluster --name $CLUSTER_NAME --config="$kind_config"
 }
 
 # execute command on kind cluster node
