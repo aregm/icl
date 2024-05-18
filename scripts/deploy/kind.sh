@@ -81,6 +81,17 @@ else
   fi
 fi
 
+# Creates kube config in the workspace
+function create_kube_config() {
+  local workspace="workspace/kind/$CLUSTER_NAME"
+  local kube_config="$PROJECT_ROOT/$workspace/config"
+  if [[ $ICL_INGRESS_HOST_PORTS == "true" ]]; then
+    kind get kubeconfig --name "$CLUSTER_NAME" > "$kube_config"
+  else
+    kind get kubeconfig --name "$CLUSTER_NAME" --internal > "$kube_config"
+  fi
+}
+
 function ccn_tag() {
   cd "$PROJECT_ROOT"
   git rev-parse --short HEAD
@@ -91,7 +102,7 @@ function create_ccn() {
   local dockerfile="/tmp/icl-dockerfile-$tag"
   local workspace="workspace/kind/$CLUSTER_NAME"
   mkdir -p "$PROJECT_ROOT/$workspace"
-  cp "$KUBECONFIG" "$PROJECT_ROOT/$workspace/config"
+  create_kube_config
   cat << DOCKERFILE > "$dockerfile"
 FROM $CONTROL_NODE_IMAGE
 COPY --chown=$(id -u):$(id -g) . /work/x1
@@ -115,7 +126,7 @@ function ensure_ccn() {
 # TODO: make ports 80 and 443 configurable on host
 function create_kind_cluster() {
   local workspace="workspace/kind/$CLUSTER_NAME"
-  local kind_config="$workspace/kind.yaml"
+  local kind_config="$PROJECT_ROOT/$workspace/kind.yaml"
   mkdir -p "$PROJECT_ROOT/$workspace"
 
   cat << EOF > "$kind_config"
@@ -125,7 +136,6 @@ nodes:
   - role: control-plane
     image: kindest/node:v1.28.0
 EOF
-
 
   if [[ $ICL_INGRESS_HOST_PORTS == "true" ]]; then
     cat << EOF >> "$kind_config"
