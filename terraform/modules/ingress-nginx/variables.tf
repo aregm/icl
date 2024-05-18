@@ -3,15 +3,3 @@ variable "ingress_nginx_service_enabled" {
   type = bool
   default = false
 }
-
-variable "ingress_nginx_http_port" {
-  description = "HTTP host port"
-  type = number
-  default = 80
-}
-
-variable "ingress_nginx_https_port" {
-  description = "HTTPS host port"
-  type = number
-  default = 443
-}
