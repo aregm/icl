@@ -102,6 +102,13 @@ function delete_ccn() {
   docker rmi "icl-ccn:$tag" 2> /dev/null || true
 }
 
+function ensure_ccn() {
+  local tag=$1
+  if ! docker inspect "icl-ccn:$tag" &> /dev/null; then
+    create_ccn $tag
+  fi
+}
+
 # TODO: make ports 80 and 443 configurable on host
 function create_kind_cluster() {
   kind_config="\
@@ -306,12 +313,14 @@ fi
 
 if kind get clusters | grep -qE "^${CLUSTER_NAME}\$" &> /dev/null; then
   pass "Cluster $CLUSTER_NAME is up"
+  if [[ $ICL_BUILD_CCN == "true" ]]; then
+    ensure_ccn $(ccn_tag)
+  fi
 else
   pass "Cluster $CLUSTER_NAME is not up, will attempt to create a new cluster"
   create_kind_cluster
   if [[ $ICL_BUILD_CCN == "true" ]]; then
-    create_ccn $(ccn_tag)
-
+    ensure_ccn $(ccn_tag)
   fi
   if [[ " $@ " =~ " --with-images " ]]; then
     load_images
