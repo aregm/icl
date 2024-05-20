@@ -16,7 +16,8 @@ declare -g JUPYTERHUB_EXTRA_RESOURCE_LIMITS
 : ${X1_EXTERNALDNS_ENABLED:="false"}
 : ${CONTROL_NODE_IMAGE:="pbchekin/icl-ccn-aws:0.0.1"}
 : ${ICL_INGRESS_DOMAIN:="test.x1infra.com"}
-: ${GPU_MODEL:=""}
+: ${GPU_TYPE:="none"}
+: ${GPU_ENABLED:="false"}
 : ${ICL_AWS_INSTANCE_TYPE:="t3.xlarge"}
 
 # https://stackoverflow.com/questions/59895/getting-the-source-directory-of-a-bash-script-from-within
