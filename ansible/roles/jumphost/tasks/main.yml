@@ -49,7 +49,7 @@
   become: true
   copy:
     dest: /etc/docker/daemon.json
-    content: "{{ lookup('template', 'docker-daemon.yaml') | from_yaml | to_json }}"
+    content: "{{ lookup('template', 'docker-daemon.yaml.j2') | from_yaml | to_json }}"
 
 - name: Restart Docker
   become: true

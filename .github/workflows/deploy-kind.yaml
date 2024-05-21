@@ -2,15 +2,38 @@ name: Single node cluster with Kind
 
 # Controls when the workflow will run
 on:
+  # Triggers the workflow on push or pull request events but only for the main branch
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
+env:
+  ICL_BUILD_CCN: true
+  ICL_INGRESS_HOST_PORTS: false
+  ICL_CCN_NETWORK: container:x1-control-plane
+
 jobs:
   deploy:
-    runs-on: ubuntu-latest
+    runs-on:
+      - self-hosted
+      - docker
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Delete the existing cluster
+        run: |
+          ./scripts/deploy/kind.sh --delete
+
+      - name: Create ICL environment file
+        run: |
+          mkdir .x1
+          cat << EOF > .x1/environment
+          ICL_RAY_ENDPOINT=localtest.me:30009
+          EOF
 
       - name: Deploy a cluster with kind
         run: |
@@ -19,6 +42,11 @@ jobs:
       - name: Run tests
         run: |
           ./scripts/deploy/kind.sh --console ./scripts/ccn/test.sh
+
+      - name: Delete the existing cluster
+        if: always()
+        run: |
+          ./scripts/deploy/kind.sh --delete
 
       - name: Upload logs
         if: always()
