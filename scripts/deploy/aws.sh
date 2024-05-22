@@ -169,6 +169,7 @@ if [[ " $@ " =~ " --render " ]]; then
 fi
 
 if [[ " $@ " =~ " --deploy-eks " ]]; then
+  set_gpu_type
   deploy_eks
   exit 0
 fi
