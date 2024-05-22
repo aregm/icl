@@ -66,6 +66,18 @@ cluster_version = "$X1_CLUSTER_VERSION"
 EOF
 }
 
+function eks_terraform_args()
+{
+  terraform_extra_args=(
+    -var gpu_type="${GPU_TYPE}"
+    -var instance_type="${ICL_AWS_INSTANCE_TYPE}"
+  )
+  if [[ -v X1_TERRAFORM_DISABLE_LOCKING ]]; then
+    terraform_extra_args+=( -lock=false )
+  fi
+  echo "${terraform_extra_args[*]}"
+}
+
 function x1_terraform_args() {
   terraform_extra_args=(
     -var prometheus_enabled=false
@@ -89,11 +101,7 @@ function x1_terraform_args() {
 
 
 function deploy_eks() {
-  terraform_extra_args=(
-    -var gpu_type="${GPU_TYPE}"
-    -var instance_type="${ICL_AWS_INSTANCE_TYPE}"
-  )
-  control_node "terraform -chdir=$WORKSPACE/terraform/aws/ apply -input=false -auto-approve ${terraform_extra_args[*]}"
+  control_node "terraform -chdir=$WORKSPACE/terraform/aws/ apply -input=false -auto-approve $(eks_terraform_args)"
 }
 
 function update_config() {
@@ -102,7 +110,7 @@ function update_config() {
 
 # Delete cluster
 function delete_eks() {
-  control_node "terraform -chdir=$WORKSPACE/terraform/aws/ destroy -input=false -auto-approve"
+  control_node "terraform -chdir=$WORKSPACE/terraform/aws/ destroy -input=false -auto-approve $(eks_terraform_args)"
 }
 
 # Delete workloads, cluster and workspace

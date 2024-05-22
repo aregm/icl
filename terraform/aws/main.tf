@@ -9,7 +9,7 @@ data "aws_ami" "current_aws_ami" {
     name = "name"
     values = [ "${var.gpu_type == "nvidia" ?
                   "*ubuntu-eks/k8s_${var.cluster_version}/images/hvm-ssd/ubuntu-focal-20.04-amd64-*" :
-                  "*amazon/amazon-eks-node-${var.cluster_version}-*"}"]
+                  "amazon-eks-node-${var.cluster_version}-*"}"]
   }
 }
 
