@@ -72,17 +72,13 @@ module "eks" {
     }
   }
 
-  eks_managed_node_group_defaults = {
-    disk_size = 100
-  }
-
   eks_managed_node_groups = {
     main = {
       min_size = 2
       max_size = 2
       desired_size = 2
       ami_type = "AL2_x86_64"
-      ami_id = var.gpu_type == data.aws_ami.current_aws_ami.id
+      ami_id = data.aws_ami.current_aws_ami.id
       enable_bootstrap_user_data = true
       instance_types = ["${var.instance_type}"]
       capacity_type  = "ON_DEMAND"
