@@ -128,7 +128,7 @@ export ICL_AWS_INSTANCE_TYPE="g4dn.xlarge"
 
 To install GPU driver and Kubernetes plugin, specify GPU type:
 ```shell
-export GPU_MODEL="nvidia"
+export GPU_TYPE="nvidia"
 ```
 
 For AWS, currently only "nvidia" and "" (empty value) are supported. The latter means no GPU.
