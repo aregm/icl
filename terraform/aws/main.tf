@@ -1,10 +1,15 @@
-data "aws_ami" "gpu_aws_ami" {
+
+data "aws_ami" "current_aws_ami" {
   most_recent = true
-    owners = [ "099720109477" ]
+    owners = [ "${var.gpu_type == "nvidia" ?
+                  "099720109477" :
+                  "602401143452"}" ]
 
   filter {
     name = "name"
-    values = ["*ubuntu-eks/k8s_${var.cluster_version}/images/hvm-ssd/ubuntu-focal-20.04-amd64-*"]
+    values = [ "${var.gpu_type == "nvidia" ?
+                  "*ubuntu-eks/k8s_${var.cluster_version}/images/hvm-ssd/ubuntu-focal-20.04-amd64-*" :
+                  "*amazon/amazon-eks-node-${var.cluster_version}-*"}"]
   }
 }
 
@@ -77,7 +82,7 @@ module "eks" {
       max_size = 2
       desired_size = 2
       ami_type = "AL2_x86_64"
-      ami_id = var.gpu_type == "nvidia" ? data.aws_ami.gpu_aws_ami.id : null
+      ami_id = var.gpu_type == data.aws_ami.current_aws_ami.id
       enable_bootstrap_user_data = true
       instance_types = ["${var.instance_type}"]
       capacity_type  = "ON_DEMAND"
