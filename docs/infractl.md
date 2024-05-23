@@ -138,11 +138,11 @@ infractl.run(infractl.program('my_flow.py'), tags=['my_flow'])
 
 ## Schedule a flow
 
-To specify a [schedule](https://docs.prefect.io/2.10.21/concepts/schedules/) for a flow:
+To specify a [schedule](https://docs.prefect.io/latest/concepts/schedules/) for a flow:
 
 ```python
 # This schedule will create flow runs for this deployment every day at midnight.
-await infractl.run(infractl.program('my_flow.py'), schedule={'cron': '0 0 * * *'})
+await infractl.run(infractl.program('my_flow.py'), cron='0 0 * * *')
 ```
 
 ## Customize a Kubernetes job
