@@ -120,25 +120,25 @@ async def test_flow_async(address):
     program_run = await program.run(detach=True)
     assert program_run.is_scheduled()
 
-    for i in range(60):
+    wait_sec = 120
+    for _ in range(wait_sec):
         if program_run.is_running():
             break
         time.sleep(1)
         await program_run.update()
     else:
-        raise RuntimeError("the program has been in the planned state for too long")
+        raise RuntimeError(f'Program {program_run} is not running after {wait_sec}s')
 
     await program_run.cancel()
-    print(f"program_run=")
     assert program_run.is_cancelling()
 
-    for i in range(60):
+    for _ in range(wait_sec):
         if program_run.is_cancelled():
             break
         time.sleep(1)
         await program_run.update()
     else:
-        raise RuntimeError("the program has been in the planned state for too long")
+        raise RuntimeError(f'Program {program_run} is not cancelled after {wait_sec}s')
 
 
 @pytest.mark.asyncio

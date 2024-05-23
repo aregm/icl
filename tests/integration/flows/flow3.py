@@ -10,7 +10,7 @@ def flow3(first: str = 'Default Value', second: int = 0):
     logger = get_run_logger()
     logger.info(f'Parameters: {first=}, {second=}')
     # test timeout
-    time.sleep(3)
+    time.sleep(5)
     return first, second
 
 
