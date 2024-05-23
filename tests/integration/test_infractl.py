@@ -174,7 +174,7 @@ async def test_flow_with_schedule(address):
         infractl.program('flows/flow1.py'),
         name='flow1-with-cron',
         infrastructure=infrastructure,
-        schedule={'cron': '0 0 * * *'},
+        cron='0 0 * * *',
     )
 
 
