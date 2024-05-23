@@ -116,6 +116,23 @@ Where
 * `{ingress_nginx_elb}` is a DNS name of AWS CLB tagged with `kubernetes.io/service-name = ingress-nginx/ingress-nginx-controller`.
 * `{ray_elb}` is a DNS name of AWS CLB tagged with `kubernetes.io/service-name = ray/ray-client`.
 
+### Custom instance type
+
+You may override default instance type (e.g. to enable use of GPU):
+
+```shell
+export ICL_AWS_INSTANCE_TYPE="g4dn.xlarge"
+```
+
+### GPU software and drivers
+
+To install GPU driver and Kubernetes plugin, specify GPU type:
+```shell
+export GPU_TYPE="nvidia"
+```
+
+For AWS, currently only "nvidia" and "" (empty value) are supported. The latter means no GPU.
+
 ### Tests
 
 Replace `{ingress_domain}` with the cluster ingress domain.

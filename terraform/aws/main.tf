@@ -1,3 +1,18 @@
+
+data "aws_ami" "current_aws_ami" {
+  most_recent = true
+    owners = [ "${var.gpu_type == "nvidia" ?
+                  "099720109477" :
+                  "602401143452"}" ]
+
+  filter {
+    name = "name"
+    values = [ "${var.gpu_type == "nvidia" ?
+                  "*ubuntu-eks/k8s_${var.cluster_version}/images/hvm-ssd/ubuntu-focal-20.04-amd64-*" :
+                  "amazon-eks-node-${var.cluster_version}-*"}"]
+  }
+}
+
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
   version = "19.0.4"
@@ -15,8 +30,8 @@ module "eks" {
     ingress_self_all = {
       description = "Node to node all ports/protocols"
       protocol = "-1"
-      from_port = 0
-      to_port = 0
+      from_port = 1
+      to_port = 65535
       type = "ingress"
       self = true
     }
@@ -59,14 +74,17 @@ module "eks" {
 
   eks_managed_node_groups = {
     main = {
-      min_size = 3
-      max_size = 3
-      desired_size = 3
-      instance_types = ["t3.xlarge"]
+      min_size = 2
+      max_size = 2
+      desired_size = 2
+      ami_type = "AL2_x86_64"
+      ami_id = data.aws_ami.current_aws_ami.id
+      enable_bootstrap_user_data = true
+      instance_types = ["${var.instance_type}"]
       capacity_type  = "ON_DEMAND"
       block_device_mappings = {
-        xvda = {
-          device_name = "/dev/xvda"
+        root = {
+          device_name = data.aws_ami.current_aws_ami.root_device_name
           ebs         = {
             volume_size           = 250
             volume_type           = "gp3"
