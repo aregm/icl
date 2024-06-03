@@ -127,6 +127,7 @@ module "jupyterhub" {
   ingress_domain = var.ingress_domain
   shared_volume_enabled = var.shared_volume_enabled
   jupyterhub_extra_resource_limits = var.jupyterhub_extra_resource_limits
+  jupyterhub_cluster_admin_enabled = var.jupyterhub_cluster_admin_enabled
 }
 
 module "jupyterhub-vscode" {
