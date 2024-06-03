@@ -199,6 +199,9 @@ resource "helm_release" "jupyterhub" {
           - jupyter.${var.ingress_domain}
         annotations:
           nginx.ingress.kubernetes.io/proxy-body-size: "0"
+      scheduling:
+        userScheduler:
+          enabled: false
     EOT
   ]
 }
