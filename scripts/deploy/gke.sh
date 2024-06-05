@@ -93,7 +93,7 @@ function x1_terraform_args() {
     -var use_node_ip_for_user_ports=true
     -var use_external_node_ip_for_user_ports=true
   )
-  if [[ -v X1_TERRAFORM_DISABLE_LOCKING ]]; then
+  if [[ -v X1_TERRAFORM_DISABLE_LOCKING || -v ICL_TERRAFORM_DISABLE_LOCKING ]]; then
     terraform_extra_args+=( -lock=false )
   fi
   # TODO: add lock release here

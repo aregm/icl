@@ -71,7 +71,7 @@ function eks_terraform_args()
     -var gpu_type="${GPU_TYPE}"
     -var instance_type="${ICL_AWS_INSTANCE_TYPE}"
   )
-  if [[ -v X1_TERRAFORM_DISABLE_LOCKING ]]; then
+  if [[ -v X1_TERRAFORM_DISABLE_LOCKING || -v ICL_TERRAFORM_DISABLE_LOCKING ]]; then
     terraform_extra_args+=( -lock=false )
   fi
   echo "${terraform_extra_args[*]}"
