@@ -14,6 +14,8 @@ set -e
 : ${ICL_GCP_MACHINE_TYPE:="e2-standard-4"}
 : ${GKE_GPU_DRIVER_VERSION:="DEFAULT"}
 : ${GPU_MODEL:=""}
+: ${CREATE_BASTION:="false"}
+: ${BASTION_SOURCE_RANGES:=""}
 
 # GLOBAL VARIABLES
 declare -g GPU_TYPE
@@ -62,6 +64,8 @@ Environment variables:
   PGUSER                         PostgreSQL username for Terraform state
   PGPASSWORD                     PostgreSQL password for Terraform state
   GKE_GPU_DRIVER_VERSION         NVIDIA driver setting for GKE. Accepts "DEFAULT" or "LATEST".
+  CREATE_BASTION                 Boolean value which controls the creation of bastion host if required by environment
+  BASTION_SOURCE_RANGES          Comma separated list of CIDR addresses to allow SSH from e.g. "1.1.1.1/1","2.2.2.2/2"
 EOF
 }
 
@@ -69,6 +73,14 @@ function show_parameters() {
   for var in X1_GCP_ZONE ICL_INGRESS_DOMAIN WORKSPACE; do
     echo "$var: ${!var}"
   done
+}
+
+# Function to check if SOURCE_RANGES is empty
+check_source_ranges() {
+  if [ -z "${BASTION_SOURCE_RANGES}" ] || [ "${BASTION_SOURCE_RANGES}" == '""' ]; then
+    echo "Error: BASTION_SOURCE_RANGES must be set and cannot be empty when CREATE_BASTION=\"true\""
+    exit 1
+  fi
 }
 
 # TODO: add cluster_version here
@@ -81,6 +93,13 @@ function render_gcp_terraform_tfvars() {
 EOF
   fi
 
+  # Check and convert the string to a JSON array format if CREATE_BASTION is true
+  if [[ "${CREATE_BASTION}" == "true" ]]; then
+    check_source_ranges
+    bastion_source_ranges_list=$(echo $BASTION_SOURCE_RANGES | sed 's/,/","/g' | sed 's/^/["/' | sed 's/$/"]/')
+    generate_bastion_key
+  fi
+
   cat <<EOF >> "$WORKSPACE/terraform/gcp/terraform.tfvars"
 cluster_name = "$X1_CLUSTER_NAME"
 gcp_zone = "$X1_GCP_ZONE"
@@ -90,7 +109,27 @@ machine_type = "$ICL_GCP_MACHINE_TYPE"
 gke_gpu_driver_version = "$GKE_GPU_DRIVER_VERSION"
 gpu_enabled="$GPU_ENABLED"
 gpu_model = "$GPU_MODEL"
+create_bastion = "$CREATE_BASTION"
+bastion_public_key_content = "$bastion_public_key_content"
+bastion_username = "$USER"
+bastion_source_ranges = $bastion_source_ranges_list
 EOF
+}
+
+function generate_bastion_key {
+  # Create ~/.ssh directory if it doesn't exist and set permissions to 0700
+  if [ ! -d "$HOME/.ssh" ]; then
+    mkdir "$HOME/.ssh"
+    chmod 0700 "$HOME/.ssh"
+  fi
+  # Generate an SSH key with an empty passphrase
+  if [ ! -f "$HOME/.ssh/rsa_gcp.pub" ]; then
+    ssh-keygen -t rsa -f "$HOME/.ssh/rsa_gcp" -C "$USER" -N ""
+  fi
+  # Set the value of $bastion_public_key_content to the contents of rsa_gcp.pub file
+  bastion_public_key_content=$(cat "$HOME/.ssh/rsa_gcp.pub")
+  # Export the variable to make it available in the current session
+  export bastion_public_key_content
 }
 
 # Queries for the specific GPU included in the provided ICL_GCP_MACHINE_TYPE and X1_GCP_ZONE
@@ -232,7 +271,7 @@ if [[ " $@ " =~ " --render " ]]; then
 fi
 
 if [[ " $@ " =~ " --deploy-gke " ]]; then
-  if [[ "${GPU_ENABLED}" ]];
+  if [[ "${GPU_ENABLED}" == "true" ]]; 
   then
     check_gpu_support
   fi
@@ -317,7 +356,7 @@ fi
 
 show_parameters
 set_gpu_type
-if [[ "${GPU_ENABLED}" ]];
+if [[ "${GPU_ENABLED}" == "true" ]]; 
 then
   check_gpu_support
 fi

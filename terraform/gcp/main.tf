@@ -14,6 +14,22 @@ provider "google" {
   zone    = var.gcp_zone
 }
 
+module "bastion-host" {
+  count                      = var.create_bastion ? 1: 0
+  source                     = "./modules/bastion-host"
+  bastion_name               = "${var.cluster_name}-${var.bastion_name}"
+  bastion_machine_type       = var.bastion_machine_type
+  bastion_public_key_content = var.bastion_public_key_content
+  bastion_username           = var.bastion_username
+  gcp_zone                   = var.gcp_zone
+}
+
+module "firewall-rule-bastion-host" {
+  count                      = var.create_bastion ? 1: 0
+  source                     = "./modules/firewall-rule-bastion-ports"
+  bastion_source_ranges      = var.bastion_source_ranges
+}
+
 module "icl-cluster" {
   source = "./modules/icl-cluster"
   cluster_name = var.cluster_name

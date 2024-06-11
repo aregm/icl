@@ -13,6 +13,7 @@ resource "google_container_node_pool" "pool" {
   node_count = 1
 
   node_config {
+    tags = ["gke-cluster"]
     image_type   = "cos_containerd"
     machine_type = var.machine_type
     oauth_scopes = [
@@ -36,6 +37,7 @@ resource "google_container_node_pool" "exclusive_gpu_pool" {
   node_count = var.node_count
 
   node_config {
+    tags = ["gke-cluster"]
     image_type   = "cos_containerd"
     machine_type = var.machine_type
 
@@ -69,6 +71,7 @@ resource "google_container_node_pool" "shared_gpu_pool" {
   node_count = var.node_count
 
   node_config {
+    tags = ["gke-cluster"]
     image_type   = "cos_containerd"
     machine_type = var.machine_type
 

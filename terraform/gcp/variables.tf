@@ -50,3 +50,36 @@ variable "shared_gpu" {
   type = bool
   default = true
 }
+
+variable "create_bastion" {
+  description = "Boolean to determine if bastion host is required"
+  type = bool
+  default = false
+}
+
+variable "bastion_name" {
+  description = "Name of bastion host for SSH/RDP traffic"
+  type = string
+  default = "bastion"
+}
+
+variable "bastion_username" {
+  description = "Username to be created on bastion host"
+  type = string
+}
+
+variable "bastion_machine_type" {
+  description = "Machine type to use for bastion host"
+  type = string
+  default = "n1-standard-1"
+}
+
+variable "bastion_public_key_content" {
+  description = "Public key string for connection to bastion host"
+  type = string
+}
+
+variable "bastion_source_ranges" {
+  description = "List of IP ranges to allow access to bastion host"
+  type = list(string)
+}
