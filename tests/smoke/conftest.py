@@ -11,7 +11,6 @@ from minio.error import InvalidResponseError
 from prefect.filesystems import RemoteFileSystem
 from prefect.infrastructure.kubernetes import KubernetesJob
 
-MINIO_API_PORT = 80
 MINIO_WAIT_TIMEOUT_S = 180
 
 
@@ -97,7 +96,12 @@ def minio_client(s3_endpoint, minio_credentials):
     """Create Minio client object"""
     user, password = minio_credentials
     hc = urllib3.PoolManager(cert_reqs="CERT_NONE")
-    address = f"{s3_endpoint}:{MINIO_API_PORT}"
+
+    if s3_endpoint.find(":") > 0:
+        address = s3_endpoint
+    else:
+        address = f"{s3_endpoint}:80"
+
     minio_client = Minio(
         address,
         access_key=user,

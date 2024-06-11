@@ -169,7 +169,7 @@ function x1_terraform_args() {
     -var use_node_ip_for_user_ports=true
     -var use_external_node_ip_for_user_ports=true
   )
-  if [[ -v X1_TERRAFORM_DISABLE_LOCKING ]]; then
+  if [[ -v X1_TERRAFORM_DISABLE_LOCKING || -v ICL_TERRAFORM_DISABLE_LOCKING ]]; then
     terraform_extra_args+=( -lock=false )
   fi
   # TODO: add lock release here
@@ -253,6 +253,8 @@ fi
 
 # This script is designed to work in the project root
 cd "$PROJECT_ROOT"
+allowed=(--help --console --check --render --deploy-gke --deploy-x1 --config --delete --delete-x1 --delete-gke --gcloud-login  --start-proxy --stop-proxy)
+check_args "$@"
 
 if [[ " $@ " =~ " --help " ]]; then
   show_help

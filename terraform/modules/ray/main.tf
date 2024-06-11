@@ -100,8 +100,8 @@ resource "helm_release" "ray" {
                   topologyKey: kubernetes.io/hostname
       worker:
         replicas: "${var.ray_worker_nodes}"
-        miniReplicas: "${var.ray_worker_nodes}"
-        maxiReplicas: "${var.ray_worker_nodes}"
+        minReplicas: "${var.ray_worker_nodes}"
+        maxReplicas: "${var.ray_worker_nodes}"
         # TODO: use ray_node_ram, ray_node_cpu
         resources:
           requests:

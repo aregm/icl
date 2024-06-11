@@ -120,7 +120,7 @@ variable "docker_registry_storage_size" {
 
 variable "prefect_image_tag" {
   description = "Tag of the official Prefect Docker image"
-  default = "2.14.3-python3.9"
+  default = "2.16.5-python3.9"
   type = string
 }
 
@@ -198,7 +198,7 @@ variable "jupyterhub_pre_puller_enabled" {
 
 variable "jupyterhub_singleuser_volume_size" {
   description = "Size of a persistent volume for a single user session"
-  default = "2536Mi"
+  default = "16Gi"
   type = string
 }
 
@@ -289,6 +289,18 @@ variable "externaldns_enabled" {
 
 variable "nfd_enabled" {
   description = "Enable Node Feature Discovery"
+  type = bool
+  default = false
+}
+
+variable "nvidia_gpu_enabled" {
+  description = "Enable NVIDIA GPU support"
+  type = bool
+  default = false  
+}
+
+variable "intel_gpu_enabled" {
+  description = "Enable Intel GPU support"
   type = bool
   default = false
 }

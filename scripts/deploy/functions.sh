@@ -5,6 +5,13 @@
 : ${CONTROL_NODE_IMAGE:=pbchekin/icl-ccn:0.0.1}
 : ${PROXY_IMAGE:=pbchekin/icl-proxy:0.0.1}
 
+# If true, then a local ccn will be built with all necessary files inside
+: ${ICL_BUILD_CCN:=false}
+: ${ICL_LOCAL_CCN:=}
+
+# Docker network to run ccn in.
+: ${ICL_CCN_NETWORK:=}
+
 PROJECT_ROOT="$( cd $SCRIPT_DIR && cd ../.. && pwd)"
 
 function proxy_container_status() {
@@ -45,26 +52,60 @@ function warn_about_proxy_and_variables()
   fi
 }
 
+# Queries for the specific GPU included in the provided ICL_GCP_MACHINE_TYPE and X1_GCP_ZONE
+function set_gpu_type() {
+    # Check if GPU_MODEL contains the substrings [amd, intel, nvidia] and assign variables
+    if [[ $GPU_MODEL == *"nvidia"* ]]; then
+        GPU_ENABLED=true
+        GPU_TYPE="nvidia"
+        JUPYTERHUB_EXTRA_RESOURCE_LIMITS='nvidia.com/gpu'
+    elif [[ $GPU_MODEL == *"intel"* ]]; then
+        GPU_ENABLED=true
+        GPU_TYPE="intel"
+        JUPYTERHUB_EXTRA_RESOURCE_LIMITS='gpu.intel.com/i915'
+    elif [[ $GPU_MODEL == *"amd"* ]]; then
+        GPU_ENABLED=true
+        GPU_TYPE="amd"
+        JUPYTERHUB_EXTRA_RESOURCE_LIMITS='amd.com/gpu'
+    else
+        GPU_ENABLED=false
+        GPU_TYPE="none"
+        JUPYTERHUB_EXTRA_RESOURCE_LIMITS=''
+    fi
+}
+
 # Starts the control code in a ephemeral container.
 # Mounts ~/.aws and ~/.kube to the container, if exist.
 # The repository is mounted to ~/x1, which can be used to persist data, for example, in ~/x1/workspace
 function control_node() {
   local docker_cmd=(
     --rm
-    --volume $PROJECT_ROOT:/work/x1
     --user "$(id -u):$(id -g)"
     --env USER
     --workdir /work/x1
   )
 
-  if [[ -f $KUBECONFIG ]]; then
-    docker_cmd+=( --volume $KUBECONFIG:/work/.kube/config )
-  elif [[ -d ${HOME}/.kube ]]; then
-    docker_cmd+=( --volume ${HOME}/.kube:/work/.kube )
-  fi
+  # Keep all volumes here
+  if [[ ! $ICL_LOCAL_CCN ]]; then
+    docker_cmd+=( --volume $PROJECT_ROOT:/work/x1 )
 
-  if [[ -d $HOME/.aws ]]; then
-    docker_cmd+=( --volume $HOME/.aws:/work/.aws )
+    if [[ -f $KUBECONFIG ]]; then
+      docker_cmd+=( --volume $KUBECONFIG:/work/.kube/config )
+    elif [[ -d ${HOME}/.kube ]]; then
+      docker_cmd+=( --volume ${HOME}/.kube:/work/.kube )
+    fi
+
+    if [[ -d $HOME/.aws ]]; then
+      docker_cmd+=( --volume $HOME/.aws:/work/.aws )
+    fi
+
+    if [[ -d $HOME/.config/gcloud ]]; then
+      docker_cmd+=( --volume $HOME/.config/gcloud:/work/.config/gcloud )
+    fi
+
+    if [[ -v GOOGLE_APPLICATION_CREDENTIALS ]]; then
+      docker_cmd+=( --volume $GOOGLE_APPLICATION_CREDENTIALS:/work/.config/gcloud/credentials.json )
+    fi
   fi
 
   if [[ -v PG_CONN_STR ]]; then
@@ -105,13 +146,8 @@ function control_node() {
 
   if [[ -v GOOGLE_APPLICATION_CREDENTIALS ]]; then
     docker_cmd+=( --env GOOGLE_APPLICATION_CREDENTIALS=/work/.config/gcloud/credentials.json )
-    docker_cmd+=( -v $GOOGLE_APPLICATION_CREDENTIALS:/work/.config/gcloud/credentials.json )
   fi
   
-  if [[ -d $HOME/.config/gcloud ]]; then
-    docker_cmd+=( --volume $HOME/.config/gcloud:/work/.config/gcloud )
-  fi
-
   if [[ -t 0 ]]; then
     docker_cmd+=( --interactive )
   fi
@@ -141,11 +177,12 @@ function control_node() {
       docker_cmd+=( --env no_proxy )
     fi
 
-    # TODO: kind requires host network, aws/gcp does not
-    docker_cmd+=( --network host )
+    if [[ $ICL_CCN_NETWORK ]]; then
+      docker_cmd+=( --network $ICL_CCN_NETWORK )
+    fi
   fi
 
-  docker_cmd+=( $CONTROL_NODE_IMAGE )
+  docker_cmd+=( "${ICL_LOCAL_CCN:-$CONTROL_NODE_IMAGE}" )
   if (( $# != 0 )); then
     docker_cmd+=( -c "$*" )
   fi
@@ -157,7 +194,7 @@ function deploy_x1() {
   control_node "\
     cd terraform/icl \
     && terraform init -upgrade -migrate-state -input=false \
-    && terraform apply -input=false -auto-approve $(x1_terraform_args)
+    && terraform apply -parallelism=100 -input=false -auto-approve $(x1_terraform_args)
   "
 }
 
@@ -166,7 +203,7 @@ function delete_x1() {
   control_node "\
   cd terraform/icl \
   && terraform init -upgrade -migrate-state -input=false \
-  && terraform destroy -input=false -auto-approve $(x1_terraform_args) || true"
+  && terraform destroy -parallelism=100 -input=false -auto-approve $(x1_terraform_args) || true"
 }
 
 # Delete PersistentVolumes
@@ -199,6 +236,26 @@ function warn() {
 
 function fail() {
   echo -e "${RED}[FAIL]${ENDCOLOR} $1"
+}
+
+function check_args() {
+  # Flag to check if any invalid argument is found
+  invalid_arg=false
+
+  for arg in "$@"; do
+      if [[ $arg == "--console" ]]; then
+        break
+      fi
+      # Check if the argument is not in the allowed list
+      if [[ ! " ${allowed[@]} " =~ " $arg " ]]; then
+          echo "Invalid argument: $arg"
+          invalid_arg=true
+      fi
+  done
+  if [ $invalid_arg == true ]; then
+      show_help
+      exit 1
+  fi
 }
 
 function is_installed() {

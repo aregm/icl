@@ -12,14 +12,24 @@ fi
 # Default values that can be overriden by corresponding environment variables
 : ${KIND_VERSION:="v0.20.0"}
 : ${CLUSTER_NAME:="x1"}
-: ${REDSOCKS_SKIP:="0.0.0.0/8 10.0.0.0/8 100.64.0.0/10 127.0.0.0/8 169.254.0.0/16 172.16.0.0/12 192.168.0.0/16 198.18.0.0/15 224.0.0.0/4 240.0.0.0/4"}
 : ${X1_EXTERNALDNS_ENABLED:="false"}
 : ${CONTROL_NODE_IMAGE:=pbchekin/ccn:0.0.1}
 : ${KUBECONFIG:="$HOME/.kube/config"}
 
+# Ingress ports are ports on the hosts that are used to forward traffic to the kind cluster.
+# If one on the ports below is not available on the host then you need to change the corresponding value.
+: ${ICL_INGRESS_HOST_PORTS:=true}
+: ${ICL_INGRESS_HTTP_PORT:=80}
+: ${ICL_INGRESS_HTTPS_PORT:=443}
+: ${ICL_INGRESS_RAY_PORT:=10001}
+: ${ICL_INGRESS_SSH_PORT:=32001}
+
+: ${ICL_CCN_NETWORK:=host}
+
 export ICL_INGRESS_DOMAIN="localtest.me"
 export ICL_RAY_ENDPOINT="localtest.me:10001"
 export KUBECONFIG
+export KUBE_CONFIG_PATH=$KUBECONFIG
 
 # https://stackoverflow.com/questions/59895/getting-the-source-directory-of-a-bash-script-from-within
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
@@ -71,51 +81,101 @@ else
   fi
 fi
 
+# Creates kube config in the workspace
+function create_kube_config() {
+  local workspace="workspace/kind/$CLUSTER_NAME"
+  local kube_config="$PROJECT_ROOT/$workspace/config"
+  if [[ $ICL_INGRESS_HOST_PORTS == "true" ]]; then
+    kind get kubeconfig --name "$CLUSTER_NAME" > "$kube_config"
+  else
+    kind get kubeconfig --name "$CLUSTER_NAME" --internal > "$kube_config"
+  fi
+}
+
+function ccn_tag() {
+  cd "$PROJECT_ROOT"
+  git rev-parse --short HEAD
+}
+
+function create_ccn() {
+  local tag=$1
+  local dockerfile="/tmp/icl-dockerfile-$tag"
+  local workspace="workspace/kind/$CLUSTER_NAME"
+  mkdir -p "$PROJECT_ROOT/$workspace"
+  create_kube_config
+  cat << DOCKERFILE > "$dockerfile"
+FROM $CONTROL_NODE_IMAGE
+COPY --chown=$(id -u):$(id -g) . /work/x1
+COPY --chown=$(id -u):$(id -g) $workspace/config /work/.kube/config
+DOCKERFILE
+  docker build --tag "icl-ccn:$tag" --file "$dockerfile" "$PROJECT_ROOT"
+}
+
+function delete_ccn() {
+  local tag=$1
+  docker rmi "icl-ccn:$tag" 2> /dev/null || true
+}
+
+function ensure_ccn() {
+  local tag=$1
+  if ! docker inspect "icl-ccn:$tag" &> /dev/null; then
+    create_ccn $tag
+  fi
+}
+
 # TODO: make ports 80 and 443 configurable on host
 function create_kind_cluster() {
-  kind_config="\
+  local workspace="workspace/kind/$CLUSTER_NAME"
+  local kind_config="$PROJECT_ROOT/$workspace/kind.yaml"
+  mkdir -p "$PROJECT_ROOT/$workspace"
+
+  cat << EOF > "$kind_config"
 kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
 nodes:
   - role: control-plane
     image: kindest/node:v1.28.0
+EOF
+
+  if [[ $ICL_INGRESS_HOST_PORTS == "true" ]]; then
+    cat << EOF >> "$kind_config"
     # This works only for one node, see https://kind.sigs.k8s.io/docs/user/ingress/#ingress-nginx
     # With multiple nodes, a more granular control is needed where nginx pod is running.
     extraPortMappings:
       - containerPort: 80
-        hostPort: 80
+        hostPort: $ICL_INGRESS_HTTP_PORT
         protocol: TCP
       - containerPort: 443
-        hostPort: 443
+        hostPort: $ICL_INGRESS_HTTPS_PORT
         protocol: TCP
       # Map Ray client port 10001 to the container port (see nodePort configuration for Ray).
-      # Since it is a default Ray port you may need to change it if you have Ray running on the host.
       - containerPort: 30009
-        hostPort: 10001
+        hostPort: $ICL_INGRESS_RAY_PORT
         protocol: TCP
       # Map clusterNodePort 32001 to the same port on host.
       # This port is used to forward SSH to JupyterHub session for the first user. If you are
       # planning to enable SSH for more than one user add more ports (32002 for the second user, and
       # so on).
       - containerPort: 32001
-        hostPort: 32001
+        hostPort: $ICL_INGRESS_SSH_PORT
         protocol: TCP
-"
+EOF
+  fi
+
   if [[ -v dockerhub_proxy ]]; then
     pass "DockerHub proxy: ${dockerhub_proxy}"
-    kind_config="\
-$kind_config
+    cat << EOF >> "$kind_config"
 containerdConfigPatches:
   - |-
-    [plugins.\"io.containerd.grpc.v1.cri\".registry]
-    [plugins.\"io.containerd.grpc.v1.cri\".registry.mirrors]
-    [plugins.\"io.containerd.grpc.v1.cri\".registry.mirrors.\"docker.io\"]
-    endpoint = [\"${dockerhub_proxy}\"]
-    [plugins.\"io.containerd.grpc.v1.cri\".registry.configs.\"${dockerhub_proxy}\".tls]
+    [plugins."io.containerd.grpc.v1.cri".registry]
+    [plugins."io.containerd.grpc.v1.cri".registry.mirrors]
+    [plugins."io.containerd.grpc.v1.cri".registry.mirrors."docker.io"]
+    endpoint = ["${dockerhub_proxy}"]
+    [plugins."io.containerd.grpc.v1.cri".registry.configs."${dockerhub_proxy}".tls]
       insecure_skip_verify = true
-"
+EOF
   fi
-  kind create cluster --name $CLUSTER_NAME --config=- <<< "$kind_config"
+  kind create cluster --name $CLUSTER_NAME --config="$kind_config"
 }
 
 # execute command on kind cluster node
@@ -160,8 +220,6 @@ function with_proxy() {
     exit 1
   fi
 
-  cluster_node "export DEBIAN_FRONTEND=noninteractive; apt-get update -y; apt-get install -y --no-install-recommends redsocks"
-
   if [[ $proxy_url =~ (https?:\/\/)?([^:]+):([^:]+) ]]; then
     proxy_host="${BASH_REMATCH[2]}"
     proxy_port="${BASH_REMATCH[3]}"
@@ -170,45 +228,25 @@ function with_proxy() {
     fail "Unable to parse proxy URL $proxy_url"
   fi
 
-  redsocks_config="\
-base {
-    log_debug = off;
-    log_info = on;
-    log = \"syslog:daemon\";
-    daemon = on;
-    redirector = iptables;
+  docker cp "$PROJECT_ROOT/scripts/etc/kind/redsocks.sh" "$CLUSTER_NAME-control-plane:/redsocks.sh" > /dev/null
+  cluster_node "/bin/bash /redsocks.sh $proxy_host $proxy_port"
 }
 
-redsocks {
-    local_ip = 0.0.0.0;
-    local_port = 12345;
-    ip = $proxy_host;
-    port = $proxy_port;
-    type = http-connect;
-}
-"
-  cluster_node "echo '$redsocks_config' > /etc/redsocks.conf"
-  cluster_node "/etc/init.d/redsocks restart"
-
-  cluster_node "iptables -w 60 -t nat -N REDSOCKS"
-
-  for nw in $REDSOCKS_SKIP; do
-    cluster_node "iptables -w 60 -t nat -A REDSOCKS -d $nw -j RETURN"
-  done
-
-  cluster_node "iptables -w 60 -t nat -A REDSOCKS -p tcp --dport 80 -j REDIRECT --to-ports 12345"
-  cluster_node "iptables -w 60 -t nat -A REDSOCKS -p tcp --dport 443 -j REDIRECT --to-ports 12345"
-
-  cluster_node "iptables -w 60 -t nat -A PREROUTING -p tcp --dport 80 -j REDSOCKS"
-  cluster_node "iptables -w 60 -t nat -A PREROUTING -p tcp --dport 443 -j REDSOCKS"
+function with_no_proxy() {
+  docker cp "$PROJECT_ROOT/scripts/etc/kind/redsocks.sh" "$CLUSTER_NAME-control-plane:/redsocks.sh" > /dev/null
+  cluster_node "/bin/bash /redsocks.sh"
 }
 
 # Update CoreDNS configuration file to resolve external endpoints in cluster correctly
 function with_corefile() {
   CONTROl_PLANE_IP=$(docker inspect --format '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' "$CLUSTER_NAME-control-plane")
   pass "Cluster IP: $CONTROl_PLANE_IP"
-  control_node "python -m scripts.kubernetes.coredns $CONTROl_PLANE_IP $ICL_INGRESS_DOMAIN"
+  control_node python -m scripts.kubernetes.coredns $CONTROl_PLANE_IP $ICL_INGRESS_DOMAIN
 }
+
+if [[ $ICL_BUILD_CCN == "true" ]]; then
+  ICL_LOCAL_CCN="icl-ccn:$(ccn_tag)"
+fi
 
 if [[ " $@ " =~ " --help " ]]; then
   cat <<EOF
@@ -225,6 +263,8 @@ Options:
   --with-clearml      Deploy a cluster with ClearML
   --with-dask         Deploy a cluster with Dask
   --with-cert-manager Deploy a cluster with cert-manager
+  --with-proxy        Enable HTTP/HTTPS proxy for the existing cluster (uses https_proxy or http_proxy)
+  --with-no-proxy     Disable HTTP/HTTPS proxy for the existing cluster
   --delete            Delete cluster $CLUSTER_NAME
 EOF
   exit 0
@@ -263,6 +303,9 @@ fi
 
 if [[ " $@ " =~ " --delete " ]]; then
   kind delete cluster --name $CLUSTER_NAME
+  if [[ $ICL_BUILD_CCN == "true" ]]; then
+    delete_ccn $(ccn_tag)
+  fi
   exit 0
 fi
 
@@ -271,16 +314,37 @@ if [[ " $@ " =~ " --with-proxy " ]]; then
   exit 0
 fi
 
+if [[ " $@ " =~ " --with-no-proxy " ]]; then
+  with_no_proxy
+  exit 0
+fi
+
 if [[ " $@ " =~ " --with-corefile " ]]; then
   with_corefile
   exit 0
 fi
 
+if [[ " $@ " =~ " --create-ccn " ]]; then
+  create_ccn $(ccn_tag)
+  exit 0
+fi
+
+if [[ " $@ " =~ " --delete-ccn " ]]; then
+  delete_ccn $(ccn_tag)
+  exit 0
+fi
+
 if kind get clusters | grep -qE "^${CLUSTER_NAME}\$" &> /dev/null; then
   pass "Cluster $CLUSTER_NAME is up"
+  if [[ $ICL_BUILD_CCN == "true" ]]; then
+    ensure_ccn $(ccn_tag)
+  fi
 else
   pass "Cluster $CLUSTER_NAME is not up, will attempt to create a new cluster"
   create_kind_cluster
+  if [[ $ICL_BUILD_CCN == "true" ]]; then
+    ensure_ccn $(ccn_tag)
+  fi
   if [[ " $@ " =~ " --with-images " ]]; then
     load_images
   fi
@@ -310,8 +374,7 @@ if [[ " $@ " =~ " --with-cert-manager " ]]; then
 fi
 
 with_corefile
-control_node "terraform -chdir=terraform/icl init -upgrade -input=false"
-control_node "terraform -chdir=terraform/icl apply -input=false -auto-approve ${terraform_extra_args[*]}"
+control_node "terraform -chdir=terraform/icl init -upgrade -input=false && terraform -chdir=terraform/icl apply -input=false -auto-approve ${terraform_extra_args[*]}"
 
 echo
 get_admin_token

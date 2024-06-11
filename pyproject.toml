@@ -1,6 +1,6 @@
 [project]
 name = "infractl"
-version = "0.0.3"
+version = "0.0.4"
 description = "API driven Machine Learning suite"
 license = {file = "LICENSE"}
 readme = "README.md"
@@ -27,11 +27,11 @@ dependencies = [
     "pydantic<2.0.0",
     "python-docker",
     "s3fs>=2023.9.2",
-    "prefect==2.14.9",
+    "prefect==2.16.5",
 ]
 
 [project.urls]
-"Homepage" = "https://intel-ai.github.io/icl"
+"Homepage" = "https://aregm.github.io/icl"
 "Source" = "https://github.com/intel-ai/icl"
 
 [project.scripts]

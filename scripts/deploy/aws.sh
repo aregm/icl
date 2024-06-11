@@ -4,6 +4,11 @@
 
 set -e
 
+# GLOBAL VARIABLES
+declare -g GPU_ENABLED
+declare -g GPU_TYPE
+declare -g JUPYTERHUB_EXTRA_RESOURCE_LIMITS
+
 # Default values that can be overriden by corresponding environment variables
 : ${X1_CLUSTER_NAME:="x1-$USER"}
 : ${AWS_DEFAULT_REGION:="us-east-1"}
@@ -11,6 +16,8 @@ set -e
 : ${X1_EXTERNALDNS_ENABLED:="false"}
 : ${CONTROL_NODE_IMAGE:="pbchekin/icl-ccn-aws:0.0.1"}
 : ${ICL_INGRESS_DOMAIN:="test.x1infra.com"}
+: ${GPU_MODEL:="none"}
+: ${ICL_AWS_INSTANCE_TYPE:="t3.xlarge"}
 
 # https://stackoverflow.com/questions/59895/getting-the-source-directory-of-a-bash-script-from-within
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
@@ -58,6 +65,18 @@ cluster_version = "$X1_CLUSTER_VERSION"
 EOF
 }
 
+function eks_terraform_args()
+{
+  terraform_extra_args=(
+    -var gpu_type="${GPU_TYPE}"
+    -var instance_type="${ICL_AWS_INSTANCE_TYPE}"
+  )
+  if [[ -v X1_TERRAFORM_DISABLE_LOCKING || -v ICL_TERRAFORM_DISABLE_LOCKING ]]; then
+    terraform_extra_args+=( -lock=false )
+  fi
+  echo "${terraform_extra_args[*]}"
+}
+
 function x1_terraform_args() {
   terraform_extra_args=(
     -var prometheus_enabled=false
@@ -69,13 +88,19 @@ function x1_terraform_args() {
     -var ray_load_balancer_enabled=true # dedicated AWS CLB for Ray client endpoint on port 80
     -var use_node_ip_for_user_ports=true
     -var use_external_node_ip_for_user_ports=true
+    -var jupyterhub_extra_resource_limits="${JUPYTERHUB_EXTRA_RESOURCE_LIMITS}"
+    -var gpu_enabled="${GPU_ENABLED}"
+    -var gpu_type="${GPU_TYPE}"
   )
+  if [[ -v X1_TERRAFORM_DISABLE_LOCKING ]]; then
+    terraform_extra_args+=( -lock=false )
+  fi
   echo "${terraform_extra_args[*]}"
 }
 
 
 function deploy_eks() {
-  control_node "terraform -chdir=$WORKSPACE/terraform/aws/ apply -input=false -auto-approve"
+  control_node "terraform -chdir=$WORKSPACE/terraform/aws/ apply -input=false -auto-approve $(eks_terraform_args)"
 }
 
 function update_config() {
@@ -84,7 +109,7 @@ function update_config() {
 
 # Delete cluster
 function delete_eks() {
-  control_node "terraform -chdir=$WORKSPACE/terraform/aws/ destroy -input=false -auto-approve"
+  control_node "terraform -chdir=$WORKSPACE/terraform/aws/ destroy -input=false -auto-approve $(eks_terraform_args)"
 }
 
 # Delete workloads, cluster and workspace
@@ -111,6 +136,8 @@ function render_workspace() {
 
 # This script is designed to work in the project root
 cd "$PROJECT_ROOT"
+allowed=(--help --console --check --render --deploy-eks --deploy-x1 --config --delete --delete-x1 --delete-eks --start-proxy --stop-proxy)
+check_args "$@"
 
 if [[ " $@ " =~ " --help " ]]; then
   show_help
@@ -136,11 +163,13 @@ if [[ " $@ " =~ " --check " ]]; then
 fi
 
 if [[ " $@ " =~ " --render " ]]; then
+  set_gpu_type
   render_workspace
   exit 0
 fi
 
 if [[ " $@ " =~ " --deploy-eks " ]]; then
+  set_gpu_type
   deploy_eks
   exit 0
 fi
@@ -151,6 +180,7 @@ if [[ " $@ " =~ " --config " ]]; then
 fi
 
 if [[ " $@ " =~ " --deploy-x1 " ]]; then
+  set_gpu_type
   deploy_x1
   exit 0
 fi
@@ -190,6 +220,7 @@ if [[ " $@ " =~ " --stop-proxy " ]]; then
   exit 0
 fi
 
+set_gpu_type
 show_parameters
 render_workspace
 deploy_eks

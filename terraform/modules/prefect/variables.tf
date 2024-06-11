@@ -12,7 +12,7 @@ variable "agent_namespace" {
 
 variable "chart_version" {
   description = "Version of Prefect Helm chart"
-  default = "2023.09.07"
+  default = "2024.4.4201250"
   type = string
 }
 
