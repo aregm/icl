@@ -1,7 +1,7 @@
 variable "bastion_name" {
   description = "Name of bastion host for SSH/RDP traffic"
   type = string
-  default = "bastion-velasco"
+  default = "bastion-icl"
 }
 
 variable "bastion_machine_type" {
@@ -22,6 +22,11 @@ variable "bastion_public_key_content" {
 
 variable "bastion_username" {
   description = "Username for the bastion host."
-  type        = string
-  default     = "bastion_user"
+  type = string
+  default = "bastion_user"
+}
+
+variable "bastion_tags" {
+  description = "Tags associated with bastion host for applying firewall rules"
+  type = list(string)
 }

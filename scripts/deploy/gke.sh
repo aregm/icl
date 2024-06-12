@@ -113,6 +113,12 @@ create_bastion = "$CREATE_BASTION"
 bastion_public_key_content = "$bastion_public_key_content"
 bastion_username = "$USER"
 bastion_source_ranges = $bastion_source_ranges_list
+bastion_name = "bastion-icl-${USER}"
+bastion_source_tags = ["bastion-${USER}"]
+bastion_tags = ["bastion-${USER}"]
+cluster_tags = ["gke-cluster-${USER}"]
+ssh_rule_name = "allow-ssh-${USER}"
+internal_rule_name = "allow-internal-${USER}"
 EOF
 }
 

@@ -21,6 +21,7 @@ module "bastion-host" {
   bastion_machine_type       = var.bastion_machine_type
   bastion_public_key_content = var.bastion_public_key_content
   bastion_username           = var.bastion_username
+  bastion_tags               = var.bastion_tags
   gcp_zone                   = var.gcp_zone
 }
 
@@ -28,6 +29,10 @@ module "firewall-rule-bastion-host" {
   count                      = var.create_bastion ? 1: 0
   source                     = "./modules/firewall-rule-bastion-ports"
   bastion_source_ranges      = var.bastion_source_ranges
+  bastion_tags               = var.bastion_tags
+  cluster_tags               = var.cluster_tags
+  ssh_rule_name              = var.ssh_rule_name
+  internal_rule_name         = var.internal_rule_name
 }
 
 module "icl-cluster" {

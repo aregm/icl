@@ -1,5 +1,5 @@
 resource "google_compute_firewall" "bastion-ssh" {
-  name    = "allow-ssh"
+  name    = var.ssh_rule_name
   network = "default"
  
   allow {
@@ -8,11 +8,11 @@ resource "google_compute_firewall" "bastion-ssh" {
   }
  
   source_ranges = var.bastion_source_ranges
-  target_tags   = ["bastion"]
+  target_tags   = var.bastion_tags
 }
  
 resource "google_compute_firewall" "internal" {
-  name    = "allow-internal"
+  name    = var.internal_rule_name
   network = "default"
  
   allow {
@@ -20,6 +20,6 @@ resource "google_compute_firewall" "internal" {
     ports    = ["0-65535"]
   }
  
-  source_tags = ["bastion"]
-  target_tags = ["gke-cluster"]
+  source_tags = var.bastion_tags
+  target_tags = var.cluster_tags
 }

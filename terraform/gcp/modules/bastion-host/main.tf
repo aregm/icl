@@ -20,5 +20,5 @@ resource "google_compute_instance" "bastion" {
     ssh-keys = "${var.bastion_username}:${var.bastion_public_key_content}"
   }
  
-  tags = ["bastion"]
+  tags = var.bastion_tags
 }
