@@ -334,3 +334,8 @@ variable "jupyterhub_extra_resource_limits" {
   type = string
   default = ""
 }
+
+variable "deployment_type" {
+  description = "Deployment location e.g. kind, gcp, aws, azure. Affects execution of specific modules."
+  type = string 
+}

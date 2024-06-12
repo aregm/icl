@@ -91,6 +91,7 @@ function x1_terraform_args() {
     -var jupyterhub_extra_resource_limits="${JUPYTERHUB_EXTRA_RESOURCE_LIMITS}"
     -var gpu_enabled="${GPU_ENABLED}"
     -var gpu_type="${GPU_TYPE}"
+    -var deployment_type="aws"
   )
   if [[ -v X1_TERRAFORM_DISABLE_LOCKING ]]; then
     terraform_extra_args+=( -lock=false )

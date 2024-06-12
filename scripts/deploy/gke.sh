@@ -114,7 +114,6 @@ bastion_public_key_content = "$bastion_public_key_content"
 bastion_username = "$USER"
 bastion_source_ranges = $bastion_source_ranges_list
 bastion_name = "bastion-icl-${USER}"
-bastion_source_tags = ["bastion-${USER}"]
 bastion_tags = ["bastion-${USER}"]
 cluster_tags = ["gke-cluster-${USER}"]
 ssh_rule_name = "allow-ssh-${USER}"
@@ -174,6 +173,7 @@ function x1_terraform_args() {
     -var jupyterhub_extra_resource_limits="${JUPYTERHUB_EXTRA_RESOURCE_LIMITS}"
     -var use_node_ip_for_user_ports=true
     -var use_external_node_ip_for_user_ports=true
+    -var deployment_type="gcp"
   )
   if [[ -v X1_TERRAFORM_DISABLE_LOCKING || -v ICL_TERRAFORM_DISABLE_LOCKING ]]; then
     terraform_extra_args+=( -lock=false )

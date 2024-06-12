@@ -359,6 +359,7 @@ terraform_extra_args=(
   -var prometheus_enabled=false         # Disable prometheus stack to make footprint smaller
   -var ingress_domain="$ICL_INGRESS_DOMAIN"
   -var externaldns_enabled="$X1_EXTERNALDNS_ENABLED"
+  -var deployment_type="kind"
 )
 
 if [[ " $@ " =~ " --with-clearml " ]]; then
