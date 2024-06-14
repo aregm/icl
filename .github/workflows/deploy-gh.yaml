@@ -19,6 +19,8 @@ jobs:
   nodes:
     needs: define-nodes
     runs-on: ubuntu-latest
+    env:
+      nodes: "[0, 1, 2]"
 
     strategy:
       matrix:
