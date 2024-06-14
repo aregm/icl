@@ -30,6 +30,7 @@ jobs:
           sudo usermod -aG libvirt runner
 
       - name: Run vagrant
+        run: |
           vagrant up
           vagrant ssh -c "echo 'hello world!'"
 
