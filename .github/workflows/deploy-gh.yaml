@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: |
-        echo "nodes='"$(python -c "print(list(range($num_nodes)))")"'" >>"$GITHUB_ENV"
+          echo "nodes='"$(python -c "print(list(range($num_nodes)))")"'" >>"$GITHUB_ENV"
 
   nodes:
     needs: define-nodes
