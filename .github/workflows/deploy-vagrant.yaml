@@ -3,12 +3,9 @@ name: Multi node cluster with Vagrant, Ubuntu, Kubespray
 # Controls when the workflow will run
 on:
   push:
-    branches: [ main ]
+    #    branches: [ main ]
 
   workflow_dispatch:
-  push:
-    paths:
-      - .github/workflows/deploy-vagrant.yaml    
 
 jobs:
   deploy:
