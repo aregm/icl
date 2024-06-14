@@ -10,12 +10,16 @@ env:
   num_nodes: 4
 
 jobs:
-  define_nodes:
-  steps:
-     run: |
-       echo "nodes='"$(python -c "print(list(range($num_nodes)))")"'" >>"$GITHUB_ENV"
+  define-nodes:
+    runs-on: ubuntu-latest
+    steps:
+      run: |
+        echo "nodes='"$(python -c "print(list(range($num_nodes)))")"'" >>"$GITHUB_ENV"
 
   nodes:
+    needs: define-nodes
+    runs-on: ubuntu-latest
+
     strategy:
       matrix:
         id: ${{ fromJSON(env.nodes) }}
