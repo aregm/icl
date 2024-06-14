@@ -19,7 +19,7 @@ jobs:
           echo "nodes='"$(python -c "print(list(range($num_nodes)))")"'" >>"$GITHUB_OUTPUT"
 
   nodes:
-    needs: define-nodes
+    needs: define-matrix
     runs-on: ubuntu-latest
 
     strategy:
