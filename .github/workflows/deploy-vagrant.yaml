@@ -30,10 +30,9 @@ jobs:
           sudo usermod -aG libvirt runner
           set -vx
           #          sudo systemctl start libvirtd.service
-          sudo journalctl -u libvirtd.service
           kvm-ok
-          vagrant up
-          vagrant ssh -c "echo 'hello world!'"
+          sudo vagrant up
+          sudo vagrant ssh -c "echo 'hello world!'"
 
       - name: Deploy X1 to Vagrant VMs
         run: ./scripts/ci/vagrant.sh
