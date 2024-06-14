@@ -27,12 +27,10 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install vagrant qemu-kvm libvirt-daemon-system
-          sudo usermod -aG libvirt runner
+          sudo usermod -aG libvirt,kvm runner
           set -vx
-          #          sudo systemctl start libvirtd.service
-          kvm-ok
-          sudo vagrant up
-          sudo vagrant ssh -c "echo 'hello world!'"
+          vagrant up
+          vagrant ssh -c "echo 'hello world!'"
 
       - name: Deploy X1 to Vagrant VMs
         run: ./scripts/ci/vagrant.sh
