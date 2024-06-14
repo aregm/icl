@@ -1,0 +1,53 @@
+# Generated from Kapitan target ci
+
+calico_endpoint_to_host_action: ACCEPT
+calico_ipip_mode: Never
+calico_network_backend: bird
+calico_vxlan_mode: Never
+containerd_registries_mirrors:
+- mirrors:
+  - capabilities:
+    - pull
+    - resolve
+    host: https://dockerhubcache.caas.intel.com
+    skip_verify: true
+  prefix: docker.io
+containerd_use_config_path: true
+dns_etchosts: '{{ ansible_default_ipv4.address }} {{ ingress_domain }}
+
+  {{ ansible_default_ipv4.address }} hub.{{ ingress_domain }}
+
+  {{ ansible_default_ipv4.address }} jupyter.{{ ingress_domain }}
+
+  {{ ansible_default_ipv4.address }} prefect.{{ ingress_domain }}
+
+  {{ ansible_default_ipv4.address }} ray.{{ ingress_domain }}
+
+  {{ ansible_default_ipv4.address }} registry.{{ ingress_domain }}
+
+  {{ ansible_default_ipv4.address }} s3.{{ ingress_domain }}
+
+  '
+docker_image_repo: dockerhubcache.caas.intel.com
+download_container: false
+ingress_domain: localtest.me
+kube_pods_subnet: 192.168.128.0/18
+kube_service_addresses: 192.168.64.0/18
+ntp_enabled: true
+ntp_manage_config: true
+ntp_servers:
+- corp.intel.com
+vm_mode: true
+
+# Overwrite default Terraform variables. Keeping this for compatibility with the older installation
+# method. New method uses a dedicated terraform.tfvars file instead.
+# For a complete list of variables and their default values see x1/terraform/variables.tf.
+# Note that this variable is deprecated, use a generated "terraform.tfvars.json" instead.
+terraform_tfvars: |
+  ingress_domain = "localtest.me"
+  prefect_api_url = "http://prefect.localtest.me/api"
+  jupyterhub_pre_puller_enabled = false
+  prometheus_enabled = false
+  kubernetes_dashboard_enabled = false
+  use_node_ip_for_user_ports = true
+  use_external_node_ip_for_user_ports = true
