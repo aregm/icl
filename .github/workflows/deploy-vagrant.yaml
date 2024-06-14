@@ -2,28 +2,29 @@ name: Multi node cluster with Vagrant, Ubuntu, Kubespray
 
 # Controls when the workflow will run
 on:
-  # Triggers the workflow on push or pull request events but only for the main branch
   push:
     branches: [ main ]
 
-  # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
+  push:
+    paths:
+      - .github/workflows/deploy-vagrant.yaml    
 
 jobs:
   deploy:
-    runs-on:
-      - self-hosted
-      - libvirt-vagrant
+    runs-on: ubuntu-latest
+    #      - self-hosted
+    #      - libvirt-vagrant
     steps:
       - name: Checkout x1 repository
         uses: actions/checkout@v4
 
-      - name: Checkout x1-cluster-profiles repository
-        uses: actions/checkout@v4
-        with:
-          repository: intel-sandbox/x1-cluster-profiles
-          path: x1-cluster-profiles
-          token: ${{ secrets.X1_GITHUB_TOKEN }}
+#      - name: Checkout x1-cluster-profiles repository
+#        uses: actions/checkout@v4
+#        with:
+#          repository: intel-sandbox/x1-cluster-profiles
+#          path: x1-cluster-profiles
+#          token: ${{ secrets.X1_GITHUB_TOKEN }}
 
       - name: Deploy X1 to Vagrant VMs
         run: ./scripts/ci/vagrant.sh
