@@ -16,6 +16,7 @@ jobs:
       nodes: $
     steps:
       - run: |
+          set -vx
           echo "nodes='"$(python -c "print(list(range($num_nodes)))")"'" >>"$GITHUB_OUTPUT"
 
   nodes:
