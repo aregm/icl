@@ -27,8 +27,8 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install vagrant vagrant-libvirt libvirt-daemon-system
-          sudo usermod -aG libvirt,libvirt-qemu runner
-          sudo cat /etc/group
+          sudo usermod -aG libvirt runner
+          sudo systemctl restart libvirtd
 
       - name: Run vagrant
         run: |
