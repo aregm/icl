@@ -28,6 +28,8 @@ jobs:
           sudo apt-get update
           sudo apt-get install vagrant qemu-kvm libvirt-daemon-system
           sudo usermod -aG libvirt runner
+          set -vx
+          kvm-ok
           vagrant up
           vagrant ssh -c "echo 'hello world!'"
 
