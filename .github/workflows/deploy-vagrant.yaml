@@ -27,6 +27,9 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install vagrant qemu-kvm libvirt-daemon-system
+          set -vx
+          sudo ls -l /var/run/libvirt/libvirt-sock
+          $USER
           vagrant up
           vagrant ssh -c "echo 'hello world!'"
 
