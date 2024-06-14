@@ -26,8 +26,8 @@ jobs:
       - name: Install deps
         run: |
           sudo apt-get update
-          sudo apt-get install vagrant
-          vagrant up --provider virtualbox
+          sudo apt-get install vagrant libvirt
+          vagrant up
           vagrant ssh -c "echo 'hello world!'"
 
       - name: Deploy X1 to Vagrant VMs
