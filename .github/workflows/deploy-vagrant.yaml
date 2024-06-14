@@ -32,7 +32,7 @@ jobs:
 
       - name: Run vagrant
         run: |
-          vagrant up
+          VAGRANT_LOG=loud vagrant up
           vagrant ssh -c "echo 'hello world!'"
 
       - name: Deploy X1 to Vagrant VMs
