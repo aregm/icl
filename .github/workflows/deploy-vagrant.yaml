@@ -29,16 +29,11 @@ jobs:
           sudo apt-get update
           sudo apt-get install vagrant vagrant-libvirt libvirt-daemon-system
           sudo usermod -aG libvirt runner
-          sudo ls -dl /var/run/libvirt/
-          sudo ls -l /var/run/libvirt/
-          sudo systemctl restart libvirtd
-          sudo ls -l /var/run/libvirt/
 
       - name: Run vagrant
         run: |
-          groups
-          bash -c 'VAGRANT_LOG=debug vagrant up'
-          vagrant ssh -c "echo 'hello world!'"
+          su -l runner vagrant up
+          su -l runner vagrant ssh -c "echo 'hello world!'"
 
       - name: Deploy X1 to Vagrant VMs
         run: ./scripts/ci/vagrant.sh
