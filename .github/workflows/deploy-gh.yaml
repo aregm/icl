@@ -1,0 +1,26 @@
+name: Multi node cluster with Vagrant, Ubuntu, Kubespray
+
+on:
+  push:
+    #    branches: [ main ]
+
+  workflow_dispatch:
+
+env:
+  num_nodes: 4
+
+jobs:
+  define_nodes:
+  steps:
+     run: |
+       echo "nodes='"$(python -c "print(list(range($num_nodes)))")"'" >>"$GITHUB_ENV"
+
+  nodes:
+    strategy:
+      matrix:
+        id: ${{ fromJSON(env.nodes) }}
+
+    steps:
+      - name: Print
+        run: |
+          echo ${{ matrix.id }}
