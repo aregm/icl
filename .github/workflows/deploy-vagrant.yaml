@@ -32,8 +32,9 @@ jobs:
 
       - name: Run vagrant
         run: |
-          su -l runner vagrant up
-          su -l runner vagrant ssh -c "echo 'hello world!'"
+          newgrp libvirt
+          vagrant up
+          vagrant ssh -c "echo 'hello world!'"
 
       - name: Deploy X1 to Vagrant VMs
         run: ./scripts/ci/vagrant.sh
