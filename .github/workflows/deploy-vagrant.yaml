@@ -31,7 +31,7 @@ jobs:
         run: |
           sudo usermod -aG libvirt runner
           exec newgrp libvirt
-          ./scripts/ci/vagrant.sh
+          bash ./scripts/ci/vagrant.sh
 
       - name: Upload logs
         if: always()
