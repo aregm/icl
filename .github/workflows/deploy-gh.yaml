@@ -8,6 +8,7 @@ on:
 
 env:
   num_nodes: 4
+  testd: $
 
 jobs:
   define-matrix:
@@ -19,6 +20,7 @@ jobs:
           set -vx
           nodes=$(python -c "print(list(range($num_nodes)))")
           echo nodes="$nodes" >>"$GITHUB_OUTPUT"
+          echo ${{ env.testd }}
 
   nodes:
     needs: define-matrix
