@@ -27,7 +27,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install vagrant
-          vagrant up
+          vagrant up --provider virtualbox
           vagrant ssh -c "echo 'hello world!'"
 
       - name: Deploy X1 to Vagrant VMs
