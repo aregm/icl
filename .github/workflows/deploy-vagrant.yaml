@@ -19,16 +19,11 @@ jobs:
           sudo apt-get update
           sudo apt-get install vagrant vagrant-libvirt libvirt-daemon-system
 
-      - name: Run vagrant
-        run: |
+      - name: Deploy X1 to Vagrant VMs
+        run: 
           sudo usermod -aG libvirt runner
           exec newgrp libvirt
-          groups
-          vagrant up
-          vagrant ssh -c "echo 'hello world!'"
-
-      - name: Deploy X1 to Vagrant VMs
-        run: ./scripts/ci/vagrant.sh
+          ./scripts/ci/vagrant.sh
 
       - name: Upload logs
         if: always()
