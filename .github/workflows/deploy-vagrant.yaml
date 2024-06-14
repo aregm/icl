@@ -23,6 +23,11 @@ jobs:
 #          path: x1-cluster-profiles
 #          token: ${{ secrets.X1_GITHUB_TOKEN }}
 
+      - name: Install deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install vagrant
+
       - name: Deploy X1 to Vagrant VMs
         run: ./scripts/ci/vagrant.sh
 
