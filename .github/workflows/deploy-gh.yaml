@@ -17,7 +17,8 @@ jobs:
     steps:
       - run: |
           set -vx
-          echo 'nodes="'$(python -c "print(list(range($num_nodes)))")'"' >>"$GITHUB_OUTPUT"
+          $nodes=$(python -c "print(list(range($num_nodes)))")
+          echo nodes="$nodes" >>"$GITHUB_OUTPUT"
 
   nodes:
     needs: define-matrix
