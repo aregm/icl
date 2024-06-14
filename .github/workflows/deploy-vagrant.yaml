@@ -26,9 +26,8 @@ jobs:
       - name: Install deps
         run: |
           sudo apt-get update
-          sudo apt-get install vagrant qemu-kvm libvirt-daemon-system
+          sudo apt-get install vagrant vagrant-libvirt qemu-kvm libvirt-daemon-system
           sudo usermod -aG libvirt runner
-          vagrant plugin install vagrant-libvirt
           set -vx
 
           vagrant up
