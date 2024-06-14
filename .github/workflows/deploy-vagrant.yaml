@@ -19,8 +19,16 @@ jobs:
           sudo apt-get update
           sudo apt-get install vagrant vagrant-libvirt libvirt-daemon-system
 
+    - name: Cache Vagrant boxes
+      uses: actions/cache@v4
+      with:
+        path: ~/.vagrant.d/boxes
+        key: ${{ runner.os }}-vagrant-${{ hashFiles('vagrant/Vagrantfile') }}
+        restore-keys: |
+          ${{ runner.os }}-vagrant-
+
       - name: Deploy X1 to Vagrant VMs
-        run: 
+        run: |
           sudo usermod -aG libvirt runner
           exec newgrp libvirt
           ./scripts/ci/vagrant.sh
