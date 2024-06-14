@@ -13,7 +13,7 @@ jobs:
   define-nodes:
     runs-on: ubuntu-latest
     steps:
-      run: |
+      - run: |
         echo "nodes='"$(python -c "print(list(range($num_nodes)))")"'" >>"$GITHUB_ENV"
 
   nodes:
@@ -25,6 +25,5 @@ jobs:
         id: ${{ fromJSON(env.nodes) }}
 
     steps:
-      - name: Print
-        run: |
+      - run: |
           echo ${{ matrix.id }}
