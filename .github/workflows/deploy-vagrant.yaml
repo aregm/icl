@@ -27,6 +27,8 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install vagrant
+          vagrant up
+          vagrant ssh -c "echo 'hello world!'"
 
       - name: Deploy X1 to Vagrant VMs
         run: ./scripts/ci/vagrant.sh
