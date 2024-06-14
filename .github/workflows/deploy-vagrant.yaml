@@ -29,9 +29,10 @@ jobs:
 
       - name: Deploy X1 to Vagrant VMs
         run: |
+          set -vx
           sudo usermod -aG libvirt runner
           exec newgrp libvirt
-          bash ./scripts/ci/vagrant.sh
+          bash -vx ./scripts/ci/vagrant.sh
 
       - name: Upload logs
         if: always()
