@@ -36,6 +36,7 @@ jobs:
 
       - name: Run vagrant
         run: |
+          groups
           bash -c 'VAGRANT_LOG=debug vagrant up'
           vagrant ssh -c "echo 'hello world!'"
 
