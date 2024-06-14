@@ -28,13 +28,9 @@ jobs:
           sudo apt-get update
           sudo apt-get install vagrant vagrant-libvirt qemu-kvm libvirt-daemon-system
           sudo usermod -aG libvirt runner
-          set -vx
-          sudo ls -ld /var/run/libvirt/libvirt-sock
-          ls -l /var/run/libvirt/libvirt-sock
 
-          vagrant up &
-          ps -ef
-          wait
+      - name: Run vagrant
+          vagrant up
           vagrant ssh -c "echo 'hello world!'"
 
       - name: Deploy X1 to Vagrant VMs
