@@ -40,6 +40,7 @@ jobs:
 
       - run: |
           systemctl status sshd
+          ssh $(hostname -i) echo hello
           sleep 200
 
 
@@ -61,11 +62,13 @@ jobs:
 
       - run: |
           set -vx
-          ls -l
           echo ${{ matrix.id }}
           ip=$(cat control-node-ip.txt)
+
           mkdir .ssh
+          chmod 700 .ssh
+          chmod 600 id_rsa.pub
           mv id_rsa.pub .ssh/
-          ping $ip
+
           ssh $ip echo hello
 
