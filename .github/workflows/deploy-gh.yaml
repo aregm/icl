@@ -65,5 +65,6 @@ jobs:
           ip=$(cat control-node-ip.txt)
           mkdir .ssh
           mv id_rsa.pub .ssh/
+          ping $ip
           ssh $ip echo hello
 
