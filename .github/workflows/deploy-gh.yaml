@@ -20,7 +20,7 @@ jobs:
           nodes=$(python -c "print(list(range($num_nodes)))")
           echo nodes="$nodes" >>"$GITHUB_OUTPUT"
       - run: |
-          echo ${{ fromJSON(needs.define-matrix.outputs.nodes) }}
+          echo ${{ fromJSON('[0, 1, 2]') }}
 
   nodes:
     needs: define-matrix
