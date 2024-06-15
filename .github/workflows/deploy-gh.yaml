@@ -39,6 +39,7 @@ jobs:
             id_rsa.pub
 
       - run: |
+          systemctl status sshd
           sleep 200
 
 
