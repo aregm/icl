@@ -18,10 +18,23 @@ jobs:
       - id: nodes
         run: |
           nodes=$(python -c "print(list(range($num_nodes)))")
-          echo nodes="$nodes" >>"$GITHUB_OUTPUT"
+          echo nodes="$nodes" >>$GITHUB_OUTPUT
+
+  control-node:
+    runs-on: ubuntu-latest
+    outputs:
+      control-node-ip: ${{ steps.ip.outputs.ip }}
+
+    steps:
+      - id: ip
+        run: |
+          echo ip=$(hostname -i) >>$GITHUB_OUTPUT
+
+      - run: |
+          sleep 200
 
   nodes:
-    needs: define-matrix
+    needs: [define-matrix, control-node]
     runs-on: ubuntu-latest
 
     strategy:
@@ -30,16 +43,8 @@ jobs:
 
     steps:
       - run: |
+          set -vx
           echo ${{ matrix.id }}
+          echo ${{ needs.control-node.outputs.control-node-ip }}
           hostname -i
-
-  control-node:
-    runs-on: ubuntu-latest
-
-    steps:
-      - run: |
-          hostname -i
-
-
-
 
