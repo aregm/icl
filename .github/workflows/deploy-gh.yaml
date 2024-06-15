@@ -1,4 +1,4 @@
-name: Multi node cluster with Vagrant, Ubuntu, Kubespray
+name: Multi node cluster with managed runners, Ubuntu, Kubespray
 
 on:
   push:
@@ -22,19 +22,23 @@ jobs:
 
   control-node:
     runs-on: ubuntu-latest
-    outputs:
-      control-node-ip: ${{ steps.ip.outputs.ip }}
 
     steps:
-      - id: ip
-        run: |
-          echo ip=$(hostname -i) >>$GITHUB_OUTPUT
+      - run: |
+          hostname -i >control-node-ip.txt
+
+      - name: Upload control node IP
+        uses: actions/upload-artifact@v4
+        with:
+          name: control-node-ip.txt
+          path: control-node-ip.txt
 
       - run: |
           sleep 200
 
+
   nodes:
-    needs: [define-matrix, control-node]
+    needs: [define-matrix]
     runs-on: ubuntu-latest
 
     strategy:
@@ -43,8 +47,15 @@ jobs:
 
     steps:
       - run: |
+          sleep 60
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: control-node-ip.txt
+
+      - run: |
           set -vx
           echo ${{ matrix.id }}
-          echo ${{ needs.control-node.outputs.control-node-ip }}
+          cat control-node-ip.txt
           hostname -i
 
