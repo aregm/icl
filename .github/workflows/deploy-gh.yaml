@@ -20,14 +20,6 @@ jobs:
           nodes=$(python -c "print(list(range($num_nodes)))")
           echo nodes="$nodes" >>"$GITHUB_OUTPUT"
 
-  test_nodes:
-    needs: define-matrix
-    runs-on: ubuntu-latest
-    steps:
-      - run: |
-          echo ${{ needs.define-matrix.outputs.nodes }}
-
-
   nodes:
     needs: define-matrix
     runs-on: ubuntu-latest
@@ -39,3 +31,15 @@ jobs:
     steps:
       - run: |
           echo ${{ matrix.id }}
+          ip addr
+
+  control-node:
+    runs-on: ubuntu-latest
+
+    steps:
+      - run: |
+        ip addr
+
+
+
+
