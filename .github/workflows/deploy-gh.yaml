@@ -39,9 +39,9 @@ jobs:
             id_rsa.pub
 
       - run: |
-          systemctl status sshd
           ssh -o StrictHostKeyChecking=no $(hostname -i) echo hello
           sudo iptables -S
+          ps -ef
           sleep 200
 
 
