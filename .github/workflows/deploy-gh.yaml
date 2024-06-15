@@ -17,10 +17,10 @@ jobs:
       nodes: $
     steps:
       - run: |
-          set -vx
           nodes=$(python -c "print(list(range($num_nodes)))")
           echo nodes="$nodes" >>"$GITHUB_OUTPUT"
-          echo ${{ env.testd }}
+      - run: |
+          echo ${{ fromJSON(needs.define-matrix.outputs.nodes) }}
 
   nodes:
     needs: define-matrix
