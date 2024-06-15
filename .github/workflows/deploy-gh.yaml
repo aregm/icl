@@ -27,7 +27,7 @@ jobs:
       - run: |
           hostname -i >control-node-ip.txt
           ssh-keygen -q -b 2048 -t rsa -N '' -C 'cluster key' -f ~/.ssh/id_rsa
-
+          cp ~/.ssh/id_rsa.pub ~/.ssh/authorized_keys
 
       - name: Upload control node IP
         uses: actions/upload-artifact@v4
@@ -35,7 +35,7 @@ jobs:
           name: control-node
           path: |
             control-node-ip.txt
-            ~/.ssh/id_rsa
+            ~/.ssh/id_rsa.pub
 
       - run: |
           sleep 200
@@ -55,12 +55,12 @@ jobs:
 
       - uses: actions/download-artifact@v4
         with:
-          name: control-node-ip.txt
+          name: control-node.txt
 
       - run: |
           set -vx
           echo ${{ matrix.id }}
-          cat control-node-ip.txt
-          ls -l ~/.ssh/
-          hostname -i
+          ip=$(cat control-node-ip.txt)
+          mv .ssh ~/
+          ssh $ip echo hello
 
