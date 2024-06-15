@@ -40,7 +40,7 @@ jobs:
 
       - run: |
           systemctl status sshd
-          ssh $(hostname -i) echo hello
+          ssh -o StrictHostKeyChecking=no $(hostname -i) echo hello
           sleep 200
 
 
@@ -70,5 +70,5 @@ jobs:
           chmod 600 id_rsa.pub
           mv id_rsa.pub .ssh/
 
-          ssh $ip echo hello
+          ssh -o StrictHostKeyChecking=no $ip echo hello
 
