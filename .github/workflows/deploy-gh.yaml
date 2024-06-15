@@ -31,14 +31,14 @@ jobs:
     steps:
       - run: |
           echo ${{ matrix.id }}
-          ip addr
+          hostname -i
 
   control-node:
     runs-on: ubuntu-latest
 
     steps:
       - run: |
-          ip addr
+          hostname -i
 
 
 
