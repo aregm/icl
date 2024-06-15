@@ -26,6 +26,7 @@ jobs:
     steps:
       - run: |
           hostname -i >control-node-ip.txt
+          ls -l ~/.ssh
 
       - name: Upload control node IP
         uses: actions/upload-artifact@v4
