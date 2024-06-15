@@ -55,7 +55,7 @@ jobs:
 
       - uses: actions/download-artifact@v4
         with:
-          name: control-node.txt
+          name: control-node
 
       - run: |
           set -vx
