@@ -8,7 +8,6 @@ on:
 
 env:
   num_nodes: 4
-  testd: $
 
 jobs:
   define-matrix:
@@ -20,6 +19,7 @@ jobs:
           nodes=$(python -c "print(list(range($num_nodes)))")
           echo nodes="$nodes" >>"$GITHUB_OUTPUT"
       - run: |
+          echo ${{ needs.define-matrix.outputs.nodes }}
           echo ${{ fromJSON('[0, 1, 2]') }}
 
   nodes:
