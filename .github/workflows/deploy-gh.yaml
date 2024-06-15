@@ -39,7 +39,10 @@ jobs:
             id_rsa.pub
 
       - run: |
-          ssh -o StrictHostKeyChecking=no $(hostname -i) echo hello
+          set -vx
+          #ssh -o StrictHostKeyChecking=no $(hostname -i) echo hello
+          ip addr
+
           sudo iptables -S
           ps -ef
           sleep 200
@@ -71,5 +74,6 @@ jobs:
           chmod 600 id_rsa.pub
           mv id_rsa.pub .ssh/
 
+          ip addr
           ssh -o StrictHostKeyChecking=no $ip echo hello
 
