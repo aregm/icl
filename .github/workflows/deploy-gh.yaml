@@ -13,7 +13,7 @@ jobs:
   define-matrix:
     runs-on: ubuntu-latest
     outputs:
-      nodes: ${{ steps.nodes.output.nodes }}
+      nodes: ${{ steps.nodes.outputs.nodes }}
     steps:
       - id: nodes
         run: |
