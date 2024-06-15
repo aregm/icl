@@ -15,7 +15,8 @@ jobs:
     outputs:
       nodes: $
     steps:
-      - run: |
+      - id: nodes
+        run: |
           nodes=$(python -c "print(list(range($num_nodes)))")
           echo nodes="$nodes" >>"$GITHUB_OUTPUT"
 
