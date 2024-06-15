@@ -33,9 +33,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: control-node
-          path:
-            - control-node-ip.txt
-            - ~/.ssh/id_rsa
+          path: |
+            control-node-ip.txt
+            ~/.ssh/id_rsa
 
       - run: |
           sleep 200
