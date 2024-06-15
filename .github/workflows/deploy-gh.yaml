@@ -59,6 +59,7 @@ jobs:
 
       - run: |
           set -vx
+          ls -l
           echo ${{ matrix.id }}
           ip=$(cat control-node-ip.txt)
           mv .ssh ~/
