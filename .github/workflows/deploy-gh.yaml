@@ -43,7 +43,7 @@ jobs:
           #ssh -o StrictHostKeyChecking=no $(hostname -i) echo hello
           ip addr
 
-          sudo iptables -S
+          sudo iptables -L -v -n
           ps -ef
           sleep 200
 
