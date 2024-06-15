@@ -41,6 +41,7 @@ jobs:
       - run: |
           systemctl status sshd
           ssh -o StrictHostKeyChecking=no $(hostname -i) echo hello
+          cat /etc/ssh/ssh_config
           sleep 200
 
 
