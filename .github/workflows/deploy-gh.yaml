@@ -29,10 +29,13 @@ jobs:
           ssh-keygen -q -b 2048 -t rsa -N '' -C 'cluster key' -f ~/.ssh/id_rsa
           cp ~/.ssh/id_rsa.pub ~/.ssh/authorized_keys
           cp ~/.ssh/id_rsa.pub .
+          sudo iptables -X
+          sudo iptables -t nat -F
+          sudo iptables -t nat -X
+          sudo iptables -t mangle -F
+          sudo iptables -t mangle -X
           sudo iptables -P INPUT ACCEPT
-          sudo iptables -P OUTPUT ACCEPT
           sudo iptables -P FORWARD ACCEPT
-          sudo iptables -F
 
       - name: Upload control node data
         uses: actions/upload-artifact@v4
@@ -70,10 +73,18 @@ jobs:
 
       - run: |
           set -vx
+          sudo iptables -X
+          sudo iptables -t nat -F
+          sudo iptables -t nat -X
+          sudo iptables -t mangle -F
+          sudo iptables -t mangle -X
           sudo iptables -P INPUT ACCEPT
-          sudo iptables -P OUTPUT ACCEPT
           sudo iptables -P FORWARD ACCEPT
-          sudo iptables -F
+          sudo iptables -P OUTPUT ACCEPT
+#          sudo iptables -P INPUT ACCEPT
+#          sudo iptables -P OUTPUT ACCEPT
+#          sudo iptables -P FORWARD ACCEPT
+#          sudo iptables -F
           
           echo ${{ matrix.id }}
           ip=$(cat control-node-ip.txt)
