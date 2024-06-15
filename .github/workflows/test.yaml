@@ -1,0 +1,25 @@
+name: shared matrix
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  define-matrix:
+    runs-on: ubuntu-latest
+
+    outputs:
+      colors: $
+
+    steps:
+      - name: Define Colors
+        id: colors
+        run: |
+          echo 'colors=["red", "green", "blue"]' >> "$GITHUB_OUTPUT"
+
+  produce-artifacts:
+    runs-on: ubuntu-latest
+    needs: define-matrix
+    steps:
+      - run: |
+          echo ${{ needs.define-matrix.outputs.colors }}
+
