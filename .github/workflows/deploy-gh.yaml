@@ -29,6 +29,10 @@ jobs:
           ssh-keygen -q -b 2048 -t rsa -N '' -C 'cluster key' -f ~/.ssh/id_rsa
           cp ~/.ssh/id_rsa.pub ~/.ssh/authorized_keys
           cp ~/.ssh/id_rsa.pub .
+          sudo iptables -P INPUT ACCEPT
+          sudo iptables -P OUTPUT ACCEPT
+          sudo iptables -P FORWARD ACCEPT
+          sudo iptables -F
 
       - name: Upload control node data
         uses: actions/upload-artifact@v4
