@@ -40,8 +40,12 @@ jobs:
             id_rsa.pub
 
       - run: |
-          systemctl status sshd
-          ssh -o StrictHostKeyChecking=no $(hostname -i) echo hello
+          set -vx
+          #ssh -o StrictHostKeyChecking=no $(hostname -i) echo hello
+          ip addr
+
+          sudo iptables -L -v -n
+          ps -ef
           sleep 200
 
 
@@ -63,6 +67,11 @@ jobs:
 
       - run: |
           set -vx
+          #          sudo iptables -P INPUT ACCEPT
+          #          sudo iptables -P OUTPUT ACCEPT
+          #          sudo iptables -P FORWARD ACCEPT
+          #          sudo iptables -F
+          
           echo ${{ matrix.id }}
           ip=$(cat control-node-ip.txt)
 
@@ -71,5 +80,6 @@ jobs:
           chmod 600 id_rsa.pub
           mv id_rsa.pub .ssh/
 
+          ip addr
           ssh -o StrictHostKeyChecking=no $ip echo hello
 
