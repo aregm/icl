@@ -30,8 +30,13 @@ jobs:
           ssh-keygen -q -b 2048 -t rsa -N '' -C 'cluster key' -f ~/.ssh/id_rsa
           cp ~/.ssh/id_rsa.pub ~/.ssh/authorized_keys
           cp ~/.ssh/id_rsa.pub .
-          sudo iptables -S
-          sudo iptables -D -P FORWARD DROP
+          sudo iptables -P INPUT ACCEPT
+          sudo iptables -P FORWARD ACCEPT
+          sudo iptables -P OUTPUT ACCEPT
+          sudo iptables -t nat -F
+          sudo iptables -t mangle -F
+          sudo iptables -F
+
           sudo cat /var/log/auth.log
 
       - name: Upload control node data
@@ -69,10 +74,13 @@ jobs:
 
       - run: |
           set -vx
-          #          sudo iptables -P INPUT ACCEPT
-          #          sudo iptables -P OUTPUT ACCEPT
-          #          sudo iptables -P FORWARD ACCEPT
-          #          sudo iptables -F
+          sudo iptables -P INPUT ACCEPT
+          sudo iptables -P FORWARD ACCEPT
+          sudo iptables -P OUTPUT ACCEPT
+          sudo iptables -t nat -F
+          sudo iptables -t mangle -F
+          sudo iptables -F
+          sudo iptables -S
           
           echo ${{ matrix.id }}
           ip=$(cat control-node-ip.txt)
