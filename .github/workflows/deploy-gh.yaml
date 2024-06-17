@@ -25,6 +25,7 @@ jobs:
 
     steps:
       - run: |
+          set -vx
           hostname -i >control-node-ip.txt
           ssh-keygen -q -b 2048 -t rsa -N '' -C 'cluster key' -f ~/.ssh/id_rsa
           cp ~/.ssh/id_rsa.pub ~/.ssh/authorized_keys
@@ -45,7 +46,6 @@ jobs:
           #ssh -o StrictHostKeyChecking=no $(hostname -i) echo hello
           ip addr
 
-          sudo iptables -L -v -n
           ps -ef
           sleep 200
 
