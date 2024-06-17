@@ -29,7 +29,7 @@ jobs:
           ssh-keygen -q -b 2048 -t rsa -N '' -C 'cluster key' -f ~/.ssh/id_rsa
           cp ~/.ssh/id_rsa.pub ~/.ssh/authorized_keys
           cp ~/.ssh/id_rsa.pub .
-          sudo iptables -L -n
+          sudo iptables -S
           sudo cat /var/log/auth.log
 
       - name: Upload control node data
