@@ -31,6 +31,7 @@ jobs:
           cp ~/.ssh/id_rsa.pub ~/.ssh/authorized_keys
           cp ~/.ssh/id_rsa.pub .
           sudo iptables -S
+          sudo iptables -D FORWARD DROP
           sudo cat /var/log/auth.log
 
       - name: Upload control node data
