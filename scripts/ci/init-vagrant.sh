@@ -21,6 +21,9 @@ vm_copy_logs() {
 }
 
 ensure_vagrant_plugins() {
+    if ! vagrant plugin list | grep -q vagrant-libvirt; then
+        vagrant plugin install vagrant-libvirt
+    fi
     if ! vagrant plugin list | grep -q vagrant-proxyconf; then
         vagrant plugin install vagrant-proxyconf
     fi
