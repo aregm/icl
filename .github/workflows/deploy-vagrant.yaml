@@ -18,13 +18,6 @@ jobs:
       - name: Checkout x1 repository
         uses: actions/checkout@v4
 
-      - name: Checkout x1-cluster-profiles repository
-        uses: actions/checkout@v4
-        with:
-          repository: intel-sandbox/x1-cluster-profiles
-          path: x1-cluster-profiles
-          token: ${{ secrets.X1_GITHUB_TOKEN }}
-
       - name: Deploy X1 to Vagrant VMs
         run: ./scripts/ci/vagrant.sh
 
