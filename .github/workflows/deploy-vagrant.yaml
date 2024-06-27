@@ -13,7 +13,7 @@ jobs:
   deploy:
     runs-on:
       - self-hosted
-      - libvirt-vagrant
+      - vagrant
     steps:
       - name: Checkout x1 repository
         uses: actions/checkout@v4
