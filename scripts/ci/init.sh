@@ -4,6 +4,7 @@ set -e
 set -vx
 
 set_env() {
+    echo "HOSTNAME: "$(hostname)
     AGENT_ID=$(hostname | sed -e 's/.*[^0-9]//')
     AGENT_ID=${AGENT_ID:-100}
 
@@ -15,7 +16,7 @@ set_env() {
 
     WORKFLOW_PREFIX_ID="$WORKFLOW_PREFIX-$AGENT_ID"
 
-    X1_K8S_EXTRA_SETTINGS_FILE="$WORKSPACE_DIR/x1-cluster-profiles/profiles/ci.yaml"
+    X1_K8S_EXTRA_SETTINGS_FILE="$WORKSPACE_DIR/icl-cluster-profiles/profiles/ci.yaml"
     no_proxy=localtest.me,.localtest.me,$no_proxy
 
     VM_MEMORY=16384
@@ -30,6 +31,9 @@ set_env() {
  
     echo "WORKFLOW_DIR: $WORKFLOW_DIR"
     echo "X1_K8S_EXTRA_SETTINGS_FILE: $X1_K8S_EXTRA_SETTINGS_FILE"
+
+    export LC_ALL="C.UTF-8"
+    locale
 }
 
 run_kind() {
