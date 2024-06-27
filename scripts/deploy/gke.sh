@@ -9,12 +9,12 @@ set -e
 : ${X1_GCP_ZONE:="us-central1-a"}
 : ${ICL_INGRESS_DOMAIN:="test.x1infra.com"}
 : ${X1_CLUSTER_VERSION:="1.28"}
-: ${X1_EXTERNALDNS_ENABLED:="false"}
+: ${X1_EXTERNALDNS_ENABLED:=false}
 : ${CONTROL_NODE_IMAGE:="pbchekin/ccn-gcp:0.0.2"}
 : ${ICL_GCP_MACHINE_TYPE:="e2-standard-4"}
 : ${GKE_GPU_DRIVER_VERSION:="DEFAULT"}
 : ${GPU_MODEL:=""}
-: ${CREATE_BASTION:="false"}
+: ${CREATE_BASTION:=false}
 : ${BASTION_SOURCE_RANGES:=""}
 
 # GLOBAL VARIABLES
@@ -107,17 +107,17 @@ gcp_project = "$X1_GCP_PROJECT_NAME"
 node_version = "$X1_CLUSTER_VERSION"
 machine_type = "$ICL_GCP_MACHINE_TYPE"
 gke_gpu_driver_version = "$GKE_GPU_DRIVER_VERSION"
-gpu_enabled="$GPU_ENABLED"
+gpu_enabled = $GPU_ENABLED
 gpu_model = "$GPU_MODEL"
-create_bastion = "$CREATE_BASTION"
+create_bastion = $CREATE_BASTION
 bastion_public_key_content = "$bastion_public_key_content"
 bastion_username = "$USER"
 bastion_source_ranges = $bastion_source_ranges_list
-bastion_name = "bastion-icl-${USER}"
-bastion_tags = ["bastion-${USER}"]
-cluster_tags = ["gke-cluster-${USER}"]
-ssh_rule_name = "allow-ssh-${USER}"
-internal_rule_name = "allow-internal-${USER}"
+bastion_name = "bastion-icl-$USER"
+bastion_tags = ["bastion-$USER"]
+cluster_tags = ["gke-cluster-$USER"]
+ssh_rule_name = "allow-ssh-$USER"
+internal_rule_name = "allow-internal-$USER"
 EOF
 }
 
@@ -167,13 +167,13 @@ function x1_terraform_args() {
     -var local_path_enabled=false # use standard-rwo for GKE instead
     -var default_storage_class="standard-rwo"
     -var ray_load_balancer_enabled=false
-    -var externaldns_enabled="${X1_EXTERNALDNS_ENABLED}"
-    -var gpu_enabled="${GPU_ENABLED}"
+    -var externaldns_enabled=${X1_EXTERNALDNS_ENABLED}
+    -var gpu_enabled=${GPU_ENABLED}
     -var gpu_type="${GPU_TYPE}"
     -var jupyterhub_extra_resource_limits="${JUPYTERHUB_EXTRA_RESOURCE_LIMITS}"
     -var use_node_ip_for_user_ports=true
     -var use_external_node_ip_for_user_ports=true
-    -var deployment_type="gcp"
+    -var enable_nvidia_operator=false
   )
   if [[ -v X1_TERRAFORM_DISABLE_LOCKING || -v ICL_TERRAFORM_DISABLE_LOCKING ]]; then
     terraform_extra_args+=( -lock=false )

@@ -194,7 +194,7 @@ module "intel-gpu" {
 }
 
 module "nvidia-gpu" {
-  count = (var.gpu_type == "nvidia" && var.deployment_type == "aws") ? 1 : 0
+  count = (var.gpu_type == "nvidia" && var.enable_nvidia_operator == true) ? 1 : 0
   source = "../modules/nvidia-gpu"
 }
 

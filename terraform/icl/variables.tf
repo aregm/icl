@@ -335,7 +335,8 @@ variable "jupyterhub_extra_resource_limits" {
   default = ""
 }
 
-variable "deployment_type" {
-  description = "Deployment location e.g. kind, gcp, aws, azure. Affects execution of specific modules."
-  type = string 
+variable "enable_nvidia_operator" {
+  description = "Toggles deployment of NVIDIA GPU Operator Container."
+  type = bool
+  default = false
 }
