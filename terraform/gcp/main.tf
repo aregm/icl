@@ -14,11 +14,35 @@ provider "google" {
   zone    = var.gcp_zone
 }
 
+module "bastion-host" {
+  count                      = var.create_bastion ? 1: 0
+  source                     = "./modules/bastion-host"
+  bastion_name               = var.bastion_name
+  bastion_machine_type       = var.bastion_machine_type
+  bastion_public_key_content = var.bastion_public_key_content
+  bastion_username           = var.bastion_username
+  bastion_tags               = var.bastion_tags
+  gcp_zone                   = var.gcp_zone
+}
+
+module "firewall-rule-bastion-host" {
+  count                      = var.create_bastion ? 1: 0
+  source                     = "./modules/firewall-rule-bastion-ports"
+  bastion_source_ranges      = var.bastion_source_ranges
+  bastion_tags               = var.bastion_tags
+  cluster_tags               = var.cluster_tags
+  ssh_rule_name              = var.ssh_rule_name
+  internal_rule_name         = var.internal_rule_name
+}
+
 module "icl-cluster" {
   source = "./modules/icl-cluster"
   cluster_name = var.cluster_name
   node_version = var.node_version
   machine_type = var.machine_type
+  gpu_enabled = var.gpu_enabled
+  gpu_model = var.gpu_model
+  shared_gpu = var.shared_gpu
 }
 
 module "firewall-rule-allow-tcp-8443" {

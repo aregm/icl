@@ -3,6 +3,11 @@ variable "cluster_name" {
   type = string
 }
 
+variable "gcp_project" {
+  description = "Name of GKE project"
+  type = string
+}
+
 #variable "gcp_region" {
 #  description = "Name of GKE region"
 #  type = string
@@ -13,16 +18,6 @@ variable "gcp_zone" {
   type = string
 }
 
-#variable "gcp_region" {
-#  description = "Name of GKE region"
-#  type = string
-#}
-
-variable "gcp_project" {
-  description = "Name of GKE project"
-  type = string
-}
-
 variable "node_version" {
   description ="Kubernetes version to use for GKE"
   type = string
@@ -30,5 +25,81 @@ variable "node_version" {
 
 variable "machine_type" {
   description = "Machine type to use for GKE"
+  type = string
+}
+
+variable "gpu_enabled" {
+  description = "Enable GPU support"
+  type = bool
+  default = false
+}
+
+variable "gpu_model" {
+  description = "Model of GPU to attach to nodes in pool"
+  type = string
+  default = "none"
+}
+
+variable "gke_gpu_driver_version" {
+  description = "The NVIDIA driver version to install"
+  default = "DEFAULT"
+}
+
+variable "shared_gpu" {
+  description = "Enable more than one container per GPU"
+  type = bool
+  default = true
+}
+
+variable "create_bastion" {
+  description = "Boolean to determine if bastion host is required"
+  type = bool
+  default = false
+}
+
+variable "bastion_name" {
+  description = "Name of bastion host for SSH/RDP traffic"
+  type = string
+  default = "bastion"
+}
+
+variable "bastion_username" {
+  description = "Username to be created on bastion host"
+  type = string
+}
+
+variable "bastion_machine_type" {
+  description = "Machine type to use for bastion host"
+  type = string
+  default = "n1-standard-1"
+}
+
+variable "bastion_public_key_content" {
+  description = "Public key string for connection to bastion host"
+  type = string
+}
+
+variable "bastion_source_ranges" {
+  description = "List of IP ranges to allow access to bastion host"
+  type = list(string)
+}
+
+variable "bastion_tags" {
+  description = "Tags associated with bastion host for applying firewall rules"
+  type = list(string)
+}
+
+variable "cluster_tags" {
+  description = "Tags associated with bastion host for applying firewall rules"
+  type = list(string)
+}
+
+variable "ssh_rule_name" {
+  description = "User specific name for allow SSH firewall rule"
+  type = string
+}
+
+variable "internal_rule_name" {
+  description = "Tags for creating firewall rules and specifying target clusters"
   type = string
 }
