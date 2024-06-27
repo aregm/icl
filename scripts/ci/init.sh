@@ -15,7 +15,7 @@ set_env() {
 
     WORKFLOW_PREFIX_ID="$WORKFLOW_PREFIX-$AGENT_ID"
 
-    X1_K8S_EXTRA_SETTINGS_FILE="$WORKSPACE_DIR/x1-cluster-profiles/profiles/ci.yaml"
+    X1_K8S_EXTRA_SETTINGS_FILE="$WORKSPACE_DIR/icl-cluster-profiles/profiles/ci.yaml"
     no_proxy=localtest.me,.localtest.me,$no_proxy
 
     VM_MEMORY=16384
