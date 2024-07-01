@@ -28,3 +28,8 @@ jobs:
           name: logs
           path: logs
           if-no-files-found: ignore
+
+      - name: Sleep
+        if: always()
+        run: |
+          sleep 600
