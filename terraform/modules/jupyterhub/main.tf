@@ -14,7 +14,6 @@ locals {
         fsGroupChangePolicy = "OnRootMismatch"
       }
     }
-
     default = true
   }
 
