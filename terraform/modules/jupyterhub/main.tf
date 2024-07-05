@@ -9,7 +9,12 @@ locals {
       # enable cluster admin
       service_account = var.jupyterhub_cluster_admin_enabled ? kubernetes_service_account.admin.0.metadata.0.name : null
       automount_service_account_token = var.jupyterhub_cluster_admin_enabled
+      pod_security_context = {
+        fsGroup = 100
+        fsGroupChangePolicy = "OnRootMismatch"
+      }
     }
+
     default = true
   }
 
