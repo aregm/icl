@@ -4,14 +4,6 @@ calico_endpoint_to_host_action: ACCEPT
 calico_ipip_mode: Never
 calico_network_backend: bird
 calico_vxlan_mode: Never
-containerd_registries_mirrors:
-- mirrors:
-  - capabilities:
-    - pull
-    - resolve
-    host: https://dockerhubcache.caas.intel.com
-    skip_verify: true
-  prefix: docker.io
 containerd_use_config_path: true
 dns_etchosts: '{{ ansible_default_ipv4.address }} {{ ingress_domain }}
 
