@@ -334,3 +334,9 @@ variable "jupyterhub_extra_resource_limits" {
   type = string
   default = ""
 }
+
+variable "enable_nvidia_operator" {
+  description = "Toggles deployment of NVIDIA GPU Operator Container."
+  type = bool
+  default = false
+}
