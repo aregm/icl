@@ -20,7 +20,6 @@ dns_etchosts: '{{ ansible_default_ipv4.address }} {{ ingress_domain }}
   {{ ansible_default_ipv4.address }} s3.{{ ingress_domain }}
 
   '
-docker_image_repo: dockerhubcache.caas.intel.com
 download_container: false
 ingress_domain: localtest.me
 kube_pods_subnet: 192.168.128.0/18
