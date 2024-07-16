@@ -35,6 +35,7 @@ ensure_vagrant_plugins() {
 set_vagrant_env() {
     export X1_LIBVIRT_DEFAULT_PREFIX="$WORKFLOW_PREFIX_ID"
     export VAGRANT_DEFAULT_PROVIDER=libvirt
+    export VAGRANT_HOME=/.vagrant.d
 }
 
 vm_clean_before() {
@@ -62,6 +63,6 @@ vm_cleanup() {
     vm_clean_before
 }
 
-ensure_vagrant_plugins
 set_vagrant_env
+ensure_vagrant_plugins
 
