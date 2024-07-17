@@ -1,6 +1,6 @@
 variable "release" {
   description = "Version of docker-registry Helm chart"
-  default = "2.2.2"
+  default = "2.2.3"
   type = string
 }
 

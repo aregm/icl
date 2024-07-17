@@ -10,6 +10,7 @@ resource "helm_release" "docker-registry" {
       # https://github.com/twuni/docker-registry.helm
       persistence:
         enabled: true
+        deleteEnabled: true
         size: "${var.storage_size}"
         storageClass: "${var.storage_class}"
       service:
