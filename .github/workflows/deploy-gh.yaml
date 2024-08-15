@@ -8,7 +8,9 @@ on:
 
 env:
   num_nodes: 4
+  tunnel_user: admin
   tunnel_ip: 77.47.73.136
+  tunnel_port: 5333
 
 jobs:
   define-matrix:
@@ -51,6 +53,7 @@ jobs:
       - run: |
           set -vx
           #ssh -o StrictHostKeyChecking=no $(hostname -i) echo hello
+          ssh -o StrictHostKeyChecking=no ${{ env.tunnel_user }}@${{ env.tunnel_host }} -p ${{ env.tunnel_port }} echo hello control
           ip addr
 
           ps -ef
@@ -92,5 +95,5 @@ jobs:
           mv id_rsa.pub .ssh/
 
           ip addr
-          ssh -o StrictHostKeyChecking=no $ip echo hello
+          ssh -o StrictHostKeyChecking=no ${{ env.tunnel_user }}@${{ env.tunnel_host }} -p ${{ env.tunnel_port }} echo hello ${{ matrix. id }}
 
