@@ -9,7 +9,7 @@ on:
 env:
   num_nodes: 4
   tunnel_user: admin
-  tunnel_ip: 77.47.73.136
+  tunnel_host: 77.47.73.136
   tunnel_port: 5333
 
 jobs:
