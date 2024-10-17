@@ -23,11 +23,9 @@ dependencies = [
     "docker",
     "dynaconf",
     "fsspec>=2023.9.2",
-    # FIXME: Prefect does not compatible with Pydantic v2, see https://github.com/PrefectHQ/prefect/pull/10144
-    "pydantic<2.0.0",
     "python-docker",
     "s3fs>=2023.9.2",
-    "prefect==2.16.5",
+    "prefect==2.20.9",
 ]
 
 [project.urls]
