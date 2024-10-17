@@ -205,7 +205,7 @@ variable "jupyterhub_singleuser_volume_size" {
 variable "jupyterhub_singleuser_default_image" {
   description = "Default Docker image for JupyterHub default profile"
   # original image: jupyterhub/k8s-singleuser-sample:2.0.1-0.dev.git.6035.h643c0f0c
-  default = "pbchekin/icl-jupyterhub:0.0.21"
+  default = "pbchekin/icl-jupyterhub:0.0.22"
   type = string
 }
 
