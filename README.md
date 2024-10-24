@@ -97,7 +97,7 @@ flowchart TD
             c["`aws
                 gke
                 idc
-                onecloud<
+                onecloud
                 dbaas
             `"]
         end
