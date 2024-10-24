@@ -82,25 +82,102 @@ ICL can be a backbone of your company CI and ML infrastructure, here is a compon
 for us.
 
 ```mermaid
-block-beta
-  block
-    ag["access governance"]
-    block
-      columns 1
-      mn["maintenance notifications"]:1
-      is["info sharing"]
+flowchart TD
+    subgraph Infrastructure
+        subgraph Bare-metal
+            bm["`ubuntu
+            rocky
+            raid
+            datasets
+            runners
+            caches`"]
+        end
+
+        subgraph Clouds
+            c["`aws
+                gke
+                idc
+                onecloud<
+                dbaas
+            `"]
+        end
+
+        subgraph VMs
+            vm["`kvm
+            qemu
+            docker`"]
+        end
+
+        subgraph GitHub
+            gh["`repos
+            actions
+            runners
+            caches`"]
+        end
     end
-    sla
-    block
-      columns 1
-      b["release engineering"]
-      scans
-      signing
+
+    subgraph icl["Infrastructure Control Language"]
+        subgraph Kubernetes
+            user["`arc
+                grafana
+                jupyterhub
+                prefect
+                pytorch
+                ray`"]
+            system["`
+                prometheus
+                kubernetes dashboard
+                docker registry 
+                cert manager
+                ingress
+                rook-ceph 
+                shared volumes`"]
+        end
+        subgraph Deploy
+            deploy["`maas
+                terraform
+                vagrant
+                ansible
+                multipass
+                kubespray`"]
+        end
+        Deploy --> Kubernetes
     end
-    block
-    columns 1
-     sc["security compliance"]
-     rp["retention policy"]
+    Infrastructure --> icl
+
+    subgraph Pipelines
+        pb["`product build
+            infra build`"]
+        
+        check["`license check
+            style check
+            sanitizers
+            llvm-tidy`"]
+
+        test["`integration tests
+            functional tests
+            cpu testruns
+            gpu testruns
+            sim tests
+            issue and skiplist updates`"]
+
+        perf["`performance tests
+            dashboard`"]
+
+        ctests["`container tests
+        icl definition updates`"]
+
     end
-  end
+    icl --> Pipelines
+
+    subgraph Processes
+        p["`sla
+        access governance
+        scans
+        signing
+        compliance checks
+        retention
+        backups`"]
+    end
+    Pipelines --> Processes
 ```
