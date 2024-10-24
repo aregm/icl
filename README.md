@@ -116,7 +116,7 @@ flowchart TD
         end
     end
 
-    subgraph icl["Infrastructure Control&nbsp;Language"]
+    subgraph icl["Infrastructure&nbsp;Control&nbsp;Language"]
         subgraph Kubernetes
             user["`arc
                 grafana
