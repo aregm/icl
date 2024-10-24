@@ -1,6 +1,7 @@
 # Infrastructure Control Language
 
-Tool to easily run your data science, machine learning or deep learning experiments anywhere: locally, on-prem clusters, or hybrid clouds. 
+Tool to easily run your data science, machine learning or deep learning experiments anywhere: locally, on-prem clusters, or hybrid clouds
+dynamically optimized for GPUs. 
 Based on Infrastructure as Code, but pushed to the next level.
 Provides cosmic level of infrastructure control bringing old good days back when you run program on the machine you develop.
 
@@ -74,3 +75,11 @@ ICL allows executing the same program or flow in your local or remote ICL cluste
 In addition to a local ICL cluster, there are scripts to create multi node ICL clusters in AWS, GCP.
 We also support deploying ICL into an existing Kubernetes or OpenShift clusters, provisioning bare-metal machines.
 Check our documentation at https://aregm.github.io/icl/.
+
+## Component diagram
+
+ICL can be a backbone of your company infrastructure, here is a component diagram which shows how it works
+for us.
+
+
+
