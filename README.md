@@ -78,8 +78,29 @@ Check our documentation at https://aregm.github.io/icl/.
 
 ## Component diagram
 
-ICL can be a backbone of your company infrastructure, here is a component diagram which shows how it works
+ICL can be a backbone of your company CI and ML infrastructure, here is a component diagram which shows how it works
 for us.
 
-
-
+```mermaid
+block-beta
+  block
+    ag["access governance"]
+    block
+      columns 1
+      mn["maintenance notifications"]:1
+      is["info sharing"]
+    end
+    sla
+    block
+      columns 1
+      b["release engineering"]
+      scans
+      signing
+    end
+    block
+    columns 1
+     sc["security compliance"]
+     rp["retention policy"]
+    end
+  end
+```
