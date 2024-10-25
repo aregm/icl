@@ -76,45 +76,48 @@ In addition to a local ICL cluster, there are scripts to create multi node ICL c
 We also support deploying ICL into an existing Kubernetes or OpenShift clusters, provisioning bare-metal machines.
 Check our documentation at https://aregm.github.io/icl/.
 
-## Component diagram
+## ICL ecosystem
 
-ICL can be a backbone of your company CI and ML infrastructure, here is a component diagram which shows how it works
+ICL can be a backbone of your company CI and ML infrastructure. Here is a component diagram which shows how it works
 for us.
 
 ```mermaid
-flowchart TD
-    subgraph Infrastructure
-        subgraph Bare-metal
-            bm["`ubuntu
-            rocky
-            raid
-            datasets
-            runners
-            caches`"]
-        end
-
-        subgraph Clouds
-            c["`aws
-                gke
-                idc
-                onecloud
-                dbaas
-            `"]
-        end
-
-        subgraph VMs
-            vm["`kvm
-            qemu
-            docker`"]
-        end
-
-        subgraph GitHub
-            gh["`repos
-            actions
-            runners
-            caches`"]
-        end
+flowchart LR
+    subgraph Bare-metal
+        bm["`ubuntu
+        rocky
+        raid
+        datasets
+        runners
+        caches`"]
     end
+
+    subgraph Clouds
+        c["`aws
+            gke
+            idc
+            onecloud
+            dbaas
+        `"]
+    end
+
+    subgraph VMs
+        vm["`kvm
+        qemu
+        docker`"]
+    end
+
+    subgraph GitHub
+        gh["`repos
+        actions
+        runners
+        caches`"]
+    end
+
+    Bare-metal --> icl
+    Clouds --> icl
+    VMs --> icl
+    GitHub --> icl
 
     subgraph icl["Infrastructure&nbsp;Control&nbsp;Language"]
         subgraph Kubernetes
@@ -127,10 +130,10 @@ flowchart TD
             system["`
                 prometheus
                 kubernetes dashboard
-                docker registry 
+                docker registry
                 cert manager
                 ingress
-                rook-ceph 
+                rook-ceph
                 shared volumes`"]
         end
         subgraph Deploy
@@ -143,30 +146,24 @@ flowchart TD
         end
         Deploy --> Kubernetes
     end
-    Infrastructure --> icl
 
     subgraph Pipelines
-        pb["`product build
-            infra build`"]
-        
+        pb["product build"] -->
+
         check["`license check
             style check
             sanitizers
-            llvm-tidy`"]
+            llvm-tidy
+            integration test`"] -->
 
-        test["`integration tests
-            functional tests
-            cpu testruns
-            gpu testruns
-            sim tests
-            issue and skiplist updates`"]
+        test["`functional tests
+            cpu/gpu/sim tests
+            issue and skiplist updates`"] -->
 
-        perf["`performance tests
-            dashboard`"]
+        perf["performance tests"] --> dashboard
 
-        ctests["`container tests
-        icl definition updates`"]
 
+        ib["infra build"] --> ctest["container tests"] --> iclu["icl definition updates"]
     end
     icl --> Pipelines
 
