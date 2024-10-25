@@ -141,7 +141,7 @@ resource "helm_release" "jupyterhub" {
   namespace = kubernetes_namespace.jupyterhub.id
   chart = "jupyterhub"
   repository = "https://jupyterhub.github.io/helm-chart"
-  version = "3.0.3"
+  version = "3.3.8"
   timeout = 1200
   # See https://github.com/jupyterhub/zero-to-jupyterhub-k8s/blob/HEAD/jupyterhub/values.yaml
   # See https://zero-to-jupyterhub.readthedocs.io/en/latest/resources/reference.html
