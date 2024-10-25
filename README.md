@@ -170,6 +170,17 @@ flowchart TD
     end
     icl --> Pipelines
 
+
+    subgraph Containers
+         c[`"self-hosted runners
+         arc runners
+         jupyter profiles
+         dev dockers
+         perf measurement dockers
+         reproducers`"]
+    end
+    icl --> Containers
+
     subgraph Processes
         p["`sla
         access governance
@@ -179,5 +190,5 @@ flowchart TD
         retention
         backups`"]
     end
-    Pipelines --> Processes
+    icl --> Processes
 ```
