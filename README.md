@@ -1,6 +1,7 @@
 # Infrastructure Control Language
 
-Tool to easily run your data science, machine learning or deep learning experiments anywhere: locally, on-prem clusters, or hybrid clouds. 
+Tool to easily run your data science, machine learning or deep learning experiments anywhere: locally, on-prem clusters, or hybrid clouds
+dynamically optimized for GPUs. 
 Based on Infrastructure as Code, but pushed to the next level.
 Provides cosmic level of infrastructure control bringing old good days back when you run program on the machine you develop.
 
@@ -74,3 +75,120 @@ ICL allows executing the same program or flow in your local or remote ICL cluste
 In addition to a local ICL cluster, there are scripts to create multi node ICL clusters in AWS, GCP.
 We also support deploying ICL into an existing Kubernetes or OpenShift clusters, provisioning bare-metal machines.
 Check our documentation at https://aregm.github.io/icl/.
+
+## Component diagram
+
+ICL can be a backbone of your company CI and ML infrastructure, here is a component diagram which shows how it works
+for us.
+
+```mermaid
+flowchart TD
+    subgraph Infrastructure
+        subgraph Bare-metal
+            bm["`ubuntu
+            rocky
+            raid
+            datasets
+            runners
+            caches`"]
+        end
+
+        subgraph Clouds
+            c["`aws
+                gke
+                idc
+                onecloud
+                dbaas
+            `"]
+        end
+
+        subgraph VMs
+            vm["`kvm
+            qemu
+            docker`"]
+        end
+
+        subgraph GitHub
+            gh["`repos
+            actions
+            runners
+            caches`"]
+        end
+    end
+
+    subgraph icl["Infrastructure&nbsp;Control&nbsp;Language"]
+        subgraph Kubernetes
+            user["`arc
+                grafana
+                jupyterhub
+                prefect
+                pytorch
+                ray`"]
+            system["`
+                prometheus
+                kubernetes dashboard
+                docker registry 
+                cert manager
+                ingress
+                rook-ceph 
+                shared volumes`"]
+        end
+        subgraph Deploy
+            deploy["`maas
+                terraform
+                vagrant
+                ansible
+                multipass
+                kubespray`"]
+        end
+        Deploy --> Kubernetes
+    end
+    Infrastructure --> icl
+
+    subgraph Pipelines
+        pb["`product build
+            infra build`"]
+        
+        check["`license check
+            style check
+            sanitizers
+            llvm-tidy`"]
+
+        test["`integration tests
+            functional tests
+            cpu testruns
+            gpu testruns
+            sim tests
+            issue and skiplist updates`"]
+
+        perf["`performance tests
+            dashboard`"]
+
+        ctests["`container tests
+        icl definition updates`"]
+
+    end
+    icl --> Pipelines
+
+
+    subgraph Containers
+         cnt["`self-hosted runners
+         arc runners
+         jupyter profiles
+         dev dockers
+         perf measurement dockers
+         reproducers`"]
+    end
+    icl --> Containers
+
+    subgraph Processes
+        p["`sla
+        access governance
+        scans
+        signing
+        compliance checks
+        retention
+        backups`"]
+    end
+    icl --> Processes
+```
