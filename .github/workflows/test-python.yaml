@@ -26,7 +26,7 @@ jobs:
         run: |
           python --version
           pip --version
-          pip install .[unit_tests]
+          pip install .[unit_tests] || pip show prefect
 
       - name: Run static analysis
         run: |

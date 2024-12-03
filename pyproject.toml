@@ -30,7 +30,7 @@ dependencies = [
 
 [project.urls]
 "Homepage" = "https://aregm.github.io/icl"
-"Source" = "https://github.com/intel-ai/icl"
+"Source" = "https://github.com/aregm/icl"
 
 [project.scripts]
 infractl = "infractl.cli.main:main"
