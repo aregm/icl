@@ -32,6 +32,7 @@ export PYTHONPATH="$PROJECT_DIR/src:$PROJECT_DIR/tests/smoke:$PROJECT_DIR/tests/
 
 function dependencies() {
   cd "$PROJECT_DIR"
+  pip install --upgrade pip
   pip install .[integration_tests,ssh]
 }
 
