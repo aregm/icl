@@ -51,6 +51,3 @@ A developer can use an existing profile or a session, make update manually (inst
 
 ## Keeping profiles up to date
 DevOps team to automate making new profiles whenever update is required, potentially migrating the existing sessions to the new profiles without disturbing the development process.
- 
-
-
