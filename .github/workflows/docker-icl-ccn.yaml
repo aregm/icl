@@ -1,0 +1,82 @@
+name: Docker icl-ccn images
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Image tag
+        required: true
+        type: string
+        default: 0.0.5
+      push:
+        description: Push image to DockerHub
+        required: true
+        type: choice
+        options:
+          - false
+          - true
+        default: false
+
+env:
+  DOCKER_BUILD_ARGS: --build-arg http_proxy --build-arg https_proxy
+
+jobs:
+  build:
+    runs-on: [glados, docker]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Docker info
+        run: docker info
+
+      - name: Build image pbchekin/icl-ccn:${{ inputs.tag }}
+        run: |
+          cd docker/icl-ccn
+          docker build . \
+            $DOCKER_BUILD_ARGS \
+            --tag pbchekin/icl-ccn:${{ inputs.tag }}
+
+      - name: Build image pbchekin/icl-ccn-kubespray:${{ inputs.tag }}
+        run: |
+          cd docker/icl-ccn-kubespray
+          docker build . \
+            $DOCKER_BUILD_ARGS \
+            --tag pbchekin/icl-ccn-kubespray:${{ inputs.tag }} \
+            --build-arg BASE_TAG=pbchekin/icl-ccn:${{ inputs.tag }}
+
+      - name: Build image pbchekin/icl-ccn-aws:${{ inputs.tag }}
+        run: |
+          cd docker/icl-ccn-aws
+          docker build . \
+            $DOCKER_BUILD_ARGS \
+            --tag pbchekin/icl-ccn-aws:${{ inputs.tag }} \
+            --build-arg BASE_TAG=pbchekin/icl-ccn:${{ inputs.tag }}
+
+      - name: Build image pbchekin/icl-ccn-gcp:${{ inputs.tag }}
+        run: |
+          cd docker/icl-ccn-gcp
+          docker build . \
+            $DOCKER_BUILD_ARGS \
+            --tag pbchekin/icl-ccn-gcp:${{ inputs.tag }} \
+            --build-arg BASE_TAG=pbchekin/icl-ccn:${{ inputs.tag }}
+
+      - name: Login to Docker Hub
+        if: ${{ inputs.push == 'true' }}
+        run: docker login --username "${{ vars.DOCKERHUB_USERNAME }}" --password "${{ secrets.DOCKERHUB_PASSWORD }}"
+
+      - name: Push image pbchekin/icl-ccn:${{ inputs.tag }}
+        if: ${{ inputs.push == 'true' }}
+        run: docker push pbchekin/icl-ccn:${{ inputs.tag }}
+
+      - name: Push image pbchekin/icl-ccn-kubespray:${{ inputs.tag }}
+        if: ${{ inputs.push == 'true' }}
+        run: docker push pbchekin/icl-ccn-kubespray:${{ inputs.tag }}
+
+      - name: Push image pbchekin/icl-ccn-aws:${{ inputs.tag }}
+        if: ${{ inputs.push == 'true' }}
+        run: docker push pbchekin/icl-ccn-aws:${{ inputs.tag }}
+
+      - name: Push image pbchekin/icl-ccn-gcp:${{ inputs.tag }}
+        if: ${{ inputs.push == 'true' }}
+        run: docker push pbchekin/icl-ccn-gcp:${{ inputs.tag }}
