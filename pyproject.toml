@@ -1,14 +1,14 @@
 [project]
 name = "infractl"
 version = "0.0.4"
-description = "API driven Machine Learning suite"
+description = "IaC=based full development environment for cloud and on-prem ith batteris included"
 license = {file = "LICENSE"}
 readme = "README.md"
 authors = [
-    {name = "Areg Melik-Adamyan", email = "areg.melikadamyan@gmail.com"},
+    {name = "Areg Melik-Adamyan", email = "areg@hey.com"},
     {name = "Pavel Chekin", email = "pbchekin@gmail.com"},
 ]
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Environment :: GPU",
@@ -30,7 +30,7 @@ dependencies = [
 
 [project.urls]
 "Homepage" = "https://aregm.github.io/icl"
-"Source" = "https://github.com/intel-ai/icl"
+"Source" = "https://github.com/aregm/icl"
 
 [project.scripts]
 infractl = "infractl.cli.main:main"
