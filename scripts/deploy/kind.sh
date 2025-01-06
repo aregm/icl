@@ -13,7 +13,7 @@ fi
 : ${KIND_VERSION:="v0.20.0"}
 : ${CLUSTER_NAME:="x1"}
 : ${X1_EXTERNALDNS_ENABLED:="false"}
-: ${CONTROL_NODE_IMAGE:=pbchekin/ccn:0.0.1}
+: ${CONTROL_NODE_IMAGE:=pbchekin/icl-ccn:0.0.5}
 : ${KUBECONFIG:="$HOME/.kube/config"}
 
 # Ingress ports are ports on the hosts that are used to forward traffic to the kind cluster.
