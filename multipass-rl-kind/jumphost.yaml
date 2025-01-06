@@ -1,7 +1,0 @@
-- name: Node setup
-  hosts: all
-  vars:
-    control_node_image: pbchekin/ccn:0.0.2
-
-  roles:
-    - role: ../ansible/roles/jumphost
