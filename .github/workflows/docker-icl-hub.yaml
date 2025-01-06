@@ -1,0 +1,53 @@
+name: Docker icl-hub image
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        type: string
+        description: Image tag
+        required: true
+        default: 0.0.5
+      push:
+        description: Push image to DockerHub
+        required: true
+        type: choice
+        options:
+          - false
+          - true
+        default: false
+
+env:
+  DOCKER_BUILD_ARGS: --build-arg http_proxy --build-arg https_proxy
+
+jobs:
+  build:
+    runs-on: [glados, docker]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Checkout aregm/icl repository
+        uses: actions/checkout@v4
+        with:
+          repository: aregm/icl
+          path: icl
+
+      - name: Docker info
+        run: docker info
+
+      - name: Build image pbchekin/icl-hub:${{ inputs.tag }}
+        run: |
+          cd icl
+          docker build . \
+            $DOCKER_BUILD_ARGS \
+            --file ../docker/icl-hub/Dockerfile \
+            --tag pbchekin/icl-hub:${{ inputs.tag }} \
+
+      - name: Login to Docker Hub
+        if: ${{ inputs.push == 'true' }}
+        run: docker login --username "${{ vars.DOCKERHUB_USERNAME }}" --password "${{ secrets.DOCKERHUB_PASSWORD }}"
+
+      - name: Push image pbchekin/icl-hub:${{ inputs.tag }}
+        if: ${{ inputs.push == 'true' }}
+        run: docker push pbchekin/icl-hub:${{ inputs.tag }}

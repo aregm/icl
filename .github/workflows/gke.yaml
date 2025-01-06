@@ -1,0 +1,166 @@
+on:
+  workflow_dispatch:
+    inputs:
+      control-node-image:
+        type: string
+        description: Fully qualified control node image tag to use
+        required: true
+        default: pbchekin/ccn-gcp:0.0.2
+      cluster-name:
+        type: string
+        description: Cluster name to use
+        required: true
+        default: sc-github-ci-01
+      gcp-project-name:
+        description: GCP project name to use
+        required: true
+        default: ICL
+      ingress-domain:
+        description: Ingress domain name
+        required: true
+        default: ci-01.ci.x1infra.com
+      skip-deploy-gke:
+        type: boolean
+        description: Skip creating GKE cluster
+        required: true
+        default: false
+      skip-deploy-x1:
+        type: boolean
+        description: Skip deploying X1
+        required: true
+        default: false
+      skip-wait:
+        type: boolean
+        description: Skip waiting for the cluster to be available
+        required: true
+        default: false
+      skip-smoke-tests:
+        type: boolean
+        description: Skip smoke tests on the cluster
+        required: true
+        default: false
+      skip-destroy:
+        type: boolean
+        description: Skip destroying cluster
+        required: true
+        default: false
+
+    secrets:
+      GCP_KEY_BASE64:
+        required: true
+      TF_PSQL_CONNECTION_STRING:
+        required: true
+      TF_PSQL_USER:
+        required: true
+      TF_PSQL_PASSWORD:
+        required: true
+      AWS_ACCESS_KEY_ID:
+        required: false
+      AWS_SECRET_ACCESS_KEY:
+        required: false
+
+jobs:
+  deploy:
+    runs-on: [glados, docker]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup environment
+        run: |
+          set -xe
+          mkdir -p tmp_home
+          export HOME=${PWD}/tmp_home
+
+          mkdir -p .x1
+          mkdir -p ${HOME}/.aws
+          mkdir -p ${HOME}/.config/gcloud
+          mkdir -p ${HOME}/.kube
+
+          echo -ne "
+          export TF_PG_CONN_STR="${{ secrets.TF_PSQL_CONNECTION_STRING }}"
+          export PGUSER="${{ secrets.TF_PSQL_USER }}"
+          export PGPASSWORD="${{ secrets.TF_PSQL_PASSWORD }}"
+          export GOOGLE_APPLICATION_CREDENTIALS=${HOME}/gcp_key.json
+          export X1_CLUSTER_NAME="${{ inputs.cluster-name || 'sc-github-ci-01' }}"
+          export X1_GCP_PROJECT_NAME="${{ inputs.gcp-project-name || 'sequoia-coast' }}"
+          export X1_INGRESS_DOMAIN="${{ inputs.ingress-domain || 'ci-01.ci.x1infra.com' }}"
+          export INGRESS_DOMAIN="${{ inputs.ingress-domain || 'ci-01.ci.x1infra.com' }}"
+          export S3_ENDPOINT="s3.${{ inputs.ingress-domain || 'ci-01.ci.x1infra.com' }}"
+          export RAY_ENDPOINT="ray-api.${{ inputs.ingress-domain || 'ci-01.ci.x1infra.com' }}"
+          export X1_EXTERNALDNS_ENABLED=true
+          export DISABLE_RAY_TEST=1
+          export X1_TERRAFORM_DISABLE_LOCKING=true
+          " > .x1/environment
+
+          source .x1/environment
+
+          echo ${{ secrets.GCP_KEY_BASE64 }} | base64 -d > ${HOME}/gcp_key.json
+
+          test ! -z "${{ secrets.AWS_ACCESS_KEY_ID }}" &&
+          echo -ne "
+          [default]
+          aws_access_key_id = ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key = ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          " > ${HOME}/.aws/credentials
+          pwd
+          ./scripts/deploy/gke.sh --gcloud-login
+          ./scripts/deploy/gke.sh --render
+          ./scripts/deploy/gke.sh --config || true
+
+      - name: Apply GKE cluster
+        if: ${{ !inputs.skip-deploy-gke }}
+        run: |
+          set -xe
+          source .x1/environment
+          export HOME=${PWD}/tmp_home
+          ./scripts/deploy/gke.sh --render
+          ./scripts/deploy/gke.sh --deploy-gke
+          ./scripts/deploy/gke.sh --config
+          test -f ${HOME}/.aws/credentials && {
+            ./scripts/deploy/gke.sh --console kubectl create namespace external-dns || true
+            ./scripts/deploy/gke.sh --console \
+              kubectl delete \
+              -n external-dns \
+              --ignore-not-found \
+              secret external-dns;
+            } || true
+            ./scripts/deploy/gke.sh --console \
+              kubectl create -n external-dns \
+              secret generic external-dns \
+              --from-file .aws/credentials
+
+      - name: Apply X1 cluster
+        if: ${{ !inputs.skip-deploy-x1 }}
+        run: |
+          source .x1/environment
+          export HOME=${PWD}/tmp_home
+          ./scripts/deploy/gke.sh --deploy-x1
+
+      - name: Wait for the cluster to be reachable
+        if: ${{ !inputs.skip-wait }}
+        run: |
+          sleep 180
+
+      - name: Run smoke tests
+        if: ${{ !inputs.skip-smoke-tests }}
+        run: |
+          source .x1/environment
+          export HOME=${PWD}/tmp_home
+          set -x
+          ./scripts/deploy/gke.sh --render
+          ./scripts/deploy/gke.sh --gcloud-login
+          ./scripts/deploy/gke.sh --config
+          ./scripts/deploy/gke.sh --start-proxy
+          ./scripts/deploy/gke.sh --console kubectl get ns
+          ./scripts/deploy/gke.sh --console source x1/.x1/environment '&&' export HOME=/tmp '&&' ./x1/scripts/ccn/test.sh
+
+      - name: Destroy X1 cluster
+        if: always() && !inputs.skip-destroy
+        run: |
+          source .x1/environment
+          export HOME=${PWD}/tmp_home
+          ./scripts/deploy/gke.sh --render
+          ./scripts/deploy/gke.sh --gcloud-login
+          ./scripts/deploy/gke.sh --config
+          ./scripts/deploy/gke.sh --delete

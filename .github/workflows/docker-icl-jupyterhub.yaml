@@ -1,0 +1,68 @@
+name: Docker icl-jupyterhub images
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        type: string
+        description: Image tag
+        required: true
+        default: 0.0.22
+      push:
+        description: Push image to DockerHub
+        required: true
+        type: choice
+        options:
+          - false
+          - true
+        default: false
+
+env:
+  DOCKER_BUILD_ARGS: --build-arg http_proxy --build-arg https_proxy
+
+jobs:
+  build:
+    runs-on: [glados, docker]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Checkout aregm/icl repository
+        uses: actions/checkout@v4
+        with:
+          repository: aregm/icl
+          path: icl
+
+      - name: Docker info
+        run: docker info
+
+      - name: Build image pbchekin/icl-jupyterhub:${{ inputs.tag }}
+        run: |
+          cd icl
+          mkdir -p docker
+          cp -r ../docker/icl-jupyterhub/ docker/ 
+          docker build . \
+            $DOCKER_BUILD_ARGS \
+            --file docker/icl-jupyterhub/Dockerfile \
+            --tag pbchekin/icl-jupyterhub:${{ inputs.tag }}
+
+      - name: Build image pbchekin/icl-jupyterhub-gpu:${{ inputs.tag }}
+        if: false
+        run: |
+          cd docker/icl-jupyterhub-gpu
+          docker build . \
+            $DOCKER_BUILD_ARGS \
+            --tag pbchekin/icl-jupyterhub-gpu:${{ inputs.tag }} \
+            --build-arg BASE_TAG=pbchekin/icl-jupyterhub:${{ inputs.tag }}
+
+      - name: Login to Docker Hub
+        if: ${{ inputs.push == 'true' }}
+        run: docker login --username "${{ vars.DOCKERHUB_USERNAME }}" --password "${{ secrets.DOCKERHUB_PASSWORD }}"
+
+      - name: Push image pbchekin/icl-jupyterhub:${{ inputs.tag }}
+        if: ${{ inputs.push == 'true' }}
+        run: docker push pbchekin/icl-jupyterhub:${{ inputs.tag }}
+
+      - name: Push image pbchekin/icl-jupyterhub-gpu:${{ inputs.tag }}
+        if: ${{ false && inputs.push == 'true' }}
+        run: docker push pbchekin/icl-jupyterhub-gpu:${{ inputs.tag }}

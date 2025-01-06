@@ -1,0 +1,37 @@
+name: ICL on Vagrant VMs with MAAS with Rocky Linux
+
+# Controls when the workflow will run
+on:
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: [self-hosted, vagrant-libvirt]
+    steps:
+      - name: Checkout ICL repository
+        uses: actions/checkout@v3
+
+      - name: Checkout ICL-cluster-profiles repository
+        uses: actions/checkout@v3
+        with:
+          repository: icl/cluster-profiles
+          path: icl-cluster-profiles
+          token: ${{ secrets.X1_GITHUB_TOKEN }}
+
+      - name: Deploy ICL to Vagrant VMs
+        run: ./scripts/ci/vm.sh rocky ${{ secrets.ICL_GITHUB_TOKEN }}
+
+      - name: Prepare logs
+        if: failure()
+        run: |
+          mkdir -p logs
+          tar -zcf logs/logs.tgz /var/log
+
+      - name: Upload logs
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: logs
+          path: logs
+          if-no-files-found: warn

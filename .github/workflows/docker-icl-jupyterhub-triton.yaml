@@ -1,0 +1,46 @@
+name: Docker icl-jupyterhub-triton image
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        type: string
+        description: Image tag
+        required: true
+        default: 0.0.33
+      push:
+        description: Push image to DockerHub
+        required: true
+        type: choice
+        options:
+          - false
+          - true
+        default: false
+
+env:
+  DOCKER_BUILD_ARGS: --build-arg http_proxy --build-arg https_proxy
+
+jobs:
+  build:
+    runs-on: [glados, docker]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Docker info
+        run: docker info
+
+      - name: Build image pbchekin/icl-jupyterhub-triton:${{ inputs.tag }}
+        run: |
+          cd docker/icl-jupyterhub-triton
+          docker build . \
+            $DOCKER_BUILD_ARGS \
+            --tag pbchekin/icl-jupyterhub-triton:${{ inputs.tag }} \
+
+      - name: Login to Docker Hub
+        if: inputs.push == 'true'
+        run: docker login --username "${{ vars.DOCKERHUB_USERNAME }}" --password "${{ secrets.DOCKERHUB_PASSWORD }}"
+
+      - name: Push image pbchekin/icl-jupyterhub-triton:${{ inputs.tag }}
+        if: inputs.push == 'true'
+        run: docker push pbchekin/icl-jupyterhub-triton:${{ inputs.tag }}
