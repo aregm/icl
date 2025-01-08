@@ -4,19 +4,15 @@ Get [gh-runner script](https://github.com/leshikus/gh-runner) and `x1` repo. The
 
 ```
 git clone https://github.com/leshikus/gh-runner
-git clone https://github.com/intel-sandbox/x1
+git clone https://github.com/aregm/icl/
 ```
 
-Set `RUNNER_NAME=intel-sandbox/x1/libvirt-vagrant-1` and `TOKEN` from Github
+Set `RUNNER_NAME=icl/x1/libvirt-vagrant-1` and `TOKEN` from Github
 
 Run the following:
 
 
 ```
-export no_proxy=intel.com,.intel.com,10.0.0.0/8,192.168.0.0/16,localhost,127.0.0.0/8,134.134.0.0/16,172.16.0.0/16,localtest.me,apt.repos.intel.com,x1infra.com
-export http_proxy=http://proxy-us.intel.com:912
-export https_proxy=http://proxy-us.intel.com:912
-
 sh gh-runner/run.sh  --token $TOKEN --context x1/docker/vagrant-libvirt-runner/ $RUNNER_NAME --labels vagrant-libvirt --become
 ```
 
