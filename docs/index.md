@@ -27,6 +27,9 @@ How ICL helps you or your team:
 
 ## Next
 
+* Use cases
+  * [How to create and maintain development environments](use-case-development-environments.md)
+  * [Unification of environments](use-case-unified-environments.md)
 * [Deploying ICL cluster](deployment.md)
   * [ICL cluster in a container](kind.md)
   * [ICL cluster in AWS](aws.md)
