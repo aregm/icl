@@ -10,7 +10,7 @@ if [[ -f .x1/environment ]]; then
 fi
 
 # Default values that can be overriden by corresponding environment variables
-: ${KIND_VERSION:="v0.20.0"}
+: ${KIND_VERSION:="v0.26.0"}
 : ${CLUSTER_NAME:="x1"}
 : ${X1_EXTERNALDNS_ENABLED:="false"}
 : ${CONTROL_NODE_IMAGE:=pbchekin/icl-ccn:0.0.5}
@@ -134,7 +134,7 @@ kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
 nodes:
   - role: control-plane
-    image: kindest/node:v1.28.0
+    image: kindest/node:v1.28.15
 EOF
 
   if [[ $ICL_INGRESS_HOST_PORTS == "true" ]]; then
