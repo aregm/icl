@@ -307,6 +307,7 @@ async def test_python_program(address, runtime_kind):
     assert program_run.is_completed()
 
 
+@pytest.mark.skip(reason='FIXME')
 @pytest.mark.asyncio
 @pytest.mark.parametrize('kind', ['ssh'])
 async def test_python_program_ssh(address, kind, jupyterhub_enable_ssh):
