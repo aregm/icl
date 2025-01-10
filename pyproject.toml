@@ -25,7 +25,7 @@ dependencies = [
     "fsspec>=2023.9.2",
     "python-docker",
     "s3fs>=2023.9.2",
-    "prefect==2.20.9",
+    "prefect==2.20.16",
 ]
 
 [project.urls]
@@ -636,3 +636,6 @@ ignored-argument-names = "_.*|^ignored_|^unused_"
 # List of qualified module names which can have objects that can redefine
 # builtins.
 redefining-builtins-modules = ["six", "six.moves", "past.builtins", "future.builtins", "functools"]
+
+[tool.pytest.ini_options]
+asyncio_default_fixture_loop_scope = "function"
