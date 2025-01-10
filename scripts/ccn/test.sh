@@ -60,7 +60,8 @@ function integration_tests() {
   # make sure ICL uses infrastructure address rather than PREFECT_API_URL
   unset PREFECT_API_URL
   cd "$PROJECT_DIR/tests/integration"
-  pytest -n 4 -v . --address "$ICL_INGRESS_DOMAIN"
+  # FIXME: temporary run tests sequentially, there is an issue with pytest-xdist and pytest-asyncio
+  pytest -v . --address "$ICL_INGRESS_DOMAIN"
 }
 
 function test_all() {
