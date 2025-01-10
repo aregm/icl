@@ -62,7 +62,6 @@ integration_tests = [
     "minio",
     "pytest",
     "pytest-asyncio",
-    "pytest-depends==1.0.1",
     "pytest-xdist",
     "ray[client]==2.9.2",
 ]
