@@ -130,6 +130,12 @@ variable "prefect_api_url" {
   type = string
 }
 
+variable "ray_enabled" {
+  description = "Enable Ray"
+  type = bool
+  default = false
+}
+
 variable "ray_image" {
   description = "Full tag for Ray Docker image"
   default = "pbchekin/icl-ray:2.9.2-py39"

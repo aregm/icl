@@ -85,6 +85,7 @@ module "prefect" {
 }
 
 module "ray" {
+  count = var.ray_enabled ? 1 : 0
   source = "../modules/ray"
   depends_on = [module.shared-volume]
   namespace_labels = var.namespace_labels
