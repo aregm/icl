@@ -1,8 +1,8 @@
 import time
 from os import getenv
 
+import pytest
 import ray
-from pytest import mark
 
 
 def ray_init(address, retries=10, retry_delay=30):
@@ -25,10 +25,7 @@ def f(x):
     return x * x
 
 
-@mark.skipif(
-    getenv("ICL_DISABLE_RAY_TEST") is not None,
-    reason="Ray test is disabled by setting ICL_DISABLE_RAY_TEST",
-)
+@pytest.mark.skip(reason='Ray disabled')
 def test_ray(ray_endpoint):
     ray_init(address=f'ray://{ray_endpoint}')
     living_nodes = [node for node in ray.nodes() if node.get('alive')]

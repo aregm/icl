@@ -67,7 +67,5 @@ Note that the proxy is only used by the script itself, it is not used in the clu
 
 # On control node execute
 export ICL_INGRESS_DOMAIN={ingress_domain}
-# Ray client endpoint is not currently supported on GKE
-export ICL_DISABLE_RAY_TEST=1
 ./scripts/ccn/test.sh
 ```
