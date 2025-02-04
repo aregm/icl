@@ -1,7 +1,7 @@
 # Infrastructure Control Language
 
 Infrastructure control language - ICL is a software development kit comprised of tools and a library that allows you to:
-* Easily run your workload locally and on any cloud directly with simple from within your code.
+* Easily run your workload locally and on any cloud directly with simple API directly from within your code.
 * Simplifies the Infrastructure as Code approach by providing a semantically unified API across all of your infrastructure
 * logically separates the infrastructure control part from the code logic directly in Python
 * integrates your favorite tools, i.e., Jupyter Notebooks and VS Code, with your favorite add-ons to make you feel at home everywhere.
