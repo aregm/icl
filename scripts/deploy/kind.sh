@@ -9,12 +9,13 @@ if [[ -f .x1/environment ]]; then
   source .x1/environment
 fi
 
-# Default values that can be overriden by corresponding environment variables
+# Default values that can be overridden by corresponding environment variables
 : ${KIND_VERSION:="v0.26.0"}
 : ${CLUSTER_NAME:="x1"}
 : ${X1_EXTERNALDNS_ENABLED:="false"}
 : ${CONTROL_NODE_IMAGE:=pbchekin/icl-ccn:0.0.5}
 : ${KUBECONFIG:="$HOME/.kube/config"}
+: ${ICL_NVIDIA:=false}
 
 # Ingress ports are ports on the hosts that are used to forward traffic to the kind cluster.
 # If one on the ports below is not available on the host then you need to change the corresponding value.
@@ -85,7 +86,7 @@ fi
 function create_kube_config() {
   local workspace="workspace/kind/$CLUSTER_NAME"
   local kube_config="$PROJECT_ROOT/$workspace/config"
-  if [[ $ICL_INGRESS_HOST_PORTS == "true" ]]; then
+  if [[ $ICL_INGRESS_HOST_PORTS = true ]]; then
     kind get kubeconfig --name "$CLUSTER_NAME" > "$kube_config"
   else
     kind get kubeconfig --name "$CLUSTER_NAME" --internal > "$kube_config"
@@ -123,6 +124,14 @@ function ensure_ccn() {
   fi
 }
 
+function setup_nvidia() {
+  # Tested only on Debian Bookworm
+  docker cp "$PROJECT_ROOT/scripts/etc/kind/nvidia.sh" "$CLUSTER_NAME-control-plane:/nvidia.sh" > /dev/null
+  cluster_node "/bin/bash /nvidia.sh"
+  docker cp "$PROJECT_ROOT/scripts/etc/kind/containerd-config.toml" "$CLUSTER_NAME-control-plane:/etc/containerd/config.toml" > /dev/null
+  cluster_node "systemctl restart containerd"
+}
+
 # TODO: make ports 80 and 443 configurable on host
 function create_kind_cluster() {
   local workspace="workspace/kind/$CLUSTER_NAME"
@@ -137,7 +146,7 @@ nodes:
     image: kindest/node:v1.28.15
 EOF
 
-  if [[ $ICL_INGRESS_HOST_PORTS == "true" ]]; then
+  if [[ $ICL_INGRESS_HOST_PORTS = true ]]; then
     cat << EOF >> "$kind_config"
     # This works only for one node, see https://kind.sigs.k8s.io/docs/user/ingress/#ingress-nginx
     # With multiple nodes, a more granular control is needed where nginx pod is running.
@@ -162,6 +171,28 @@ EOF
 EOF
   fi
 
+  if [[ $ICL_NVIDIA = true ]]; then
+    echo "    extraMounts:" >> "$kind_config"
+    for i in $(seq 0 $((GPU_COUNT-1))); do
+      echo "      - hostPath: /dev/nvidia${i}" >> "$kind_config"
+      echo "        containerPath: /dev/nvidia${i}" >> "$kind_config"
+    done
+    for device in nvidia-uvm nvidia-uvm-tools nvidiactl nvidia-modeset nvidia-caps; do
+        if [[ -e "/dev/${device}" ]]; then
+          echo "      - hostPath: /dev/${device}" >> "$kind_config"
+          echo "        containerPath: /dev/${device}" >> "$kind_config"
+        fi
+    done
+    cat << EOF >> "$kind_config"
+kubeadmConfigPatches:
+  - |
+    kind: InitConfiguration
+    nodeRegistration:
+      kubeletExtraArgs:
+        node-labels: "nvidia.com/gpu=true"
+EOF
+  fi
+
   if [[ -v dockerhub_proxy ]]; then
     pass "DockerHub proxy: ${dockerhub_proxy}"
     cat << EOF >> "$kind_config"
@@ -176,6 +207,8 @@ containerdConfigPatches:
 EOF
   fi
   kind create cluster --name $CLUSTER_NAME --config="$kind_config"
+  pass "Cluster is up, waiting for the nodes to become ready"
+  control_node "kubectl wait --for=condition=ready node --all --timeout=120s"
 }
 
 # execute command on kind cluster node
@@ -197,7 +230,6 @@ function cluster_node() {
 
   docker exec "${docker_cmd[@]}"
 }
-
 
 function pull_images() {
   xargs -P4 -n1 docker pull -q < "$PROJECT_ROOT/scripts/etc/kind/images.txt"
@@ -244,7 +276,7 @@ function with_corefile() {
   control_node python -m scripts.kubernetes.coredns $CONTROl_PLANE_IP $ICL_INGRESS_DOMAIN
 }
 
-if [[ $ICL_BUILD_CCN == "true" ]]; then
+if [[ $ICL_BUILD_CCN = true ]]; then
   ICL_LOCAL_CCN="icl-ccn:$(ccn_tag)"
 fi
 
@@ -265,6 +297,7 @@ Options:
   --with-cert-manager Deploy a cluster with cert-manager
   --with-proxy        Enable HTTP/HTTPS proxy for the existing cluster (uses https_proxy or http_proxy)
   --with-no-proxy     Disable HTTP/HTTPS proxy for the existing cluster
+  --with-nvidia       Deploy a cluster with NVIDIA GPU support
   --delete            Delete cluster $CLUSTER_NAME
 EOF
   exit 0
@@ -303,7 +336,7 @@ fi
 
 if [[ " $@ " =~ " --delete " ]]; then
   kind delete cluster --name $CLUSTER_NAME
-  if [[ $ICL_BUILD_CCN == "true" ]]; then
+  if [[ $ICL_BUILD_CCN = true ]]; then
     delete_ccn $(ccn_tag)
   fi
   exit 0
@@ -334,15 +367,34 @@ if [[ " $@ " =~ " --delete-ccn " ]]; then
   exit 0
 fi
 
+if [[ " $@ " =~ " --with-nvidia " ]]; then
+  ICL_NVIDIA=true
+  for cmd in nvidia-smi find; do
+    if ! is_installed "$cmd"; then
+      exit 1
+    fi
+  done
+
+  CUDA_VERSION=$(nvidia-smi --query-gpu=driver_version --format=csv,noheader | head -n1)
+  if [[ ! $CUDA_VERSION ]]; then
+      fail "Could not detect CUDA version"
+      exit 1
+  fi
+  pass "Detected CUDA version: $CUDA_VERSION"
+
+  GPU_COUNT=$(nvidia-smi --query-gpu=gpu_name --format=csv,noheader | wc -l)
+  pass "Detected $GPU_COUNT GPU(s)"
+fi
+
 if kind get clusters | grep -qE "^${CLUSTER_NAME}\$" &> /dev/null; then
   pass "Cluster $CLUSTER_NAME is up"
-  if [[ $ICL_BUILD_CCN == "true" ]]; then
+  if [[ $ICL_BUILD_CCN = true ]]; then
     ensure_ccn $(ccn_tag)
   fi
 else
   pass "Cluster $CLUSTER_NAME is not up, will attempt to create a new cluster"
   create_kind_cluster
-  if [[ $ICL_BUILD_CCN == "true" ]]; then
+  if [[ $ICL_BUILD_CCN = true ]]; then
     ensure_ccn $(ccn_tag)
   fi
   if [[ " $@ " =~ " --with-images " ]]; then
@@ -350,6 +402,9 @@ else
   fi
   if [[ -v http_proxy || -v https_proxy ]]; then
     with_proxy
+  fi
+  if [[ $ICL_NVIDIA = true ]]; then
+    setup_nvidia
   fi
 fi
 
@@ -359,7 +414,8 @@ terraform_extra_args=(
   -var prometheus_enabled=false         # Disable prometheus stack to make footprint smaller
   -var ingress_domain="$ICL_INGRESS_DOMAIN"
   -var externaldns_enabled="$X1_EXTERNALDNS_ENABLED"
-  -var enable_nvidia_operator=false
+  -var enable_nvidia_operator=$ICL_NVIDIA
+  -var gpu_type="nvidia"
 )
 
 if [[ " $@ " =~ " --with-clearml " ]]; then

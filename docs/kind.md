@@ -5,7 +5,7 @@
 * Docker installed.
 * Firewall allows connections to arbitrary ports from localhost to localhost and Docker network.
 
-In Windows, WSL (Windows Subsystem for Linux) version 1.1.2.0 or newer (version 1.1.0.0 has a bug with port forwarding https://github.com/microsoft/WSL/issues/9508).  
+In Windows, WSL (Windows Subsystem for Linux) version 1.1.2.0 or newer (version 1.1.0.0 has a bug with port forwarding https://github.com/microsoft/WSL/issues/9508).
 
 ## Create a local ICL cluster
 
@@ -50,12 +50,56 @@ control_node "kubectl get namespaces"
 
 ## Advanced scenarios
 
+### Cluster with NVIDIA GPU support
+
+The following command passes the existing `/dev/nvidia*` devices to the cluster and installs the required dependencies:
+
+```shell
+./scripts/deploy/kind.sh --with-nvidia
+```
+
+To verify that NVIDIA GPU works in the cluster execute:
+
+```shell
+cat <<EOF | kubectl create -f -
+ apiVersion: v1
+ kind: Pod
+ metadata:
+   name: vector-add
+ spec:
+   restartPolicy: OnFailure
+   containers:
+   - name: vector-add
+     image: nvcr.io/nvidia/k8s/cuda-sample:vectoradd-cuda10.2
+     resources:
+       limits:
+          nvidia.com/gpu: 1
+EOF
+```
+
+Check the logs:
+
+```shell
+kubectl logs vector-add
+```
+
+If NVIDIA GPU works in the cluster you will see the following output:
+
+```
+[Vector addition of 50000 elements]
+Copy input data from the host memory to the CUDA device
+CUDA kernel launch with 196 blocks of 256 threads
+Copy output data from the CUDA device to the host memory
+Test PASSED
+Done
+```
+
 ### Control node console
 
 The following command starts an ephemeral control node in a Docker container and starts a new Bash session:
 
 ```shell
-./scripts/deploy/aws.sh --console
+./scripts/deploy/kind.sh --console
 ```
 
 The Kubernetes context is configured in that control node,
