@@ -32,7 +32,7 @@ jobs:
 
       - name: Deploy a cluster with kind
         run: |
-          ./scripts/deploy/kind.sh
+          ./scripts/deploy/kind.sh || sleep inf
 
       - name: Run tests
         run: |
