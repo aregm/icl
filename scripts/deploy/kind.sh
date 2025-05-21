@@ -208,7 +208,7 @@ EOF
   fi
   kind create cluster --name $CLUSTER_NAME --config="$kind_config"
   pass "Cluster is up, waiting for the nodes to become ready"
-  control_node "kubectl wait --for=condition=ready node --all --timeout=120s"
+  cluster_node "kubectl wait --for=condition=ready node --all --timeout=120s"
 }
 
 # execute command on kind cluster node
