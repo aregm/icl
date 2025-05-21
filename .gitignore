@@ -28,5 +28,6 @@ venv/
 # IDEs
 .idea/
 *.swp
+.zed/
 
 .x1/

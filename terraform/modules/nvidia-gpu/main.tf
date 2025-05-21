@@ -1,20 +1,3 @@
-data "http" "nvidia-device-plugin" {
-  url = "https://raw.githubusercontent.com/NVIDIA/k8s-device-plugin/${var.device-plugin-release}/nvidia-device-plugin.yml"
-}
-
-resource "local_file" "nvidia-device-plugin" {
-  content  = data.http.nvidia-device-plugin.response_body
-  filename = "/tmp/nvidia-device-plugin.yml"
-}
-
-resource "null_resource" "nvidia-device-plugin" {
-  provisioner "local-exec" {
-    command = <<-EOT
-      kubectl apply -f ${local_file.nvidia-device-plugin.filename}
-    EOT
-  }
-}
-
 resource "helm_release" "gpu-operator" {
   name = "gpu-operator"
   namespace = "gpu-operator"
@@ -26,4 +9,19 @@ resource "helm_release" "gpu-operator" {
   cleanup_on_fail = true
   reset_values = true
   replace = true
+  values = [
+    <<-EOT
+    driver:
+      enabled: false
+      useHostMounts: true
+    toolkit:
+      enabled: true
+      version: v1.15.0-ubuntu20.04
+    devicePlugin:
+      enabled: true
+      version: v0.14.3-ubuntu20.04
+    migManager:
+      enabled: false
+    EOT
+  ]
 }
