@@ -415,7 +415,9 @@ terraform_extra_args=(
   -var ingress_domain="$ICL_INGRESS_DOMAIN"
   -var externaldns_enabled="$X1_EXTERNALDNS_ENABLED"
   -var enable_nvidia_operator=$ICL_NVIDIA
-  -var gpu_type="nvidia"
+  -var gpu_type="$([[ $ICL_NVIDIA = true ]] && echo nvidia || echo none)"
+  -var gpu_enabled=$ICL_NVIDIA
+  -var jupyterhub_extra_resource_limits="nvidia.com/gpu"
 )
 
 if [[ " $@ " =~ " --with-clearml " ]]; then
