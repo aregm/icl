@@ -52,6 +52,8 @@ control_node "kubectl get namespaces"
 
 ### Cluster with NVIDIA GPU support
 
+Before installing ICL cluster with NVIDIA support make sure you have the [latest NVIDIA driver](https://docs.nvidia.com/cuda/cuda-installation-guide-linux/index.html#package-manager-installation) installed.
+
 The following command passes the existing `/dev/nvidia*` devices to the cluster and installs the required dependencies:
 
 ```shell
