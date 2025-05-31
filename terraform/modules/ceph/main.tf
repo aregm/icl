@@ -47,6 +47,9 @@ resource "helm_release" "ceph_cluster" {
           ssl: false
         storage:
           deviceFilter: "${var.ceph_device_filter}"
+        monitoring:
+          enabled: true
+          createPrometheusRules: true 
         # cephObjectStores:
         # TODO: instances == number of nodes
         # TODO: increase CPU and RAM limits for the gateway
