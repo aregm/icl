@@ -183,6 +183,7 @@ resource "helm_release" "jupyterhub" {
         extraEnv:
           JUPYTERHUB_SINGLEUSER_APP: jupyter_server.serverapp.ServerApp
           PREFECT_API_URL: "${var.prefect_api_url}"
+          PREFECT_API_REQUEST_TIMEOUT: "5"
           PREFECT_UI_URL: "http://prefect.${var.ingress_domain}"
         networkPolicy:
           enabled: false
@@ -206,6 +207,9 @@ resource "helm_release" "jupyterhub" {
           - jupyter.${var.ingress_domain}
         annotations:
           nginx.ingress.kubernetes.io/proxy-body-size: "0"
+          nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+          nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+          nginx.ingress.kubernetes.io/proxy-buffering: "off"
       scheduling:
         userScheduler:
           enabled: false
