@@ -17,7 +17,7 @@ def test_jupyterhub_notebook(jupyterhub_namespace, jupyterhub_session_pod_name):
         "/tmp/test_notebook.ipynb",
     )
 
-    # In order to execute NB inside the python-3.9 conda environment, we install nbconvert to this "user" environment.
+    # In order to execute NB inside the python-3.12 conda environment, we install nbconvert to this "user" environment.
     # There is a better way to do this.
     exec_in_pod(
         core_v1,
@@ -26,8 +26,8 @@ def test_jupyterhub_notebook(jupyterhub_namespace, jupyterhub_session_pod_name):
         [
             "/bin/bash",
             "-c",
-            "{ ~/.conda/bin/conda install -n python-3.9 -y nbconvert && \
-         ~/.conda/bin/conda run -n python-3.9 \
+            "{ ~/.conda/bin/conda install -n python-3.12 -y nbconvert && \
+         ~/.conda/bin/conda run -n python-3.12 \
             jupyter nbconvert /tmp/test_notebook.ipynb --execute --to notebook; } > /tmp/nbconvert.log 2>&1",
         ],
     )

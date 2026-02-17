@@ -22,7 +22,7 @@ spec:
                 topologyKey: kubernetes.io/hostname
       containers:
         - name: worker
-          image: "ghcr.io/dask/dask:2022.8.1-py3.9"
+          image: "ghcr.io/dask/dask:2026.1.2-py3.12"
           imagePullPolicy: "IfNotPresent"
           args:
             - dask-worker
@@ -32,7 +32,7 @@ spec:
     spec: # PodSpec, standard k8s pod - https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#podspec-v1-core
       containers:
         - name: scheduler
-          image: "ghcr.io/dask/dask:2022.8.1-py3.9"
+          image: "ghcr.io/dask/dask:2026.1.2-py3.12"
           imagePullPolicy: "IfNotPresent"
           args:
             - dask-scheduler
