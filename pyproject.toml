@@ -25,7 +25,7 @@ dependencies = [
     "fsspec>=2023.9.2",
     "python-docker",
     "s3fs>=2023.9.2",
-    "prefect==2.20.16",
+    "prefect>=3.6,<4",
 ]
 
 [project.urls]
