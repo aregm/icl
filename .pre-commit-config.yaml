@@ -24,3 +24,8 @@ repos:
       - id: bandit
         args: ["-c", "pyproject.toml"]
         additional_dependencies: ["bandit[toml]"]
+# Temporary disable flake8 since it cannot use pyproject.yaml
+#  - repo: https://github.com/pycqa/flake8
+#    rev: 4.0.1
+#    hooks:
+#      - id: flake8
