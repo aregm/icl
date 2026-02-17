@@ -206,6 +206,9 @@ resource "helm_release" "jupyterhub" {
           - jupyter.${var.ingress_domain}
         annotations:
           nginx.ingress.kubernetes.io/proxy-body-size: "0"
+          nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+          nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+          nginx.ingress.kubernetes.io/proxy-buffering: "off"
       scheduling:
         userScheduler:
           enabled: false
