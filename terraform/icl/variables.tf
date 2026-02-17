@@ -118,9 +118,15 @@ variable "docker_registry_storage_size" {
   type = string
 }
 
-variable "prefect_image_tag" {
-  description = "Tag of the official Prefect Docker image"
-  default = "2.20.16-python3.9"
+variable "prefect_server_image_tag" {
+  description = "Tag of the Prefect server Docker image"
+  default = "3.6.17-python3.11"
+  type = string
+}
+
+variable "prefect_worker_image_tag" {
+  description = "Tag of the Prefect worker Docker image"
+  default = "3-python3.11-kubernetes"
   type = string
 }
 

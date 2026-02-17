@@ -4,21 +4,34 @@ variable "namespace_labels" {
   default = {}
 }
 
-variable "agent_namespace" {
-  description = "Namespace for Prefect agent"
+variable "worker_namespace" {
+  description = "Namespace for Prefect worker"
   type = string
   default = "default"
 }
 
 variable "chart_version" {
   description = "Version of Prefect Helm chart"
-  default = "2024.4.4201250"
+  default = "2026.2.12200748"
   type = string
 }
 
-variable "image_tag" {
-  description = "Tag of Prefect Docker image"
+variable "server_image_tag" {
+  description = "Tag of the Prefect server Docker image"
   type = string
+  default = "3.6.17-python3.11"
+}
+
+variable "worker_image_tag" {
+  description = "Tag of the Prefect worker Docker image"
+  type = string
+  default = "3-python3.11-kubernetes"
+}
+
+variable "work_pool_name" {
+  description = "Name of the Prefect work pool for the worker"
+  type = string
+  default = "default-pool"
 }
 
 variable "api_url" {

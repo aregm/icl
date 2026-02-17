@@ -5,20 +5,29 @@ resource "helm_release" "kubernetes-dashboard" {
   repository = "https://kubernetes.github.io/dashboard/"
   chart = "kubernetes-dashboard"
   version = var.release
+  timeout = 600
   values = [
     <<-EOT
-      protocolHttp: true
-      extraArgs:
-        - --enable-insecure-login=false
-      service:
-        type: ClusterIP
-      ingress:
-        enabled: true
-        hosts:
-          - dashboard.${var.ingress_domain}
-      serviceAccount:
-        create: false
-        name: admin-user
+      app:
+        ingress:
+          enabled: true
+          hosts:
+            - dashboard.${var.ingress_domain}
+          useDefaultIngressClass: true
+          useDefaultAnnotations: true
+          issuer:
+            scope: disabled
+          tls:
+            enabled: false
+      kong:
+        proxy:
+          type: ClusterIP
+          http:
+            enabled: true
+      cert-manager:
+        enabled: false
+      nginx:
+        enabled: false
     EOT
   ]
 }

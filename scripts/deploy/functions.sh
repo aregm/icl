@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 # Functions used by other scripts
 
 : ${SCRIPT_DIR:=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )}

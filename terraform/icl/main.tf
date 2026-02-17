@@ -78,7 +78,8 @@ module "prefect" {
   source = "../modules/prefect"
   depends_on = [module.shared-volume]
   namespace_labels = var.namespace_labels
-  image_tag = var.prefect_image_tag
+  server_image_tag = var.prefect_server_image_tag
+  worker_image_tag = var.prefect_worker_image_tag
   api_url = var.prefect_api_url
   ingress_domain = var.ingress_domain
   shared_volume_enabled = var.shared_volume_enabled
