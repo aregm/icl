@@ -4,8 +4,11 @@ ARG KUBECTL_VERSION=v1.28.2
 ARG HELM_VERSION=v3.10.1
 ARG TERRAFORM_VERSION=1.4.6
 
-ENV HOME=/work
+# BuildKit-provided args (set automatically by docker buildx)
+ARG TARGETOS
+ARG TARGETARCH
 
+ENV HOME=/work
 ENV PYTHONPATH=/work/x1:/work/x1/src
 
 # Configuration file for kubectl
@@ -38,24 +41,24 @@ RUN set -ex \
   && rm -rf /var/lib/apt/lists/*
 
 # Install dependencies for Python scripts
-# TODO: use consolidated list of dependencies for Python scripts
 RUN pip install --no-cache-dir kubernetes boto3 pydantic click
 
-# Install kubectl to /usr/local/bin
-RUN \
-    curl -sSL -o /usr/local/bin/kubectl https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/amd64/kubectl \
-    && chmod 0755 /usr/local/bin/kubectl
-
-# Install helm to /usr/local/bin
-RUN \
-    cd /usr/local/bin \
-    && curl -sSL https://get.helm.sh/helm-${HELM_VERSION}-linux-amd64.tar.gz -o - | tar --strip-components=1 -zxf - linux-amd64/helm
-
-# Install terraform to /usr/local/bin
-RUN \
-    curl -sSLO https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip \
-    && unzip terraform_${TERRAFORM_VERSION}_linux_amd64.zip -d /usr/local/bin \
-    && rm terraform_${TERRAFORM_VERSION}_linux_amd64.zip
+# Resolve tool arch names once
+RUN set -ex \
+  && : "${TARGETOS:=linux}" \
+  && case "${TARGETARCH}" in \
+       amd64) TOOL_ARCH=amd64 ;; \
+       arm64) TOOL_ARCH=arm64 ;; \
+       *) echo "Unsupported TARGETARCH: ${TARGETARCH}" >&2; exit 1 ;; \
+     esac \
+  && echo "Using TARGETOS=${TARGETOS} TARGETARCH=${TARGETARCH} TOOL_ARCH=${TOOL_ARCH}" \
+  && curl -sSL -o /usr/local/bin/kubectl "https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/${TARGETOS}/${TOOL_ARCH}/kubectl" \
+  && chmod 0755 /usr/local/bin/kubectl \
+  && cd /usr/local/bin \
+  && curl -sSL "https://get.helm.sh/helm-${HELM_VERSION}-${TARGETOS}-${TOOL_ARCH}.tar.gz" -o - | tar --strip-components=1 -zxf - "${TARGETOS}-${TOOL_ARCH}/helm" \
+  && curl -sSLo "/tmp/terraform.zip" "https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_${TARGETOS}_${TOOL_ARCH}.zip" \
+  && unzip /tmp/terraform.zip -d /usr/local/bin \
+  && rm /tmp/terraform.zip
 
 RUN set -ex \
     && echo "export PS1='control_node:\w\\$ '" >> .bashrc \
