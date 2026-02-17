@@ -73,8 +73,10 @@ class PrefectRuntimeError(Exception):
     """Prefect runtime error."""
 
 
-class PrefectBlock(pydantic.v1.BaseModel):
+class PrefectBlock(pydantic.BaseModel):
     """Prefect Block specification."""
+
+    model_config = pydantic.ConfigDict(arbitrary_types_allowed=True)
 
     kind: str
     name: str
