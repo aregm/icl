@@ -1,4 +1,5 @@
 """icl-hub REST API."""
+
 from typing import Optional
 
 import fastapi

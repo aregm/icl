@@ -1,6 +1,5 @@
 """Register and discover classes in runtime."""
 
-
 from typing import Any, Dict, Optional, Tuple, Type
 
 

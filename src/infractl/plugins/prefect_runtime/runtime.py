@@ -394,9 +394,9 @@ class PrefectRuntimeImplementation(
         client_kwargs = storage_settings.setdefault('client_kwargs', {})
         if 'endpoint_url' not in client_kwargs:
             # TODO: support different schemas
-            client_kwargs[
-                'endpoint_url'
-            ] = f'http://s3.{self.infrastructure_implementation.address}'
+            client_kwargs['endpoint_url'] = (
+                f'http://s3.{self.infrastructure_implementation.address}'
+            )
         return storage_settings
 
     def sanitize_block_name(self, block_name: str) -> str:
