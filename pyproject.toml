@@ -8,7 +8,7 @@ authors = [
     {name = "Areg Melik-Adamyan", email = "areg@hey.com"},
     {name = "Pavel Chekin", email = "pbchekin@gmail.com"},
 ]
-requires-python = ">=3.9"
+requires-python = ">=3.12"
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Environment :: GPU",

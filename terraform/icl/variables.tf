@@ -120,13 +120,13 @@ variable "docker_registry_storage_size" {
 
 variable "prefect_server_image_tag" {
   description = "Tag of the Prefect server Docker image"
-  default = "3.6.17-python3.11"
+  default = "3.6.17-python3.12"
   type = string
 }
 
 variable "prefect_worker_image_tag" {
   description = "Tag of the Prefect worker Docker image"
-  default = "3-python3.11-kubernetes"
+  default = "3-python3.12-kubernetes"
   type = string
 }
 
@@ -144,7 +144,7 @@ variable "ray_enabled" {
 
 variable "ray_image" {
   description = "Full tag for Ray Docker image"
-  default = "pbchekin/icl-ray:2.9.2-py39"
+  default = "pbchekin/icl-ray:2.9.2-py312"
   type = string
 }
 

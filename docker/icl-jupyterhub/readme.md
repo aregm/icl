@@ -24,7 +24,7 @@ In Terminal, create a new conda environment and install ipykernel.
 
 conda_env="my-env"
 
-conda create --name $conda_env python=3.9 ipykernel
+conda create --name $conda_env python=3.12 ipykernel
 Optionally, change the display name for the kernel.
 
 display_name="My Env"

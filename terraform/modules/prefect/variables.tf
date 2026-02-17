@@ -19,13 +19,13 @@ variable "chart_version" {
 variable "server_image_tag" {
   description = "Tag of the Prefect server Docker image"
   type = string
-  default = "3.6.17-python3.11"
+  default = "3.6.17-python3.12"
 }
 
 variable "worker_image_tag" {
   description = "Tag of the Prefect worker Docker image"
   type = string
-  default = "3-python3.11-kubernetes"
+  default = "3-python3.12-kubernetes"
 }
 
 variable "work_pool_name" {

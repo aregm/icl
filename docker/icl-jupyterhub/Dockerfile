@@ -1,4 +1,4 @@
-FROM python:3.9-bullseye as python_builder
+FROM python:3.12-bookworm as python_builder
 
 WORKDIR /app
 
@@ -79,12 +79,12 @@ RUN set -e; \
 
 RUN echo "conda prefix after installing jupyterhub: $(du --human-readable --summarize ${CONDA_PREFIX})" > /dev/stderr
 
-# create new conda environment python-3.9
+# create new conda environment python-3.12
 # install Modin, Prefect, Ray, ICL
 RUN set -e; \
     . ${CONDA_PREFIX}/etc/profile.d/conda.sh; \
-    conda create --name python-3.9 python=3.9 ipykernel s3cmd dvc; \
-    conda activate python-3.9; \
+    conda create --name python-3.12 python=3.12 ipykernel s3cmd dvc; \
+    conda activate python-3.12; \
     pip --no-cache-dir install /opt/icl/dist/*.whl
 
 RUN echo "conda prefix after installing modin, prefect, ray, infractl: $(du --human-readable --summarize ${CONDA_PREFIX})" > /dev/stderr
