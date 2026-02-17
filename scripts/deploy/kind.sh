@@ -259,10 +259,10 @@ function load_images() {
 
 function with_proxy() {
   local proxy_url=""
-  if [[ -v https_proxy ]]; then
+  if [[ -n "${https_proxy+x}" ]]; then
     pass "Using https_proxy: $https_proxy"
     proxy_url="$https_proxy"
-  elif [[ -v http_proxy ]]; then
+  elif [[ -n "${http_proxy+x}" ]]; then
     pass "Using http_proxy: $http_proxy"
     proxy_url="$http_proxy"
   else
@@ -418,7 +418,7 @@ else
   if [[ " $@ " =~ " --with-images " ]]; then
     load_images
   fi
-  if [[ -v http_proxy || -v https_proxy ]]; then
+  if [[ -n "${http_proxy+x}" || -n "${https_proxy+x}" ]]; then
     with_proxy
   fi
   if [[ $ICL_NVIDIA = true ]]; then
