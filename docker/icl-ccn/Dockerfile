@@ -1,4 +1,4 @@
-FROM python:3.9-slim
+FROM python:3.12-slim
 
 ARG KUBECTL_VERSION=v1.28.2
 ARG HELM_VERSION=v3.10.1

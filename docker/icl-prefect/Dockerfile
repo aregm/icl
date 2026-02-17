@@ -1,6 +1,6 @@
 ARG BASE_TAG
 
-FROM python:3.9-bullseye as python_builder
+FROM python:3.12-bookworm as python_builder
 
 WORKDIR /app
 

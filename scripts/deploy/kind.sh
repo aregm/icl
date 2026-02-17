@@ -39,15 +39,33 @@ source "$SCRIPT_DIR/functions.sh"
 
 # Install tools, such as kind, to ~/bin/
 # TODO: also support ~/.local/bin
-export PATH="$HOME/bin:$PATH"
+export PATH="$PATH:$HOME/bin"
 
 function install_kind() {
   if ! is_installed curl; then
     exit 1
   fi
+
   mkdir -p "$HOME/bin"
-  curl -sSL -o "$HOME/bin/kind" "https://kind.sigs.k8s.io/dl/${KIND_VERSION}/kind-linux-amd64"
+
+  os="$(uname -s | tr '[:upper:]' '[:lower:]')"   # darwin/linux
+  arch="$(uname -m)"
+  case "$arch" in
+    x86_64) arch="amd64" ;;
+    arm64|aarch64) arch="arm64" ;;
+  esac
+
+  url="https://kind.sigs.k8s.io/dl/${KIND_VERSION}/kind-${os}-${arch}"
+  curl -sSL -o "$HOME/bin/kind" "$url"
   chmod a+x "$HOME/bin/kind"
+
+  if [[ "$(uname -s)" == "Darwin" ]] && command -v /opt/homebrew/bin/kind >/dev/null 2>&1; then
+    KIND_BIN="/opt/homebrew/bin/kind"
+  else
+    KIND_BIN="$HOME/bin/kind"
+  fi
+
+  chmod a+x "$KIND_BIN"
 }
 
 if ! is_installed docker; then
@@ -193,7 +211,7 @@ kubeadmConfigPatches:
 EOF
   fi
 
-  if [[ -v dockerhub_proxy ]]; then
+  if [[ -n "${dockerhub_proxy+x}" ]]; then
     pass "DockerHub proxy: ${dockerhub_proxy}"
     cat << EOF >> "$kind_config"
 containerdConfigPatches:

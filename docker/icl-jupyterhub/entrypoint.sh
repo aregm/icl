@@ -4,7 +4,7 @@ set -e
 
 conda_prefix=$HOME/.conda
 jupyterlab_env="base"
-kernel_env="python-3.9"
+kernel_env="python-3.12"
 
 # Fix the owner and permissions for /home/jovyan
 # TODO: check if passwordless sudo is enabled
@@ -21,7 +21,7 @@ fi
 if [[ ! -f ~/.profile ]]; then
   echo "No .profile in $HOME, creating one"
   echo "source $conda_prefix/etc/profile.d/conda.sh" >> ~/.profile
-  echo "conda activate python-3.9" >> ~/.profile
+  echo "conda activate python-3.12" >> ~/.profile
   if [[ -f /opt/intel/oneapi/setvars.sh ]]; then
     echo "source /opt/intel/oneapi/setvars.sh || true" >> ~/.profile
   fi

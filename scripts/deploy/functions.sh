@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 # Functions used by other scripts
 
 : ${SCRIPT_DIR:=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )}
@@ -32,15 +34,15 @@ function warn_about_proxy_and_variables()
   proxy_status="$(proxy_container_status)"
   if [[ $proxy_status != "running" ]]; then
 
-    if [[ -v http_proxy ]]; then
+    if [[ -n "${http_proxy+x}" ]]; then
       proxy_variables_used=1
     fi
 
-    if [[ -v https_proxy ]]; then
+    if [[ -n "${https_proxy+x}" ]]; then
       proxy_variables_used=1
     fi
 
-    if [[ -v no_proxy ]]; then
+    if [[ -n "${no_proxy+x}" ]]; then
       proxy_variables_used=1
     fi
 
@@ -103,32 +105,32 @@ function control_node() {
       docker_cmd+=( --volume $HOME/.config/gcloud:/work/.config/gcloud )
     fi
 
-    if [[ -v GOOGLE_APPLICATION_CREDENTIALS ]]; then
+    if [[ -n "${GOOGLE_APPLICATION_CREDENTIALS+x}" ]]; then
       docker_cmd+=( --volume $GOOGLE_APPLICATION_CREDENTIALS:/work/.config/gcloud/credentials.json )
     fi
   fi
 
-  if [[ -v PG_CONN_STR ]]; then
+  if [[ -n "${PG_CONN_STR+x}" ]]; then
     docker_cmd+=( --env PG_CONN_STR )
   fi
 
-  if [[ -v TF_PG_CONN_STR ]]; then
+  if [[ -n "${TF_PG_CONN_STR+x}" ]]; then
     docker_cmd+=( --env TF_PG_CONN_STR )
   fi
 
-  if [[ -v PGUSER ]]; then
+  if [[ -n "${PGUSER+x}" ]]; then
     docker_cmd+=( --env PGUSER )
   fi
 
-  if [[ -v PGSSLMODE ]]; then
+  if [[ -n "${PGSSLMODE+x}" ]]; then
     docker_cmd+=( --env PGSSLMODE )
   fi
 
-  if [[ -v PG_SCHEMA_NAME ]]; then
+  if [[ -n "${PG_SCHEMA_NAME+x}" ]]; then
     docker_cmd+=( --env PG_SCHEMA_NAME )
   fi
 
-  if [[ -v PGPASSWORD ]]; then
+  if [[ -n "${PGPASSWORD+x}" ]]; then
     docker_cmd+=( --env PGPASSWORD )
   fi
 
@@ -144,7 +146,7 @@ function control_node() {
     docker_cmd+=( --env $icl_var )
   done
 
-  if [[ -v GOOGLE_APPLICATION_CREDENTIALS ]]; then
+  if [[ -n "${GOOGLE_APPLICATION_CREDENTIALS+x}" ]]; then
     docker_cmd+=( --env GOOGLE_APPLICATION_CREDENTIALS=/work/.config/gcloud/credentials.json )
   fi
   
@@ -165,15 +167,15 @@ function control_node() {
     fi
 
     # Only set {http,https,no}_proxy when a sidecar proxy container is not used.
-    if [[ -v http_proxy ]]; then
+    if [[ -n "${http_proxy+x}" ]]; then
       docker_cmd+=( --env http_proxy )
     fi
 
-    if [[ -v https_proxy ]]; then
+    if [[ -n "${https_proxy+x}" ]]; then
       docker_cmd+=( --env https_proxy )
     fi
 
-    if [[ -v no_proxy ]]; then
+    if [[ -n "${no_proxy+x}" ]]; then
       docker_cmd+=( --env no_proxy )
     fi
 
