@@ -183,6 +183,7 @@ resource "helm_release" "jupyterhub" {
         extraEnv:
           JUPYTERHUB_SINGLEUSER_APP: jupyter_server.serverapp.ServerApp
           PREFECT_API_URL: "${var.prefect_api_url}"
+          PREFECT_API_REQUEST_TIMEOUT: "5"
           PREFECT_UI_URL: "http://prefect.${var.ingress_domain}"
         networkPolicy:
           enabled: false
