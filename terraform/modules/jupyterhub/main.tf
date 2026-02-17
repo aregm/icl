@@ -140,8 +140,8 @@ resource "helm_release" "jupyterhub" {
   name = "jupyterhub"
   namespace = kubernetes_namespace.jupyterhub.id
   chart = "jupyterhub"
-  repository = "https://jupyterhub.github.io/helm-chart"
-  version = "3.3.8"
+  repository = "https://hub.jupyter.org/helm-chart/"
+  version = "4.3.2"
   timeout = 1200
   # See https://github.com/jupyterhub/zero-to-jupyterhub-k8s/blob/HEAD/jupyterhub/values.yaml
   # See https://zero-to-jupyterhub.readthedocs.io/en/latest/resources/reference.html
@@ -163,6 +163,9 @@ resource "helm_release" "jupyterhub" {
     }),
     <<-EOT
       hub:
+        config:
+          Authenticator:
+            allow_all: true
         db:
           pvc:
             storage: 1Gi

@@ -1,8 +1,8 @@
 docker.io/bitnami/postgresql:14.3.0
 docker.io/kindest/kindnetd:v20220726-ed811e41
 docker.io/kindest/local-path-provisioner:v0.0.22-kind.0
-jupyterhub/configurable-http-proxy:4.5.3
-jupyterhub/k8s-hub:2.0.0
+jupyterhub/configurable-http-proxy:4.6.2
+jupyterhub/k8s-hub:4.3.2
 k8s.gcr.io/coredns/coredns:v1.8.6
 k8s.gcr.io/etcd:3.5.3-0
 k8s.gcr.io/kube-apiserver:v1.24.6
