@@ -1,4 +1,4 @@
-FROM python:3.12-bookworm as python_builder
+FROM python:3.12-bookworm AS python_builder
 
 WORKDIR /app
 
@@ -11,11 +11,12 @@ RUN set -ex; \
     python -m build
 
 RUN set -ex; \
+    pip install setuptools wheel; \
     git clone https://github.com/dirkcgrunwald/jupyter_codeserver_proxy-.git; \
     cd jupyter_codeserver_proxy-; \
     make build-package
 
-FROM ubuntu:22.04 as conda_builder
+FROM ubuntu:22.04 AS conda_builder
 
 RUN set -ex; \
     export DEBIAN_FRONTEND=noninteractive; \
@@ -43,7 +44,7 @@ WORKDIR ${HOME}
 
 # install miniforge to CONDA_PREFIX
 RUN set -ex; \
-    curl -sSL -o /tmp/miniforge.sh https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Linux-x86_64.sh; \
+    curl -sSL -o /tmp/miniforge.sh https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Linux-$(uname -m).sh; \
     /bin/bash /tmp/miniforge.sh -b -p ${CONDA_PREFIX}; \
     rm -f /tmp/miniforge.sh
 
@@ -83,7 +84,7 @@ RUN echo "conda prefix after installing jupyterhub: $(du --human-readable --summ
 # install Modin, Prefect, Ray, ICL
 RUN set -e; \
     . ${CONDA_PREFIX}/etc/profile.d/conda.sh; \
-    conda create --name python-3.12 python=3.12 ipykernel s3cmd dvc; \
+    conda create --name python-3.12 python=3.12 ipykernel s3cmd ; \
     conda activate python-3.12; \
     pip --no-cache-dir install /opt/icl/dist/*.whl
 
@@ -94,7 +95,7 @@ RUN ${CONDA} clean --all --force-pkgs-dirs --yes
 RUN echo "conda prefix after cleaning: $(du --human-readable --summarize ${CONDA_PREFIX})" > /dev/stderr
 
 # archive conda prefix
-RUN tar c -I"pixz -9" -f conda.tar.xz .conda
+RUN tar cf - .conda | xz -3 -T0 > conda.tar.xz
 
 RUN echo "conda archive: $(du --human-readable conda.tar*)" > /dev/stderr
 
@@ -109,7 +110,7 @@ RUN set -ex; \
     apt-get update -y; \
     apt-get install -y software-properties-common curl; \
     curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg > /usr/share/keyrings/githubcli-archive-keyring.gpg; \
-    echo "deb [arch=amd64 signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" > /etc/apt/sources.list.d/github-cli.list; \
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" > /etc/apt/sources.list.d/github-cli.list; \
     apt-get update -y; \
     apt-get install -y --no-install-recommends \
         ca-certificates \

@@ -181,7 +181,6 @@ resource "helm_release" "jupyterhub" {
         # https://jupyterhub-kubespawner.readthedocs.io/en/latest/spawner.html#kubespawner.KubeSpawner.start_timeout
         startTimeout: 600
         extraEnv:
-          JUPYTERHUB_SINGLEUSER_APP: jupyter_server.serverapp.ServerApp
           PREFECT_API_URL: "${var.prefect_api_url}"
           PREFECT_API_REQUEST_TIMEOUT: "5"
           PREFECT_UI_URL: "http://prefect.${var.ingress_domain}"

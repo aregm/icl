@@ -15,7 +15,7 @@ cd ~
 
 if [[ ! -d $conda_prefix ]]; then
   echo "$conda_prefix does not exists, copying from /template"
-  tar x -Ipixz -f /template/conda.tar.xz
+  tar xf /template/conda.tar.xz
 fi
 
 if [[ ! -f ~/.profile ]]; then
