@@ -1,12 +1,13 @@
 # Container-based control node
 
-This is the basic container to deploy and manage ICL nodes. 
+This is the basic container to deploy and manage ICL nodes.
 It contains the minimal set of management tools:
- * Python
- * Kubespray
- * Kubectl
- * Helm
- * Terraform
+
+* Python
+* Kubespray
+* Kubectl
+* Helm
+* Terraform
 
 ## How to build
 
