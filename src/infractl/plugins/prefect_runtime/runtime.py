@@ -73,8 +73,10 @@ class PrefectRuntimeError(Exception):
     """Prefect runtime error."""
 
 
-class PrefectBlock(pydantic.v1.BaseModel):
+class PrefectBlock(pydantic.BaseModel):
     """Prefect Block specification."""
+
+    model_config = pydantic.ConfigDict(arbitrary_types_allowed=True)
 
     kind: str
     name: str
@@ -394,9 +396,9 @@ class PrefectRuntimeImplementation(
         client_kwargs = storage_settings.setdefault('client_kwargs', {})
         if 'endpoint_url' not in client_kwargs:
             # TODO: support different schemas
-            client_kwargs[
-                'endpoint_url'
-            ] = f'http://s3.{self.infrastructure_implementation.address}'
+            client_kwargs['endpoint_url'] = (
+                f'http://s3.{self.infrastructure_implementation.address}'
+            )
         return storage_settings
 
     def sanitize_block_name(self, block_name: str) -> str:

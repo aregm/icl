@@ -2,7 +2,7 @@ resource "helm_release" "docker-registry" {
   name = "docker-registry"
   namespace = "docker-registry"
   create_namespace = true
-  repository = "https://helm.twun.io"
+  repository = "https://twuni.github.io/docker-registry.helm"
   chart = "docker-registry"
   version = var.release
   values = [

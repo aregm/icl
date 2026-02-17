@@ -1,4 +1,5 @@
 """Builds and pushes a Docker image to Docker registry using a local Docker daemon."""
+
 import itertools
 import re
 import tempfile

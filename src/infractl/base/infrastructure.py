@@ -9,7 +9,7 @@ import pydantic
 from infractl.base import registry
 
 
-class Infrastructure(pydantic.BaseModel, extra=pydantic.Extra.allow):
+class Infrastructure(pydantic.BaseModel, extra='allow'):
     """Infrastructure specification (for users)."""
 
     kind: str = pydantic.Field(
@@ -26,7 +26,7 @@ class Infrastructure(pydantic.BaseModel, extra=pydantic.Extra.allow):
         default=None,
     )
 
-    @pydantic.validator('gpus')
+    @pydantic.field_validator('gpus')
     @classmethod
     def _check_gpus_tuple(cls, gpus):
         if isinstance(gpus, int):

@@ -40,14 +40,14 @@ def object_encoder(obj: Any) -> Any:
     else:
         return {
             '__class__': get_full_name(obj.__class__),
-            'data': pydantic.json.pydantic_encoder(obj),
+            'data': pydantic.TypeAdapter(type(obj)).dump_python(obj, mode='json'),
         }
 
 
 def object_decoder(obj: dict) -> Any:
     """Decodes object from JSON."""
     if '__class__' in obj:
-        return pydantic.parse_obj_as(from_full_name(obj['__class__']), obj['data'])
+        return pydantic.TypeAdapter(from_full_name(obj['__class__'])).validate_python(obj['data'])
     elif '__exc_type__' in obj:
         return from_full_name(obj['__exc_type__'])(obj['message'])
     else:

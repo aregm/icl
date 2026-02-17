@@ -71,7 +71,7 @@ class ZymeClient:
 
         self.client = paramiko.SSHClient()
         if self.add2known_hosts:
-            self.client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            self.client.set_missing_host_key_policy(paramiko.AutoAddPolicy())  # nosec B507
 
         try:
             self.client.connect(

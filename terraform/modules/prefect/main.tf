@@ -46,7 +46,8 @@ resource "helm_release" "prefect-server" {
           image:
             prefectTag: "${var.server_image_tag}"
       server:
-        prefectApiUrl: "${var.api_url == "" ? "http://prefect.${var.ingress_domain}/api" : var.api_url}"
+        uiConfig:
+          prefectUiApiUrl: "${var.api_url == "" ? "http://prefect.${var.ingress_domain}/api" : var.api_url}"
       service:
         type: ClusterIP
       ingress:

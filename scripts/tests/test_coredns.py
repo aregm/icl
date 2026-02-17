@@ -51,9 +51,7 @@ def test_update_corefile_no_hosts():
         coredns.Host(ip='127.0.0.2', name='svc2.localtest.me'),
     ]
     content = coredns.update_corefile(COREFILE1, hosts)
-    assert (
-        content
-        == """\
+    assert content == """\
 .:53 {
     health {
        lameduck 5s
@@ -70,7 +68,6 @@ def test_update_corefile_no_hosts():
        ttl 30
     }
 }"""
-    )
 
 
 def test_update_corefile_with_hosts():
@@ -79,9 +76,7 @@ def test_update_corefile_with_hosts():
         coredns.Host(ip='127.0.0.2', name='svc2.localtest.me'),
     ]
     content = coredns.update_corefile(COREFILE2, hosts)
-    assert (
-        content
-        == """\
+    assert content == """\
 .:53 {
     health {
        lameduck 5s
@@ -98,4 +93,3 @@ def test_update_corefile_with_hosts():
        ttl 30
     }
 }"""
-    )

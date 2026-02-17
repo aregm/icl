@@ -66,7 +66,7 @@ class KubernetesRuntimeSettings:
         """Remote fs spec."""
         return {
             'key': 'x1miniouser',
-            'secret': 'x1miniopass',
+            'secret': 'x1miniopass',  # nosec B105 - development default
             'use_ssl': False,
             'client_kwargs': {
                 'endpoint_url': self.s3_url,

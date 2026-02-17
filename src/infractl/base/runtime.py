@@ -57,7 +57,7 @@ def parse_dependencies(dependencies: Optional[RuntimeDependencies | Dict]) -> Ru
     if isinstance(dependencies, RuntimeDependencies):
         return dependencies
     if isinstance(dependencies, dict):
-        return RuntimeDependencies.parse_obj(dependencies)
+        return RuntimeDependencies.model_validate(dependencies)
     raise NotImplementedError(
         f'{dependencies.__class__.__name__} is not supported as dependency specification'
     )
@@ -80,7 +80,7 @@ def parse_files(files: Optional[List[RuntimeFile | Dict | str | os.PathLike]]) -
                 value = clone.get(key)
                 if isinstance(value, os.PathLike):
                     clone[key] = str(value)
-            result.append(RuntimeFile.parse_obj(clone))
+            result.append(RuntimeFile.model_validate(clone))
         elif isinstance(file, os.PathLike):
             result.append(RuntimeFile(src=str(file)))
         else:
