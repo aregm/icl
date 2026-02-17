@@ -54,7 +54,7 @@ def test_prepare_to_upload(tmp_path: pathlib.Path, set_cwd):
     assert tarfile.is_tarfile(cwd_path)
 
     with tarfile.open(cwd_path) as cwd:
-        cwd.extractall(path=runtime_path)
+        cwd.extractall(path=runtime_path, filter='data')
 
     # RuntimeFile(src='file1')
     assert (runtime_path / 'file1').read_text() == 'file1'
