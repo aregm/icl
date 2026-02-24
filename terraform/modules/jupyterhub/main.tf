@@ -212,7 +212,16 @@ resource "helm_release" "jupyterhub" {
           nginx.ingress.kubernetes.io/proxy-buffering: "off"
       scheduling:
         userScheduler:
-          enabled: false
+          pluginConfig:
+            - name: NodeResourcesFit
+              args:
+                scoringStrategy:
+                  type: LeastAllocated
+                  resources:
+                    - name: cpu
+                      weight: 1
+                    - name: memory
+                      weight: 1
     EOT
   ]
 }
