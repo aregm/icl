@@ -1,6 +1,6 @@
 ARG BASE_TAG
 
-FROM pbchekin/icl-jupyterhub:0.0.22
+FROM pbchekin/icl-jupyterhub:0.0.23
 
 USER root
 

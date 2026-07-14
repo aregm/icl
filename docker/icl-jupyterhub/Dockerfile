@@ -11,6 +11,8 @@ RUN set -ex; \
     python -m build
 
 RUN set -ex; \
+    # python:3.12 images do not include setuptools and wheel, required for "setup.py bdist_wheel"
+    pip install setuptools wheel; \
     git clone https://github.com/dirkcgrunwald/jupyter_codeserver_proxy-.git; \
     cd jupyter_codeserver_proxy-; \
     make build-package

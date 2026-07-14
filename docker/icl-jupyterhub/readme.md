@@ -3,21 +3,15 @@ Overview
 conda-based
 passwordless sudo, potentially can be disabled later
 additional packages installed (gh cli, ssh, vim, rsync, s3cmd)
-Modin, Prefect, Ray, ICL
+ICL (infractl) with Prefect 3.x in the python-3.12 kernel environment, built from the repository sources
 Build and push the image
-TARGET_TAG=pbchekin/icl-jupyterhub:latest
-MODIN_VERSION="0.26.1"
-PREFECT_VERSION="2.13.0"
-RAY_VERSION="2.9.2"
+TARGET_TAG=pbchekin/icl-jupyterhub:0.0.23
 Needs to be run from the root of the repository:
 
 docker build . \
     --file docker/icl-jupyterhub/Dockerfile \
     --progress=plain \
-    --tag $TARGET_TAG \
-    --build-arg PREFECT_VERSION="$PREFECT_VERSION" \
-    --build-arg MODIN_VERSION="$MODIN_VERSION" \
-    --build-arg RAY_VERSION="$RAY_VERSION"    
+    --tag $TARGET_TAG
 docker push $TARGET_TAG
 Create custom JupyterLab kernel
 In Terminal, create a new conda environment and install ipykernel.
