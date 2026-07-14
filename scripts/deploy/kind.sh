@@ -448,6 +448,12 @@ if [[ " $@ " =~ " --with-cert-manager " ]]; then
   terraform_extra_args+=( -var cert_manager_enabled=true )
 fi
 
+# Use a custom JupyterHub single-user image, for example a locally built one
+# loaded into the kind cluster with "kind load docker-image <image> --name x1".
+if [[ -n "${ICL_JUPYTERHUB_IMAGE:-}" ]]; then
+  terraform_extra_args+=( -var jupyterhub_singleuser_default_image="$ICL_JUPYTERHUB_IMAGE" )
+fi
+
 with_corefile
 control_node "terraform -chdir=terraform/icl init -upgrade -input=false && terraform -chdir=terraform/icl apply -input=false -auto-approve ${terraform_extra_args[*]}"
 
