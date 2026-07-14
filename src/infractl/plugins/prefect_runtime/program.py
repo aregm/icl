@@ -57,7 +57,7 @@ class PrefectProgramRun(infractl.base.ProgramRun):
         with settings.temporary_settings(
             updates={settings.PREFECT_API_URL: str(self._prefect_client.api_url)},
         ):
-            return await self._flow_run.state.result(fetch=True)
+            return await self._flow_run.state.aresult()
 
     async def update(self) -> None:
         self._flow_run = await self._prefect_client.read_flow_run(self._flow_run.id)

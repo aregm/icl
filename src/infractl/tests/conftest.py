@@ -32,7 +32,5 @@ def set_cwd():
 # Skip test modules that depend on Prefect 2.x APIs (deployments.Deployment, etc.)
 # removed in Prefect 3.x. These tests need a full migration to the Prefect 3.x SDK.
 collect_ignore_glob = [
-    "prefect/test_prefect_program.py",
-    "prefect/test_prefect_runtime.py",
     "kubernetes/test_kubernetes_program.py",
 ]

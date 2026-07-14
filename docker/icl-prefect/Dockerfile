@@ -34,9 +34,16 @@ RUN set -ex; \
 
 SHELL ["/bin/bash", "-c"]
 
+RUN pip --no-cache-dir install minio s3fs s3cmd /opt/icl/dist/*.whl
+
+# MODIN_VERSION and RAY_VERSION are optional: when not set, Modin and Ray are not installed and
+# can be added in runtime with EXTRA_PIP_PACKAGES.
 RUN \
+    if [[ -n "$RAY_VERSION" ]]; then \
+      pip --no-cache-dir install ray==${RAY_VERSION}; \
+    fi; \
     if [[ "$MODIN_VERSION" = *git* ]]; then \
-      pip --no-cache-dir install minio s3fs s3cmd ray==${RAY_VERSION} "modin[ray] @ ${MODIN_VERSION}" cryptography==38.0.4 /opt/icl/dist/*.whl; \
-    else \
-      pip --no-cache-dir install minio s3fs s3cmd ray==${RAY_VERSION} "modin[ray]==${MODIN_VERSION}" cryptography==38.0.4 /opt/icl/dist/*.whl; \
+      pip --no-cache-dir install "modin[ray] @ ${MODIN_VERSION}"; \
+    elif [[ -n "$MODIN_VERSION" ]]; then \
+      pip --no-cache-dir install "modin[ray]==${MODIN_VERSION}"; \
     fi

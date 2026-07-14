@@ -9,6 +9,7 @@ import asyncio
 import contextlib
 import copy
 import functools
+import inspect
 import os
 import pathlib
 import tempfile
@@ -17,9 +18,12 @@ from typing import Any, Dict, List, Optional, Union
 import dynaconf
 import prefect.blocks.core as blocks
 import pydantic
-from prefect import deployments, filesystems, infrastructure, settings
+from prefect import deployments, filesystems, settings
 from prefect.client import orchestration
+from prefect.client.schemas.actions import WorkPoolCreate
+from prefect.exceptions import ObjectAlreadyExists, ObjectNotFound
 from prefect.server.api import server
+from prefect.utilities.callables import parameter_schema
 
 import infractl
 import infractl.base
@@ -90,19 +94,36 @@ class PrefectBlock(pydantic.BaseModel):
         return await self.block.save(self.name, **kwargs)
 
 
+class PrefectDeployment(pydantic.BaseModel):
+    """Reference to a Prefect deployment.
+
+    Prefect 3 removed `prefect.deployments.Deployment`, so this class keeps the deployment
+    attributes required to run and identify a deployment.
+    """
+
+    id: Optional[Any] = None
+    name: str
+    flow_name: str
+
+    @property
+    def full_name(self):
+        """Returns a deployment name as Prefect shows it: "{flow_name}/{deployment_name}"."""
+        return f'{self.flow_name}/{self.name}'
+
+
 class PrefectProgramRunner(infractl.base.Runnable):
     """Prefect program."""
 
     def __init__(
         self,
         prefect_client: orchestration.PrefectClient,
-        prefect_deployment: deployments.Deployment,
+        prefect_deployment: PrefectDeployment,
     ):
         self.prefect_client = prefect_client
         self.prefect_deployment = prefect_deployment
 
     @property
-    def deployment(self) -> deployments.Deployment:
+    def deployment(self) -> PrefectDeployment:
         """Returns a Prefect deployment for this program."""
         return self.prefect_deployment
 
@@ -125,7 +146,7 @@ class PrefectProgramRunner(infractl.base.Runnable):
         if detach:
             timeout = 0
 
-        deployment_name = f'{self.prefect_deployment.flow_name}/{self.prefect_deployment.name}'
+        deployment_name = self.prefect_deployment.full_name
         logger.info('Running deployment "%s" with timeout="%s" seconds', deployment_name, timeout)
         flow_run = await deployments.run_deployment(
             name=deployment_name,
@@ -308,6 +329,19 @@ class PrefectRuntimeImplementation(
         if not isinstance(program, prefect_runtime.PrefectProgram):
             raise NotImplementedError(f'PrefectProgram expected, got {program.__class__.__name__}')
 
+        if customizations:
+            raise PrefectRuntimeError(
+                'customizations are not supported with Prefect 3: job manifest customization '
+                'moved to the work pool base job template, '
+                'see https://docs.prefect.io/v3/concepts/work-pools'
+            )
+        if manifest_filter:
+            raise PrefectRuntimeError(
+                'manifest_filter is not supported with Prefect 3: job manifest customization '
+                'moved to the work pool base job template, '
+                'see https://docs.prefect.io/v3/concepts/work-pools'
+            )
+
         flow_file_name = pathlib.Path(program.path).name
         prefect_flow = program.flow
         # use a custom flow name if specified
@@ -317,51 +351,105 @@ class PrefectRuntimeImplementation(
             prefect_flow = prefect_flow.with_options(name=name)
 
         prefect_storage_block = await self.create_code_block(prefect_flow.name)
+
+        # The first pull step downloads the program code, the following steps download the runtime
+        # files, extract them to the code directory and make the code directory the working
+        # directory for the flow run.
+        pull_steps: List[Dict[str, Any]] = [
+            {
+                'prefect.deployments.steps.pull_with_block': {
+                    'id': 'pull_code',
+                    'block_type_slug': prefect_storage_block.kind,
+                    'block_document_name': prefect_storage_block.name,
+                },
+            },
+        ]
         if self.runtime.files:
-            await self.create_files_block(prefect_flow.name)
-        prefect_infrastructure_block = await self.create_infrastructure_block(
-            prefect_flow.name,
-            customizations=customizations,
-            manifest_filter=manifest_filter,
-        )
+            prefect_files_block = await self.create_files_block(prefect_flow.name)
+            pull_steps.extend(
+                [
+                    {
+                        'prefect.deployments.steps.pull_with_block': {
+                            'id': 'pull_files',
+                            'block_type_slug': prefect_files_block.kind,
+                            'block_document_name': prefect_files_block.name,
+                        },
+                    },
+                    {
+                        # Both directories are relative to the working directory of the flow run
+                        # pod, where this step is executed.
+                        'prefect.deployments.steps.run_shell_script': {
+                            'script': (
+                                f'bash "{{{{ pull_files.directory }}}}/{self._script}"'
+                                ' "{{ pull_code.directory }}"'
+                            ),
+                        },
+                    },
+                    {
+                        'prefect.deployments.steps.set_working_directory': {
+                            'directory': '{{ pull_code.directory }}',
+                        },
+                    },
+                ]
+            )
 
         prefect_default_storage_block = await self.create_result_block('prefect-persistent-results')
         logger.info('Default result storage block: "%s"', prefect_default_storage_block)
 
-        prefect_flow_entrypoint = f'{flow_file_name}:{prefect_flow.fn.__name__}'
-        prefect_deployment = await deployments.Deployment.build_from_flow(
-            flow=prefect_flow,
+        await self.upload_code(prefect_storage_block, pathlib.Path(program.path).absolute().parent)
+
+        work_pool_name = self.settings('prefect_work_pool', 'default-pool')
+        await self.ensure_work_pool(work_pool_name)
+
+        # pass through kwargs that are valid arguments for creating a Prefect deployment
+        create_deployment_parameters = set(
+            inspect.signature(orchestration.PrefectClient.create_deployment).parameters
+        ) - {'self', 'flow_id', 'name', 'entrypoint', 'pull_steps', 'job_variables'}
+        deployment_kwargs = {
+            key: value for key, value in kwargs.items() if key in create_deployment_parameters
+        }
+        deployment_kwargs.setdefault('work_queue_name', self.settings('prefect_queue', 'prod'))
+
+        flow_id = await self.prefect_client.create_flow(prefect_flow)
+        deployment_id = await self.prefect_client.create_deployment(
+            flow_id=flow_id,
             # Note that Prefect shows deployments as "{flow_name}/{deployment_name}".
             name=program.deployment_name,
-            storage=await blocks.Block.load(
-                prefect_storage_block.full_name,
-                client=self.prefect_client,
-            ),
-            infrastructure=await blocks.Block.load(
-                prefect_infrastructure_block.full_name,
-                client=self.prefect_client,
-            ),
-            work_queue_name=self.settings('prefect_queue', 'prod'),
-            apply=False,
-            skip_upload=True,
-            entrypoint=prefect_flow_entrypoint,
-            infra_overrides={
-                'env': {
-                    'PREFECT_DEFAULT_RESULT_STORAGE_BLOCK': prefect_default_storage_block.full_name
-                }
-            },
+            entrypoint=f'{flow_file_name}:{prefect_flow.fn.__name__}',
+            work_pool_name=work_pool_name,
+            pull_steps=pull_steps,
+            job_variables=self.job_variables(prefect_default_storage_block),
+            parameter_openapi_schema=parameter_schema(prefect_flow).model_dump_for_openapi(),
+            **deployment_kwargs,
         )
 
-        deployment_keys = prefect_deployment.dict().keys()
-        deployment_dict = {}
-        for key, value in kwargs.items():
-            if key in deployment_keys:
-                deployment_dict[key] = value
-        if deployment_dict:
-            await prefect_deployment.update(**deployment_dict)
+        prefect_deployment = PrefectDeployment(
+            id=deployment_id,
+            name=program.deployment_name,
+            flow_name=prefect_flow.name,
+        )
 
-        cwd = os.getcwd()
-        os.chdir(pathlib.Path(program.path).absolute().parent)
+        return infractl.base.DeployedProgram(
+            program=program,
+            runner=PrefectProgramRunner(self.prefect_client, prefect_deployment),
+        )
+
+    async def ensure_work_pool(self, name: str) -> None:
+        """Makes sure the work pool exists.
+
+        In an ICL cluster the work pool is created by the Prefect worker. This method creates the
+        work pool for the case when infractl is used with a standalone or ephemeral Prefect server.
+        """
+        try:
+            await self.prefect_client.read_work_pool(name)
+        except ObjectNotFound:
+            with contextlib.suppress(ObjectAlreadyExists):
+                await self.prefect_client.create_work_pool(
+                    WorkPoolCreate(name=name, type='kubernetes')
+                )
+
+    async def upload_code(self, block: PrefectBlock, path: pathlib.Path) -> None:
+        """Uploads the program directory to the code storage block."""
         ignore_file_name: Optional[str] = None
         try:
             with tempfile.NamedTemporaryFile(delete=False) as ignore_file:
@@ -369,22 +457,54 @@ class PrefectRuntimeImplementation(
                 ignore_file.write('\n'.join(DEFAULT_ITEMS_TO_IGNORE).encode('utf-8'))
                 ignore_file.flush()
                 ignore_file.close()
-                await prefect_deployment.upload_to_storage(
-                    prefect_storage_block.full_name,
+                await block.block.put_directory(
+                    local_path=str(path),
                     ignore_file=ignore_file_name,
                 )
         finally:
-            os.chdir(cwd)
             if ignore_file_name:
                 with contextlib.suppress(FileNotFoundError):
                     os.remove(ignore_file_name)
 
-        await prefect_deployment.apply(upload=False)
+    def job_variables(
+        self, default_result_storage_block: Optional[PrefectBlock] = None
+    ) -> Dict[str, Any]:
+        """Returns job variables for a Prefect deployment.
 
-        return infractl.base.DeployedProgram(
-            program=program,
-            runner=PrefectProgramRunner(self.prefect_client, prefect_deployment),
-        )
+        Job variables override the variables in the work pool base job template. The default
+        Kubernetes work pool template supports "image", "env", "command" and a few others,
+        see https://docs.prefect.io/v3/concepts/work-pools.
+        """
+        if self.infrastructure_implementation.gpus:
+            raise PrefectRuntimeError(
+                'gpus are not supported with Prefect 3: add the GPU resource limits to the work '
+                'pool base job template, see https://docs.prefect.io/v3/concepts/work-pools'
+            )
+        if self.settings('prefect_shared_volume_mount'):
+            raise PrefectRuntimeError(
+                'prefect_shared_volume_mount is not supported with Prefect 3: add the volume to '
+                'the work pool base job template, '
+                'see https://docs.prefect.io/v3/concepts/work-pools'
+            )
+
+        env = self.runtime.environment.copy() if self.runtime.environment else {}
+
+        # TODO: support different targets runtime dependencies, such as using a custom docker image
+        if self.runtime.dependencies.pip:
+            # TODO: check if environment variable EXTRA_PIP_PACKAGES is set and merge if necessary
+            env['EXTRA_PIP_PACKAGES'] = ' '.join(self.runtime.dependencies.pip)
+
+        if default_result_storage_block:
+            env['PREFECT_DEFAULT_RESULT_STORAGE_BLOCK'] = default_result_storage_block.full_name
+
+        variables: Dict[str, Any] = {'env': env}
+
+        # TODO: move the default image to discover
+        image = self.settings('prefect_image', defaults.PREFECT_IMAGE)
+        if image:
+            variables['image'] = image
+
+        return variables
 
     @functools.cached_property
     def remote_storage_settings(self):
@@ -441,27 +561,29 @@ class PrefectRuntimeImplementation(
         await block.save(overwrite=True, client=self.prefect_client)
         return block
 
-    async def create_files_block(self, block_name: str):
-        """Creates a Prefect storage block, upload files and script for infractl.prefect.engine."""
+    async def create_files_block(self, block_name: str) -> PrefectBlock:
+        """Creates a Prefect storage block, uploads runtime files and the extraction script."""
         identity = infractl.identity.generate()
         storage_path = self.settings('prefect_storage_basepath', 's3://prefect')
         base_path = f'{storage_path}/_files/{identity}'
         block = self.define_storage_block(base_path, f'{identity}-{block_name}-files')
         await block.save(overwrite=True, client=self.prefect_client)
         await self.upload_files(block)
+        return block
 
     async def upload_files(self, block: PrefectBlock):
         """Uploads files to a files block."""
         # Use a unique file name to make sure it does not overlap with user's files.
-        # This script is located in the temporary directory in runtime, but executed from the
-        # current directory in runtime. So "$PWD" (or ".") points to the current directory,
-        # "$SCRIPT_PATH" points to the temporary directory with this script and all required files.
+        # The script extracts the runtime files to the directory specified as the first argument
+        # (the current directory by default). "$SCRIPT_PATH" points to the directory with this
+        # script and all required files.
         self._script = '81503f92-f80a-4a8f-855c-b399f2ec41df.sh'
         script_lines = [
             '#!/bin/bash',
             'set -e',
             'SCRIPT_PATH=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )',
-            'if [[ -f "$SCRIPT_PATH/cwd.tar" ]]; then tar xvf "$SCRIPT_PATH/cwd.tar"; fi',
+            'TARGET_PATH="${1:-.}"',
+            'if [[ -f "$SCRIPT_PATH/cwd.tar" ]]; then tar xvf "$SCRIPT_PATH/cwd.tar" -C "$TARGET_PATH"; fi',
         ]
         # Create a temporary directory with the required files, generate bash script to extract the
         # files to the corresponding locations in runtime, upload the whole directory content to the
@@ -473,109 +595,6 @@ class PrefectRuntimeImplementation(
             script_path.write_text('\n'.join(script_lines))
             await block.block.put_directory(local_path=dirname)
         self._files_block = block.full_name
-
-    async def create_infrastructure_block(
-        self,
-        block_name: str,
-        customizations: Optional[List[Dict[str, Any]]] = None,
-        manifest_filter: Optional[infractl.base.ManifestFilter] = None,
-    ) -> PrefectBlock:
-        """Creates Prefect infrastructure block."""
-        block_name = self.sanitize_block_name(block_name)
-        block = self.kubernetes_job(customizations=customizations, manifest_filter=manifest_filter)
-        await block.save(block_name, overwrite=True, client=self.prefect_client)
-        return PrefectBlock(kind='kubernetes-job', name=block_name)
-
-    def kubernetes_job(
-        self,
-        customizations: Optional[List[Dict[str, Any]]] = None,
-        manifest_filter: Optional[infractl.base.ManifestFilter] = None,
-    ) -> infrastructure.KubernetesJob:
-        """Creates Prefect KubernetesJob block."""
-        job_args = {
-            'customizations': customizations.copy() if customizations else [],
-            'env': self.runtime.environment.copy() if self.runtime.environment else {},
-        }
-
-        # TODO: move the default image to discover
-        image = self.settings('prefect_image', defaults.PREFECT_IMAGE)
-        if image:
-            job_args['image'] = image
-
-        # TODO: support different targets runtime dependencies, such as using a custom docker image
-        if self.runtime.dependencies.pip:
-            # TODO: check if environment variable EXTRA_PIP_PACKAGES is set and merge if necessary
-            job_args['env']['EXTRA_PIP_PACKAGES'] = ' '.join(self.runtime.dependencies.pip)
-
-        # TODO: support different file injection methods, such as using a custom docker image
-        if self.runtime.files:
-            job_args['command'] = [
-                'python',
-                '-m',
-                'infractl.prefect.engine',
-                '--block',
-                self._files_block,
-                '--script',
-                self._script,
-            ]
-
-        # name is required for `build_job`
-        job = infrastructure.KubernetesJob(name='foo', **job_args)
-        manifest = job.build_job()
-
-        manifest = self.manifest_filter(manifest)
-        if manifest_filter:
-            manifest = manifest_filter(manifest)
-
-        metadata = manifest['metadata']
-        metadata.pop('namespace', None)
-        metadata.pop('generateName', None)
-
-        # The following parameters are applied already in manifest, do not set them again
-        job_args.pop('customizations', None)
-        job_args.pop('env')
-
-        return infrastructure.KubernetesJob(job=manifest, **job_args)
-
-    def manifest_filter(
-        self, manifest: infractl.base.KubernetesManifest
-    ) -> infractl.base.KubernetesManifest:
-        """Filters Kubernetes Job manifest.
-
-        Adds shared volume, if enabled.
-        Adds GPU resource, if enabled
-        """
-        manifest = copy.deepcopy(manifest)
-        prefect_pod = manifest['spec']['template']['spec']
-        prefect_container = prefect_pod['containers'][0]
-
-        # TODO: make it customizable, also use discover
-        shared_volume_mount = self.settings('prefect_shared_volume_mount')
-        if shared_volume_mount:
-            volumes = prefect_pod.setdefault('volumes', [])
-            volumes.append(
-                {
-                    'name': 'shared-volume',
-                    'persistentVolumeClaim': {
-                        'claimName': 'shared-volume',
-                    },
-                },
-            )
-            volume_mounts = prefect_container.setdefault('volumeMounts', [])
-            volume_mounts.append(
-                {
-                    'name': 'shared-volume',
-                    'mountPath': shared_volume_mount,
-                },
-            )
-
-        gpus = self.infrastructure_implementation.gpus
-        if gpus:
-            resources = prefect_container.setdefault('resources', {})
-            limits = resources.setdefault('limits', {})
-            limits[gpus[0]] = str(gpus[1])
-
-        return manifest
 
     def settings(self, name: str, default_value: Any = None) -> Any:
         """Return a setting value for this infrastructure address."""

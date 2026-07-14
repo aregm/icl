@@ -106,8 +106,7 @@ async def test_flow_name_from_argument(tmp_path: pathlib.Path):
 
 
 def test_prefect_runtime_implementation():
-    gpu_count = 1
-    infrastructure = infractl.infrastructure(address='local', gpus=gpu_count)
+    infrastructure = infractl.infrastructure(address='local')
     infrastructure_implementation = infractl.base.get_infrastructure_implementation(infrastructure)
 
     runtime_implementation = runtime.PrefectRuntimeImplementation(
@@ -120,7 +119,6 @@ def test_prefect_runtime_implementation():
                 'secret': 'secret',
                 'client_kwargs': {'endpoint_url': 'endpoint_url'},
             },
-            'prefect_shared_volume_mount': '/data',
         }
     }
     settings = dynaconf.Dynaconf()
@@ -136,39 +134,46 @@ def test_prefect_runtime_implementation():
         },
     }, 'Prefect storage settings are loaded from settings'
 
-    kubernetes_job_block = runtime_implementation.kubernetes_job()
-    kubernetes_job_block.name = 'foo'
-    kubernetes_job = kubernetes_job_block.build_job()
 
-    assert kubernetes_job['spec']['template']['spec']['containers'][0]['volumeMounts'] == [
-        {
-            'name': 'shared-volume',
-            'mountPath': '/data',
-        }
-    ], 'Kubernetes Job contains volumeMounts'
+def test_prefect_runtime_gpus_not_supported():
+    infrastructure = infractl.infrastructure(address='local', gpus=1)
+    infrastructure_implementation = infractl.base.get_infrastructure_implementation(infrastructure)
+    runtime_implementation = runtime.PrefectRuntimeImplementation(
+        infractl.runtime(), infrastructure_implementation
+    )
+    runtime_implementation._settings = dynaconf.Dynaconf()
 
-    assert kubernetes_job['spec']['template']['spec']['containers'][0]['resources'] == {
-        'limits': {"gpu": str(gpu_count)},
-    }, 'Kubernetes Job contains resources'
-
-    assert kubernetes_job['spec']['template']['spec']['volumes'] == [
-        {
-            'name': 'shared-volume',
-            'persistentVolumeClaim': {
-                'claimName': 'shared-volume',
-            },
-        }
-    ], 'Kubernetes Job contains volumes'
+    with pytest.raises(runtime.PrefectRuntimeError, match='gpus are not supported'):
+        runtime_implementation.job_variables()
 
 
-def test_prefect_runtime_customizations():
+def test_prefect_runtime_shared_volume_not_supported():
+    infrastructure = infractl.infrastructure(address='local')
+    infrastructure_implementation = infractl.base.get_infrastructure_implementation(infrastructure)
+    runtime_implementation = runtime.PrefectRuntimeImplementation(
+        infractl.runtime(), infrastructure_implementation
+    )
+    settings = dynaconf.Dynaconf()
+    settings.update({'local': {'prefect_shared_volume_mount': '/data'}})
+    runtime_implementation._settings = settings
+
+    with pytest.raises(runtime.PrefectRuntimeError, match='prefect_shared_volume_mount'):
+        runtime_implementation.job_variables()
+
+
+@pytest.mark.asyncio
+async def test_prefect_runtime_customizations_not_supported(tmp_path: pathlib.Path):
+    flow_path = tmp_path / 'flow.py'
+    flow_path.write_text(FLOW3)
+
     infrastructure_implementation = infractl.base.get_infrastructure_implementation(
-        infractl.infrastructure()
+        infractl.infrastructure(address='local')
     )
     runtime_implementation = runtime.PrefectRuntimeImplementation(
         runtime=infractl.runtime(),
         infrastructure_implementation=infrastructure_implementation,
     )
+    runtime_implementation._settings = dynaconf.Dynaconf()
 
     customizations = [
         {
@@ -181,14 +186,11 @@ def test_prefect_runtime_customizations():
         },
     ]
 
-    runtime_implementation._settings = dynaconf.Dynaconf()
-    kubernetes_job_block = runtime_implementation.kubernetes_job(customizations=customizations)
-    kubernetes_job_block.name = 'foo'
-    kubernetes_job = kubernetes_job_block.build_job()
-    print(kubernetes_job)
-
-    assert kubernetes_job['spec']['template']['spec']['containers'][0]['name'] == 'prefect-job'
-    assert kubernetes_job['spec']['template']['spec']['containers'][1]['name'] == 'second-container'
+    with pytest.raises(runtime.PrefectRuntimeError, match='customizations are not supported'):
+        await runtime_implementation.deploy(
+            infractl.program(flow_path.as_posix()),
+            customizations=customizations,
+        )
 
 
 def test_prefect_runtime_implementation_environment():
@@ -197,16 +199,11 @@ def test_prefect_runtime_implementation_environment():
     runtime_implementation = runtime.PrefectRuntimeImplementation(
         infractl.runtime(environment={'foo': 'bar'}), infrastructure_implementation
     )
+    runtime_implementation._settings = dynaconf.Dynaconf()
 
-    kubernetes_job_block = runtime_implementation.kubernetes_job()
-    kubernetes_job_block.name = 'foo'
-    kubernetes_job = kubernetes_job_block.build_job()
-    kubernetes_job_env = kubernetes_job['spec']['template']['spec']['containers'][0]['env']
+    job_variables = runtime_implementation.job_variables()
 
-    assert {
-        'name': 'foo',
-        'value': 'bar',
-    } in kubernetes_job_env, 'Kubernetes Job contains environment variable foo'
+    assert job_variables['env']['foo'] == 'bar', 'Job variables contain environment variable foo'
 
 
 def test_prefect_runtime_implementation_dependencies():
@@ -215,16 +212,13 @@ def test_prefect_runtime_implementation_dependencies():
     runtime_implementation = runtime.PrefectRuntimeImplementation(
         infractl.runtime(dependencies={'pip': ['boto', 'botocore']}), infrastructure_implementation
     )
+    runtime_implementation._settings = dynaconf.Dynaconf()
 
-    kubernetes_job_block = runtime_implementation.kubernetes_job()
-    kubernetes_job_block.name = 'foo'
-    kubernetes_job = kubernetes_job_block.build_job()
-    kubernetes_job_env = kubernetes_job['spec']['template']['spec']['containers'][0]['env']
+    job_variables = runtime_implementation.job_variables()
 
-    assert {
-        'name': 'EXTRA_PIP_PACKAGES',
-        'value': 'boto botocore',
-    } in kubernetes_job_env, 'Kubernetes Job contains environment variable EXTRA_PIP_PACKAGES'
+    assert (
+        job_variables['env']['EXTRA_PIP_PACKAGES'] == 'boto botocore'
+    ), 'Job variables contain environment variable EXTRA_PIP_PACKAGES'
 
 
 @pytest.mark.asyncio
