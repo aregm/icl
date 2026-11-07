@@ -41,6 +41,8 @@ aws = [
 ]
 hub = [
     "fastapi",
+    "kubernetes",
+    "uvicorn",
 ]
 ssh = [
     "paramiko",
