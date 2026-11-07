@@ -231,11 +231,31 @@ def _enable_ssh_script() -> str:
             if [[ -x /usr/sbin/sshd ]]; then
                 echo sshd is installed
             else
+                # Fallback for images without openssh-server, depends on the package mirrors
                 echo ssh is not installed, trying to install ...
                 export DEBIAN_FRONTEND=noninteractive
                 sudo -E apt-get update
                 sudo -E apt-get install -y --no-install-recommends openssh-server
             fi
+            # Host keys are kept in the home directory, which survives pod restarts, so that
+            # the session keeps the same host key and ~/.ssh/known_hosts stays valid on clients.
+            # Keys shipped in the image (if any) are never used.
+            sudo rm -f /etc/ssh/ssh_host_*
+            mkdir -p ~/.ssh/sshd
+            chmod 00700 ~/.ssh ~/.ssh/sshd
+            for key in ~/.ssh/sshd/ssh_host_*_key; do
+                [[ -f $key && -f $key.pub ]] || continue
+                echo restoring host key $(basename $key) ...
+                sudo install -o root -g root -m 0600 $key /etc/ssh/
+                sudo install -o root -g root -m 0644 $key.pub /etc/ssh/
+            done
+            sudo ssh-keygen -A
+            for key in /etc/ssh/ssh_host_*_key; do
+                if [[ ! -f ~/.ssh/sshd/$(basename $key) ]]; then
+                    echo saving host key $(basename $key) ...
+                    sudo install -o jovyan -g jovyan -m 0600 $key $key.pub ~/.ssh/sshd/
+                fi
+            done
             echo starting sshd ...
             sudo mkdir -p -m0755 /var/run/sshd
             sudo /usr/sbin/sshd
@@ -392,7 +412,7 @@ def enable_ssh(username: str, key: Optional[str] = None) -> str:
     ssh_host = (
         get_node_ip(pod.spec.node_name, external=use_external_node_ip_for_user_ports)
         if use_node_ip_for_user_ports
-        else ingress_domain
+        else config.get().get('ssh_host') or ingress_domain
     )
     ssh_args = f'jovyan@{ssh_host} -p {response.spec.ports[0].node_port}'
     if jumphost:
