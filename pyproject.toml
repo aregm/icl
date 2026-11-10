@@ -1,6 +1,6 @@
 [project]
 name = "infractl"
-version = "0.0.4"
+version = "0.0.7"
 description = "IaC=based full development environment for cloud and on-prem ith batteris included"
 license = {file = "LICENSE"}
 readme = "README.md"
@@ -41,6 +41,8 @@ aws = [
 ]
 hub = [
     "fastapi",
+    "kubernetes",
+    "uvicorn",
 ]
 ssh = [
     "paramiko",

@@ -14,11 +14,12 @@ resource "kubernetes_config_map" "config" {
     }
   }
   data = {
-    "hub.toml" = <<-EOF
-      ingress_domain = "${var.ingress_domain}"
-      use_node_ip_for_user_ports = ${var.use_node_ip_for_user_ports}
-      use_external_node_ip_for_user_ports = ${var.use_external_node_ip_for_user_ports}
-    EOF
+    "hub.toml" = join("", [
+      "ingress_domain = \"${var.ingress_domain}\"\n",
+      "use_node_ip_for_user_ports = ${var.use_node_ip_for_user_ports}\n",
+      "use_external_node_ip_for_user_ports = ${var.use_external_node_ip_for_user_ports}\n",
+      var.ssh_host != "" ? "ssh_host = \"${var.ssh_host}\"\n" : "",
+    ])
   }
 }
 
@@ -46,7 +47,7 @@ resource "kubernetes_deployment" "icl-hub" {
       spec {
         container {
           name = "icl-hub"
-          image = "pbchekin/icl-hub:0.0.4"
+          image = var.image
           command = [
             "python", "-m", "infractl.hub.main", "server", "start"
           ]
